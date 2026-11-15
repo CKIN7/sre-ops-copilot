@@ -110,7 +110,8 @@ políticas, no en cada servidor.
 ## 3. Superficie MCP
 
 Transporte: **Streamable HTTP** en producción, **stdio** en local. Fijar revisión de spec
-(verificar la última estable al empezar; candidata: `2025-11-25`) y documentarlo en ADR-002.
+(verificar la última estable al empezar; candidata: `2026-07-28`, última estable
+verificada el 2026-11-15; sustituye a `2025-11-25`) y documentarlo en ADR-002.
 
 ### 3.1 Tools de lectura (auto-aprobadas)
 
