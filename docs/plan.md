@@ -505,7 +505,7 @@ beacon/
     migrations/
     seed/
   docs/
-    adr/
+    decisions/
     threat-model.md
     runbook.md
     postmortem-*.md
@@ -657,7 +657,8 @@ implementarla.
 
 Checklist del día 1, en orden:
 
-1. Verificar la **última revisión estable de MCP** y fijarla en `docs/adr/002`.
+1. Verificar la **última revisión estable de MCP** y fijarla en
+   `docs/decisions/002-mcp-transport.md` (con `playbook/_template-adr.md`).
 2. Crear monorepo: `pnpm` workspaces + `turbo` + `tsconfig` base + `vitest`.
 3. `docker compose` con Postgres y el generador de seed determinista.
 4. `packages/core`: schemas zod de las 10 tools de lectura + tipo `ActionExecutor`.
