@@ -1,0 +1,38 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+
+# Tests y cobertura
+coverage/
+.nyc_output/
+
+# Entorno y secretos
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editor y sistema
+.DS_Store
+Thumbs.db
+.idea/
+
+# Docker / Fly
+.docker/
+fly.local.toml
+
+# Datos locales
+tmp/
+seed/output/
