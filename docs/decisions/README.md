@@ -32,3 +32,4 @@
 | `query_readonly_sql` | Pendiente | Recomendación: no en v1; v2 con vistas restringidas |
 | Destino de deploy | Pendiente | Fly.io por defecto; Railway como alternativa |
 | Proveedor de modelo | Pendiente | Uno barato para demo, uno fuerte para evals |
+| Enfoque de migraciones | Pendiente | drizzle-kit vs SQL crudo + runner propio; decidir con ADR junto al scaffold |
