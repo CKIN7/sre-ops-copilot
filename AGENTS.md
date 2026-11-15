@@ -52,6 +52,7 @@ packages/
 infra/
   compose/  kind/  migrations/  seed/
 docs/
+  plan.md     plan de ejecución (v2)
   decisions/  threat-model.md  runbook.md
 playbook/     proceso y arquitectura (fuente de verdad)
 ```
@@ -90,6 +91,7 @@ pnpm evals
 
 | Necesito... | Archivo |
 |-------------|---------|
+| Plan de ejecución, alcance y calendario | `docs/plan.md` |
 | Cómo contribuir, ramas y releases | `playbook/contributing.md` |
 | CI/CD, Docker, deploy, secretos | `playbook/devops.md` |
 | Arquitectura, paquetes, capas, evals | `playbook/architecture.md` |

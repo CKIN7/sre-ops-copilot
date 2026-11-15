@@ -31,6 +31,7 @@ playbook/   proceso, devops y arquitectura
 
 ## Documentación
 
+- [`docs/plan.md`](./docs/plan.md) — plan de ejecución, alcance y calendario.
 - [`AGENTS.md`](./AGENTS.md) — guía del repo y no negociables.
 - [`playbook/`](./playbook/README.md) — contribución, DevOps y arquitectura.
 - [`docs/decisions/`](./docs/decisions/README.md) — índice de ADRs.
