@@ -14,6 +14,7 @@
 | 006 | Demo en tres capas con `DEMO_MODE` y circuit breaker | Aceptada |
 | 007 | Harness de evals propio con fixtures, gate en CI | Aceptada |
 | 008 | `pg-boss` sobre PostgreSQL; Temporal solo con necesidad medida | Aceptada |
+| 009 | Migraciones: SQL versionado en `infra/migrations` con runner propio (no `drizzle-kit`) | Aceptada |
 
 ## Por qué estas y no otras
 
@@ -24,6 +25,8 @@
 - **005** permite demo segura y evals deterministas sin renunciar a una prueba real
   contra `kind`.
 - **006** evita abuso y caídas: la demo pública nunca ejecuta escrituras reales.
+- **009** deja el SQL como única fuente de verdad del esquema y evita un paquete `db` que la
+  estructura objetivo no contempla; Drizzle ORM sigue siendo la capa de consulta.
 
 ## Decisiones abiertas
 
@@ -32,4 +35,5 @@
 | `query_readonly_sql` | Pendiente | Recomendación: no en v1; v2 con vistas restringidas |
 | Destino de deploy | Pendiente | Fly.io por defecto; Railway como alternativa |
 | Proveedor de modelo | Pendiente | Uno barato para demo, uno fuerte para evals |
-| Enfoque de migraciones | Pendiente | drizzle-kit vs SQL crudo + runner propio; decidir con ADR junto al scaffold |
+
+La decisión de migraciones quedó cerrada en el ADR-009 (SQL versionado + runner propio).

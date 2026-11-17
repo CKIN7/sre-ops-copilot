@@ -157,7 +157,8 @@ El rollback debe probarse al menos una vez por release candidate.
 
 ## Migraciones
 
-- Versionadas en el repo y aplicadas por Drizzle, no a mano.
+- Versionadas en el repo (`infra/migrations`) y aplicadas por un runner propio versionado
+  (ADR-009), no a mano.
 - Idempotentes: correrlas dos veces no rompe nada.
 - **Expand/contract** para cambios incompatibles:
   1. Agregar columnas/tablas nuevas sin romper la versión actual.
