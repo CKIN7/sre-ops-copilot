@@ -10,8 +10,10 @@
       "outputs": []
     },
     "test": {
-      "dependsOn": ["^build"],
-      "outputs": []
+      "dependsOn": ["build"],
+      "outputs": [],
+      "cache": false,
+      "env": ["DATABASE_URL", "SEED_SCALE", "SEED_ANCHOR_ISO"]
     }
   }
 }
