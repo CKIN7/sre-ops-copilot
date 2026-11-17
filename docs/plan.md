@@ -512,8 +512,8 @@ beacon/
     postmortem-*.md
 ```
 
-Dependencias clave: `@modelcontextprotocol/sdk`, `zod`, `drizzle-orm`, `pg-boss`,
-`@opentelemetry/*`, `vitest`, `k6`.
+Dependencias clave: `@modelcontextprotocol/server` y `@modelcontextprotocol/client`
+(SDK v2, ver ADR-002), `zod`, `drizzle-orm`, `pg-boss`, `@opentelemetry/*`, `vitest`, `k6`.
 
 **No** escribir un framework de agentes propio como objetivo. Loop fino propio + SDK para
 llamadas al modelo. El valor está en gateway, evals, executor y estado.
