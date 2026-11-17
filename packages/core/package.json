@@ -1,0 +1,45 @@
+{
+  "name": "@beacon/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./domain/services": {
+      "types": "./dist/domain/services.d.ts",
+      "default": "./dist/domain/services.js"
+    },
+    "./domain/metrics": {
+      "types": "./dist/domain/metrics.d.ts",
+      "default": "./dist/domain/metrics.js"
+    },
+    "./domain/duration": {
+      "types": "./dist/domain/duration.d.ts",
+      "default": "./dist/domain/duration.js"
+    },
+    "./schemas/tools": {
+      "types": "./dist/schemas/tools.d.ts",
+      "default": "./dist/schemas/tools.js"
+    },
+    "./errors/app-error": {
+      "types": "./dist/errors/app-error.d.ts",
+      "default": "./dist/errors/app-error.js"
+    },
+    "./ports/action-executor": {
+      "types": "./dist/ports/action-executor.d.ts",
+      "default": "./dist/ports/action-executor.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  }
+}

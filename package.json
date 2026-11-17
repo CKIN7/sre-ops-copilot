@@ -1,0 +1,25 @@
+{
+  "name": "beacon",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.21.0",
+  "engines": {
+    "node": ">=22.13.0",
+    "pnpm": "^12.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "eslint .",
+    "test": "turbo run test",
+    "db:migrate": "pnpm --filter @beacon/migrations migrate",
+    "db:seed": "pnpm --filter @beacon/seed seed",
+    "spike": "pnpm --filter @beacon/mcp-ops spike"
+  },
+  "devDependencies": {
+    "eslint": "10.15.0",
+    "turbo": "2.11.11",
+    "typescript-eslint": "8.73.0"
+  }
+}

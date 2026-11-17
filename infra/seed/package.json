@@ -1,0 +1,22 @@
+{
+  "name": "@beacon/seed",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "vitest run",
+    "seed": "pnpm run build && node --env-file-if-exists=../../.env dist/seed.js"
+  },
+  "dependencies": {
+    "@beacon/core": "workspace:*",
+    "pg": "8.23.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@types/pg": "8.23.1",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  }
+}
