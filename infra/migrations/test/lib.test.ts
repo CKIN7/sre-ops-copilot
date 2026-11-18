@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { isMigrationFile, migrationId, sortMigrationFiles } from "../src/lib.js";
+import {
+  findNonMigrationSqlFiles,
+  isMigrationFile,
+  migrationId,
+  sortMigrationFiles,
+} from "../src/lib.js";
 
 describe("descubrimiento de migraciones", () => {
   it("acepta el formato NNNN-slug.sql y rechaza el resto", () => {
@@ -21,5 +26,16 @@ describe("descubrimiento de migraciones", () => {
       "0002_a.sql",
       "0010_b.sql",
     ]);
+  });
+
+  it("detecta los .sql que no siguen el convenio en vez de omitirlos", () => {
+    expect(
+      findNonMigrationSqlFiles([
+        "0001_domain.sql",
+        "0002_read-tools.sql",
+        "0003_read_tools.sql",
+        "README.md",
+      ]),
+    ).toEqual(["0003_read_tools.sql"]);
   });
 });
