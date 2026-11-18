@@ -1,9 +1,16 @@
 # Beacon — SRE/Ops Copilot · Plan de ejecución
 
-> **Estado:** planificación (el código aún no existe) · **Versión:** v2
-> **Horizonte:** 8 semanas · **Documento canónico:** `docs/plan.md`
+> **Estado:** planificación (el código aún no existe) · **Versión:** v3
+> **Horizonte:** 8 hitos, sin calendario fijo (ver §14) · **Documento canónico:** `docs/plan.md`
 > **Proceso y reglas:** [`playbook/`](../playbook/README.md) ·
 > **Decisiones:** [`docs/decisions/`](./decisions/README.md)
+
+**Cambios en v3:** el calendario de 8 semanas pasa a 8 **hitos** (M1–M8) con los mismos DoD.
+Motivo: proyecto individual para portfolio con implementación asistida por agentes; el
+cuello de botella ya no es escribir código sino verificar contra el DoD, así que el tiempo
+se presupuesta por hito cerrado, no por semana de calendario. Un hito se cierra solo cuando
+cumple su DoD — puede tardar una tarde o una semana. Los ADRs 002, 009, 010 y 011 anteriores
+a este cambio usan "semana N": equivale a "hito N" (M-N).
 
 **Cambios en v2:** se cierran las tres decisiones abiertas (TS en todo el monorepo, demo en
 tres capas, escrituras por puerto/adaptador con sandbox real demostrado). Se añaden las
@@ -60,7 +67,7 @@ Datos sembrados en Postgres (generador determinista con semilla):
 - `deploys`: 40 despliegues, con commit, autor, diff resumido, rollout status.
 - `alerts`: 60 alertas, algunas ruidosas y una claramente falsa.
 - `feature_flags`: 12 flags con su historial de cambios. `runbooks`: 8 (uno por servicio y dos
-  transversales). `oncall`: 6 (una guardia por servicio). `incidents` llega en la semana 4, con
+  transversales). `oncall`: 6 (una guardia por servicio). `incidents` llega en el hito 4 (M4), con
   las tools de escritura que lo consumen.
 
 **Incidente estrella de la demo:** `checkout` sube 5xx del 0,4% al 4,1% a las 14:22, 18 min
@@ -522,18 +529,23 @@ llamadas al modelo. El valor está en gateway, evals, executor y estado.
 
 ---
 
-## 14. Fases (8 semanas)
+## 14. Fases (8 hitos)
 
-| Semana | Entregable | DoD |
+Un hito se cierra cuando su DoD se cumple y se **verifica** — no al agotar un calendario.
+No hay fecha objetivo por hito: con implementación asistida por agentes, el trabajo mecánico
+puede salir en horas y el tiempo real lo consume la verificación y los DoD. La regla sigue
+siendo la del §22.7: no se abre el hito siguiente hasta cerrar el actual.
+
+| Hito | Entregable | DoD |
 |---|---|---|
-| 1 | Dominio sembrado + `mcp-ops` con 10 tools de lectura (stdio) | `list_services`/`query_metrics`/`search_logs` responden con datos realistas; tests de contrato |
-| 2 | Transporte HTTP + auth + orquestador v0 + persistencia de runs/steps + CLI | Un run completo por CLI produce timeline en Postgres |
-| 3 | Gateway: allowlist, validación, rate limit, secretos, redacción, audit | Suite de policy tests; audit verificable por hash chain |
-| 4 | Dos fases + `SimulatedExecutor` + inyección de fallos + aprobaciones + UI timeline/aprobación | Un rollback requiere aprobación, es idempotente ante reintento y maneja 409/timeout |
-| 5 | Harness de evals + 40 casos + gate en CI | `pass@1` medido y reproducible; gate bloquea una regresión inyectada |
-| 6 | Presupuestos, OTel, red-team, k6, modelo de coste | 20/20 inyecciones bloqueadas; presupuesto correcto con 20 runs paralelos |
-| 7 | `SandboxExecutor` (kind) + suite de contrato + deploy público con `DEMO_MODE` + circuit breaker | 6/6 contrato real; demo pública con techo de gasto y fallback a replay |
-| 8 | Runbook + simulacro de incidente + postmortem + README/ADRs/honestidad + benchmark + vídeo | Un desconocido entiende el proyecto en 5 min y no puede abusar de la demo |
+| M1 | Dominio sembrado + `mcp-ops` con 10 tools de lectura (stdio) | `list_services`/`query_metrics`/`search_logs` responden con datos realistas; tests de contrato |
+| M2 | Transporte HTTP + auth + orquestador v0 + persistencia de runs/steps + CLI | Un run completo por CLI produce timeline en Postgres |
+| M3 | Gateway: allowlist, validación, rate limit, secretos, redacción, audit | Suite de policy tests; audit verificable por hash chain |
+| M4 | Dos fases + `SimulatedExecutor` + inyección de fallos + aprobaciones + UI timeline/aprobación | Un rollback requiere aprobación, es idempotente ante reintento y maneja 409/timeout |
+| M5 | Harness de evals + 40 casos + gate en CI | `pass@1` medido y reproducible; gate bloquea una regresión inyectada |
+| M6 | Presupuestos, OTel, red-team, k6, modelo de coste | 20/20 inyecciones bloqueadas; presupuesto correcto con 20 runs paralelos |
+| M7 | `SandboxExecutor` (kind) + suite de contrato + deploy público con `DEMO_MODE` + circuit breaker | 6/6 contrato real; demo pública con techo de gasto y fallback a replay |
+| M8 | Runbook + simulacro de incidente + postmortem + README/ADRs/honestidad + benchmark + vídeo | Un desconocido entiende el proyecto en 5 min y no puede abusar de la demo |
 
 **Recortes si vas justo:** terceros MCP, SSO, `DemoStackExecutor`, multi-región,
 `query_readonly_sql`.
@@ -637,7 +649,7 @@ implementarla.
 | La demo pública se cae el día de la entrevista | uptime monitor + fallback `REPLAY_ONLY` + vídeo |
 | Gasto descontrolado | techo global + circuit breaker + modelo barato |
 | Evals flaky por el sandbox | sandbox solo en suite nocturna; CI usa fixtures |
-| Semana 7 sobrecargada | `SandboxExecutor` solo para `rollback`; el resto sigue simulado |
+| Hito M7 sobrecargado | `SandboxExecutor` solo para `rollback`; el resto sigue simulado |
 | Drift entre demo y repo | misma imagen, solo cambia configuración; prohibido fork de código |
 | `pass@1` por debajo del objetivo | recortar tools de escritura, no maquillar números |
 
@@ -668,4 +680,4 @@ Checklist del día 1, en orden:
 5. Spike de medio día: `mcp-ops` con `list_services` y `query_metrics` por stdio, invocado desde
    un cliente de prueba. Si esto funciona, el resto es execution.
 6. Escribir ADR-001, 002 y 003 (media página cada uno).
-7. Definir el "done" de la semana 1 y no pasar a la 2 hasta cumplirlo.
+7. Definir el "done" del hito M1 y no abrir M2 hasta cumplirlo.
