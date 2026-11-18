@@ -4,6 +4,9 @@ import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 // Los tests leen el .env de la raiz si existe; sin DATABASE_URL se saltan.
+// Requieren un seed reciente: las tools miran ventanas relativas a now(), asi que las
+// filas de logs de las ultimas 24h solo existen si `pnpm db:seed` se ejecuto con ancla
+// actual (o `SEED_ANCHOR_ISO` dentro de las ultimas 24h).
 try {
   process.loadEnvFile(fileURLToPath(new URL("../../../.env", import.meta.url)));
 } catch {
@@ -144,9 +147,10 @@ describe.skipIf(!databaseUrl)("contrato stdio de mcp-ops", () => {
   });
 
   it("get_deploys incluye el 1.42.0 que precede al incidente", async () => {
+    // Ventana maxima: el test no debe depender de a que hora se sembro el dataset.
     const payload = await call<{ deploys: Array<{ version: string; deployedAt: string }> }>(
       "get_deploys",
-      { service: "checkout", window: "7d" },
+      { service: "checkout", window: "720h" },
     );
     const star = payload.deploys.find((deploy) => deploy.version === "1.42.0");
     expect(star).toBeDefined();
