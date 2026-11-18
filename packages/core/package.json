@@ -16,9 +16,17 @@
       "types": "./dist/domain/duration.d.ts",
       "default": "./dist/domain/duration.js"
     },
+    "./domain/read-tools": {
+      "types": "./dist/domain/read-tools.d.ts",
+      "default": "./dist/domain/read-tools.js"
+    },
     "./schemas/tools": {
       "types": "./dist/schemas/tools.d.ts",
       "default": "./dist/schemas/tools.js"
+    },
+    "./redaction/redact": {
+      "types": "./dist/redaction/redact.d.ts",
+      "default": "./dist/redaction/redact.js"
     },
     "./errors/app-error": {
       "types": "./dist/errors/app-error.d.ts",
