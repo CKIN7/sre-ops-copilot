@@ -1,7 +1,8 @@
-import { AppError } from "@beacon/core/errors/app-error";
 import { parseDurationSeconds } from "@beacon/core/domain/duration";
 import type { QueryMetricsInput } from "@beacon/core/schemas/tools";
 import type { Pool } from "pg";
+
+import { requireServiceId } from "./service-id.js";
 
 export interface MetricPoint {
   timestamp: string;
@@ -27,10 +28,6 @@ const AGGREGATE_SQL = {
   sum: "sum(value)",
 } as const;
 
-interface ServiceIdRow {
-  id: string;
-}
-
 interface MetricRow {
   bucket: Date;
   value: number;
@@ -40,17 +37,7 @@ export async function queryMetrics(
   pool: Pool,
   input: QueryMetricsInput,
 ): Promise<MetricsResult> {
-  const { rows: services } = await pool.query<ServiceIdRow>(
-    "select id from services where slug = $1",
-    [input.service],
-  );
-  const service = services[0];
-
-  if (!service) {
-    throw new AppError("not_found", `unknown service: ${input.service}`, {
-      statusCode: 404,
-    });
-  }
+  const serviceId = await requireServiceId(pool, input.service);
 
   const windowSeconds = parseDurationSeconds(input.window);
   const stepSeconds = parseDurationSeconds(input.step);
@@ -68,7 +55,7 @@ export async function queryMetrics(
       group by bucket
       order by bucket
     `,
-    [service.id, stepSeconds, input.metric, windowSeconds],
+    [serviceId, stepSeconds, input.metric, windowSeconds],
   );
 
   return {
