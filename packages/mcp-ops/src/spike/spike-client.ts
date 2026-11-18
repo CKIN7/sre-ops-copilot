@@ -104,7 +104,7 @@ async function main(): Promise<void> {
       textOf(
         await client.callTool({
           name: "get_deploys",
-          arguments: { service: "checkout", window: "7d" },
+          arguments: { service: "checkout", window: "168h" },
         }),
       ),
     ) as { deploys: Array<{ version: string; deployedAt: string }> };
