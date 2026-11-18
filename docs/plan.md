@@ -59,7 +59,9 @@ Datos sembrados en Postgres (generador determinista con semilla):
 - `logs`: 200k líneas estructuradas con ruido realista (incluye 3 líneas con inyección de prompt).
 - `deploys`: 40 despliegues, con commit, autor, diff resumido, rollout status.
 - `alerts`: 60 alertas, algunas ruidosas y una claramente falsa.
-- `flags`, `runbooks` (markdown), `oncall` (escalation policies), `incidents`.
+- `feature_flags`: 12 flags con su historial de cambios. `runbooks`: 8 (uno por servicio y dos
+  transversales). `oncall`: 6 (una guardia por servicio). `incidents` llega en la semana 4, con
+  las tools de escritura que lo consumen.
 
 **Incidente estrella de la demo:** `checkout` sube 5xx del 0,4% al 4,1% a las 14:22, 18 min
 después del deploy `checkout@1.42.0`. El agente correlaciona, encuentra el deploy, revisa logs
