@@ -15,6 +15,8 @@
 | 007 | Harness de evals propio con fixtures, gate en CI | Aceptada |
 | 008 | `pg-boss` sobre PostgreSQL; Temporal solo con necesidad medida | Aceptada |
 | 009 | Migraciones: SQL versionado en `infra/migrations` con runner propio (no `drizzle-kit`) | Aceptada |
+| 010 | `get_trace_summary` derivado de `metrics_series`; sin tabla de trazas | Aceptada |
+| 011 | Excepción de arranque: commits directos a `main` hasta cerrar la semana 1 | Aceptada (caduca) |
 
 ## Por qué estas y no otras
 
@@ -27,6 +29,10 @@
 - **006** evita abuso y caídas: la demo pública nunca ejecuta escrituras reales.
 - **009** deja el SQL como única fuente de verdad del esquema y evita un paquete `db` que la
   estructura objetivo no contempla; Drizzle ORM sigue siendo la capa de consulta.
+- **010** evita una tabla de trazas fuera del modelo aprobado y que `get_trace_summary`
+  contradiga a `query_metrics`; los externos se declaran sin instrumentar en vez de con ceros.
+- **011** evita un PR sin CI durante el arranque y deja fechada la vuelta al flujo normal: la
+  excepción caduca al cerrar la semana 1, con protección de `main` activa antes del primer PR.
 
 ## Decisiones abiertas
 
