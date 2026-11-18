@@ -55,6 +55,11 @@ Reglas:
 - No se hace push directo a `main`, ni siquiera para documentación.
 - Una rama, un tema. Si el cambio crece, se parte en varias ramas.
 - Las ramas `feature/*`, `fix/*` y `docs/*` se borran después del merge.
+
+> **Excepción temporal (semana 1):** mientras no haya CI ni protección de `main`, los
+> commits del arranque van directos a `main`. Caduca al cerrar la semana 1: el primer
+> commit de la semana 2 abre `feature/*` y entra por PR con merge commit. Detalle y
+> disparador en [`docs/decisions/011-arranque-en-main.md`](../docs/decisions/011-arranque-en-main.md).
 - `hotfix/*` se borra tras el tag.
 
 ### Nombres de rama
