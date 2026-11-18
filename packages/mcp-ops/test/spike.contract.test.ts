@@ -47,38 +47,175 @@ describe.skipIf(!databaseUrl)("contrato stdio de mcp-ops", () => {
     await client.close();
   });
 
-  it("descubre las tools del spike", async () => {
+  async function call<T>(name: string, args: Record<string, unknown>): Promise<T> {
+    const result = await client.callTool({ name, arguments: args });
+    expect(result.isError).toBeFalsy();
+    return JSON.parse(textOf(result)) as T;
+  }
+
+  it("descubre las 10 tools de lectura del plan", async () => {
     const { tools } = await client.listTools();
     expect(tools.map((tool) => tool.name).sort()).toEqual([
+      "get_deploys",
+      "get_feature_flags",
+      "get_oncall",
+      "get_service",
+      "get_trace_summary",
+      "list_alerts",
       "list_services",
       "query_metrics",
+      "search_logs",
+      "search_runbooks",
     ]);
   });
 
   it("list_services devuelve los 6 servicios sembrados", async () => {
-    const result = await client.callTool({ name: "list_services", arguments: {} });
-    expect(result.isError).toBeFalsy();
-    const payload = JSON.parse(textOf(result)) as { services: unknown[] };
-    expect(payload.services).toHaveLength(6);
+    const payload = await call<{ services: Array<{ slug: string; dependsOn: string[] }> }>(
+      "list_services",
+      {},
+    );
+    expect(payload.services.map((service) => service.slug)).toEqual([
+      "api",
+      "checkout",
+      "edge",
+      "inventory",
+      "payments",
+      "web",
+    ]);
+    const checkout = payload.services.find((service) => service.slug === "checkout");
+    expect(checkout?.dependsOn).toEqual(["inventory", "payments"]);
+  });
+
+  it("get_service devuelve SLO y dependencias", async () => {
+    const payload = await call<{
+      slug: string;
+      tier: string;
+      slo: { availability: string };
+      dependsOn: string[];
+    }>("get_service", { name: "checkout" });
+    expect(payload.slug).toBe("checkout");
+    expect(payload.tier).toBe("critical");
+    expect(payload.slo.availability).toBe("99.95");
+    expect(payload.dependsOn).toEqual(["inventory", "payments"]);
   });
 
   it("query_metrics devuelve puntos dentro del limite de 300", async () => {
-    const result = await client.callTool({
-      name: "query_metrics",
-      arguments: {
-        service: "checkout",
-        metric: "http_5xx_rate",
-        window: "2h",
-        step: "1m",
-        agg: "avg",
-      },
-    });
-    expect(result.isError).toBeFalsy();
-    const payload = JSON.parse(textOf(result)) as {
-      points: Array<{ timestamp: string; value: number }>;
-    };
+    const payload = await call<{ points: Array<{ timestamp: string; value: number }> }>(
+      "query_metrics",
+      { service: "checkout", metric: "http_5xx_rate", window: "2h", step: "1m", agg: "avg" },
+    );
     expect(payload.points.length).toBeGreaterThan(0);
     expect(payload.points.length).toBeLessThanOrEqual(300);
     expect(typeof payload.points[0]?.value).toBe("number");
+  });
+
+  it("search_logs respeta el limite y no devuelve PII ni tokens", async () => {
+    const payload = await call<{
+      returned: number;
+      redactions: number;
+      lines: Array<{ level: string; message: string; fields: unknown }>;
+    }>("search_logs", {
+      service: "checkout",
+      query: "psp",
+      window: "24h",
+      level: "error",
+      limit: 10,
+    });
+
+    expect(payload.returned).toBeGreaterThan(0);
+    expect(payload.returned).toBeLessThanOrEqual(10);
+    expect(typeof payload.redactions).toBe("number");
+
+    const serialized = JSON.stringify(payload.lines);
+    expect(serialized).not.toMatch(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+    expect(serialized).not.toMatch(/sk_live_[A-Za-z0-9]+/);
+    expect(serialized).not.toMatch(/\b(?:\d{1,3}\.){3}\d{1,3}\b/);
+  });
+
+  it("las lineas con inyeccion de prompt se devuelven como datos", async () => {
+    const payload = await call<{ lines: Array<{ message: string }> }>("search_logs", {
+      service: "checkout",
+      query: "ignore previous instructions",
+      window: "24h",
+      limit: 5,
+    });
+    expect(payload.lines.length).toBeGreaterThan(0);
+    expect(payload.lines[0]?.message).toContain("propose_rollback");
+  });
+
+  it("get_deploys incluye el 1.42.0 que precede al incidente", async () => {
+    const payload = await call<{ deploys: Array<{ version: string; deployedAt: string }> }>(
+      "get_deploys",
+      { service: "checkout", window: "7d" },
+    );
+    const star = payload.deploys.find((deploy) => deploy.version === "1.42.0");
+    expect(star).toBeDefined();
+    expect(payload.deploys[0]?.version).toBe("1.42.0");
+  });
+
+  it("get_trace_summary separa dependencias instrumentadas de externas", async () => {
+    const checkout = await call<{
+      downstreams: Array<{ name: string; instrumented: boolean; latencyP95Ms: number | null }>;
+    }>("get_trace_summary", { service: "checkout", window: "1h" });
+    expect(checkout.downstreams.map((downstream) => downstream.name)).toEqual([
+      "inventory",
+      "payments",
+    ]);
+    expect(checkout.downstreams.every((downstream) => downstream.instrumented)).toBe(true);
+
+    const api = await call<{ downstreams: Array<{ name: string; instrumented: boolean }> }>(
+      "get_trace_summary",
+      { service: "api", window: "1h" },
+    );
+    const external = api.downstreams.filter((downstream) => !downstream.instrumented);
+    expect(external.map((downstream) => downstream.name).sort()).toEqual(["auth", "catalog"]);
+  });
+
+  it("list_alerts filtra por servicio y estado", async () => {
+    const firing = await call<{ alerts: Array<{ service: string; status: string }> }>(
+      "list_alerts",
+      { service: "checkout", status: "firing", window: "24h" },
+    );
+    expect(firing.alerts.length).toBeGreaterThan(0);
+    expect(firing.alerts.every((alert) => alert.service === "checkout")).toBe(true);
+    expect(firing.alerts.every((alert) => alert.status === "firing")).toBe(true);
+  });
+
+  it("get_feature_flags devuelve flags y su historial", async () => {
+    const payload = await call<{
+      flags: Array<{ key: string; recentChanges: unknown[] }>;
+    }>("get_feature_flags", { service: "checkout" });
+    expect(payload.flags).toHaveLength(3);
+    expect(payload.flags.every((flag) => flag.recentChanges.length > 0)).toBe(true);
+  });
+
+  it("get_oncall devuelve primario y politica de escalado", async () => {
+    const payload = await call<{
+      primary: { handle: string };
+      escalationMinutes: number[];
+    }>("get_oncall", { service: "checkout" });
+    expect(payload.primary.handle).toMatch(/^@/);
+    expect(payload.escalationMinutes).toEqual([5, 15, 30]);
+  });
+
+  it("search_runbooks encuentra el runbook de checkout", async () => {
+    const payload = await call<{ runbooks: Array<{ title: string; bodyMd: string }> }>(
+      "search_runbooks",
+      { query: "rollback" },
+    );
+    expect(payload.runbooks.length).toBeGreaterThan(0);
+    expect(payload.runbooks[0]?.bodyMd).toContain("rollback");
+    expect(payload.runbooks.length).toBeLessThanOrEqual(5);
+  });
+
+  it("una tool con argumentos invalidos falla sin cerrar la conexion", async () => {
+    const result = await client.callTool({
+      name: "query_metrics",
+      arguments: { service: "checkout", metric: "http_5xx_rate", window: "48h", step: "1m" },
+    });
+    expect(result.isError).toBe(true);
+
+    const after = await call<{ services: unknown[] }>("list_services", {});
+    expect(after.services).toHaveLength(6);
   });
 });
