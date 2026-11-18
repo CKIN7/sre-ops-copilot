@@ -5,7 +5,12 @@ import { fileURLToPath } from "node:url";
 
 import { Client } from "pg";
 
-import { isMigrationFile, migrationId, sortMigrationFiles } from "./lib.js";
+import {
+  findNonMigrationSqlFiles,
+  isMigrationFile,
+  migrationId,
+  sortMigrationFiles,
+} from "./lib.js";
 
 const MIGRATIONS_DIR = fileURLToPath(new URL("../migrations/", import.meta.url));
 const LOCK_KEY = 827_346_192;
@@ -26,6 +31,13 @@ async function main(): Promise<void> {
   }
 
   const entries = await readdir(MIGRATIONS_DIR);
+  const orphans = findNonMigrationSqlFiles(entries);
+  if (orphans.length > 0) {
+    throw new Error(
+      `migration files must match NNNN_slug.sql (lowercase, digits and dashes): ${orphans.join(", ")}`,
+    );
+  }
+
   const files = sortMigrationFiles(entries.filter(isMigrationFile));
   if (files.length === 0) {
     throw new Error(`no migration files found in ${MIGRATIONS_DIR}`);
