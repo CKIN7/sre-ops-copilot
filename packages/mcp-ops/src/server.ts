@@ -3,10 +3,8 @@ import { serveStdio } from "@modelcontextprotocol/server/stdio";
 
 import { loadConfig } from "./config.js";
 import { createPool } from "./db/pool.js";
+import { SERVER_NAME, SERVER_VERSION } from "./meta.js";
 import { registerTools } from "./tools/register.js";
-
-export const SERVER_NAME = "beacon-mcp-ops";
-export const SERVER_VERSION = "0.0.0";
 
 const config = loadConfig();
 const pool = createPool(config.databaseUrl);
