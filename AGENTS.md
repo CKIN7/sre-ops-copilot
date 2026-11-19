@@ -14,9 +14,14 @@ nada ni arruinarla.
 
 ## Estado
 
-Repo en **fase de planificación**: aún no hay código. El playbook, los ADRs y la
-estructura objetivo ya están definidos. No inventar módulos, scripts ni cifras que no
-existan; si algo no está implementado, decirlo.
+**M2 cerrado (2026-11-19).** `mcp-ops` sirve las 10 tools de lectura por stdio y
+Streamable HTTP con bearer de servicio; el gateway aplica allowlist y validación; el
+orquestador v0 ejecuta runs con write-ahead; la API y el CLI producen la timeline en
+Postgres. El único modelo es `mock` guionizado: no hay LLM, tokens ni coste.
+
+Lo que sigue es M3 (rate limit, secretos, audit) y M4 (dos fases, aprobaciones, UI). No
+inventar módulos, scripts ni cifras que no existan; si algo no está implementado,
+decirlo.
 
 ## Stack
 
@@ -59,20 +64,27 @@ playbook/     proceso y arquitectura (fuente de verdad)
 
 ## Comandos
 
-Objetivo del scaffold (todavía no existen):
-
 ```powershell
 pnpm install --frozen-lockfile
-pnpm dev
+pnpm build
 pnpm typecheck
 pnpm lint
-pnpm build
 pnpm test
-pnpm test:integration
+
+# Postgres local + esquema + datos
+docker compose --env-file .env -f infra/compose/docker-compose.yml up -d --wait
 pnpm db:migrate
-pnpm db:seed
-pnpm evals
+$env:SEED_SCALE="0.1"; pnpm db:seed
+
+# Run completo: mcp-ops HTTP y API en dos terminales, CLI en la tercera
+pnpm --filter @beacon/mcp-ops start:http
+pnpm start:api
+pnpm cli run --goal "Investiga el pico de errores 5xx en checkout"
 ```
+
+`pnpm test` incluye integración contra `DATABASE_URL`; sin esa variable los tests que
+tocan Postgres se saltan. El seed debe ser reciente: las tools usan ventanas relativas
+a `now()`.
 
 ## No negociables
 
