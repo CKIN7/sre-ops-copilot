@@ -2,6 +2,7 @@ import { METRIC_NAMES } from "@beacon/core/domain/metrics";
 import { SERVICES } from "@beacon/core/domain/services";
 import { Client } from "pg";
 
+import { seedControlPlane } from "./control-plane.js";
 import {
   ALERT_COUNT,
   LOG_LINE_COUNT,
@@ -379,6 +380,14 @@ async function main(): Promise<void> {
     console.log(
       `seed: ${runbooks.length} runbooks y ${oncall.length} guardias en ` +
         `${(performance.now() - docsStartedAt).toFixed(0)} ms`,
+    );
+
+    // --- Control plane --------------------------------------------------------
+    // Idempotente: no borra runs y mantiene los mismos UUID entre resiembras.
+    const controlPlane = await seedControlPlane(client);
+    console.log(
+      `seed: control plane tenant=${controlPlane.tenantId} user=${controlPlane.userId} ` +
+        `agent=${controlPlane.agentId}`,
     );
 
     // --- Verificación final ---------------------------------------------------
