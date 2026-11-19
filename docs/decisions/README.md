@@ -16,7 +16,7 @@
 | 008 | `pg-boss` sobre PostgreSQL; Temporal solo con necesidad medida | Aceptada |
 | 009 | Migraciones: SQL versionado en `infra/migrations` con runner propio (no `drizzle-kit`) | Aceptada |
 | 010 | `get_trace_summary` derivado de `metrics_series`; sin tabla de trazas | Aceptada |
-| 011 | Excepción de arranque: commits directos a `main` hasta cerrar la semana 1 | Aceptada (caduca) |
+| 011 | Excepción de arranque: commits directos a `main` hasta cerrar la semana 1 | Caducada (cerrada con M1) |
 
 ## Por qué estas y no otras
 
@@ -31,8 +31,10 @@
   estructura objetivo no contempla; Drizzle ORM sigue siendo la capa de consulta.
 - **010** evita una tabla de trazas fuera del modelo aprobado y que `get_trace_summary`
   contradiga a `query_metrics`; los externos se declaran sin instrumentar en vez de con ceros.
-- **011** evita un PR sin CI durante el arranque y deja fechada la vuelta al flujo normal: la
-  excepción caduca al cerrar la semana 1, con protección de `main` activa antes del primer PR.
+- **011** evitó un PR sin CI durante el arranque y dejó fechada la vuelta al flujo normal. La
+  excepción caducó y se cerró con M1: el ruleset `main-protection` y el workflow de CI
+  (`typecheck`, `lint`, `test`, `build`) ya están activos, y todo cambio entra por PR con merge
+  commit.
 
 ## Decisiones abiertas
 
