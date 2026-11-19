@@ -9,6 +9,7 @@ export type AppErrorCode =
   | "forbidden"
   | "budget_exceeded"
   | "loop_detected"
+  | "upstream_error"
   | "internal";
 
 export interface AppErrorOptions {
