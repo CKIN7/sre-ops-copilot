@@ -7,6 +7,8 @@ export type AppErrorCode =
   | "rate_limited"
   | "unauthorized"
   | "forbidden"
+  | "budget_exceeded"
+  | "loop_detected"
   | "internal";
 
 export interface AppErrorOptions {

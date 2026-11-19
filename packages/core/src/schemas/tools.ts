@@ -205,6 +205,6 @@ export const TOOL_INPUT_SCHEMAS = {
   search_runbooks: searchRunbooksInputSchema,
 } as const;
 
-export const READ_TOOL_NAMES = Object.keys(TOOL_INPUT_SCHEMAS) as Array<
-  keyof typeof TOOL_INPUT_SCHEMAS
->;
+export type ReadToolName = keyof typeof TOOL_INPUT_SCHEMAS;
+
+export const READ_TOOL_NAMES = Object.keys(TOOL_INPUT_SCHEMAS) as ReadToolName[];

@@ -20,9 +20,37 @@
       "types": "./dist/domain/read-tools.d.ts",
       "default": "./dist/domain/read-tools.js"
     },
+    "./domain/runs": {
+      "types": "./dist/domain/runs.d.ts",
+      "default": "./dist/domain/runs.js"
+    },
+    "./domain/principal": {
+      "types": "./dist/domain/principal.d.ts",
+      "default": "./dist/domain/principal.js"
+    },
+    "./domain/json": {
+      "types": "./dist/domain/json.d.ts",
+      "default": "./dist/domain/json.js"
+    },
     "./schemas/tools": {
       "types": "./dist/schemas/tools.d.ts",
       "default": "./dist/schemas/tools.js"
+    },
+    "./schemas/runs": {
+      "types": "./dist/schemas/runs.d.ts",
+      "default": "./dist/schemas/runs.js"
+    },
+    "./ports/run-store": {
+      "types": "./dist/ports/run-store.d.ts",
+      "default": "./dist/ports/run-store.js"
+    },
+    "./ports/tool-gateway": {
+      "types": "./dist/ports/tool-gateway.d.ts",
+      "default": "./dist/ports/tool-gateway.js"
+    },
+    "./ports/model": {
+      "types": "./dist/ports/model.d.ts",
+      "default": "./dist/ports/model.js"
     },
     "./redaction/redact": {
       "types": "./dist/redaction/redact.d.ts",
