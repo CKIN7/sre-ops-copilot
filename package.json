@@ -15,6 +15,8 @@
     "test": "turbo run test",
     "db:migrate": "pnpm --filter @beacon/migrations migrate",
     "db:seed": "pnpm --filter @beacon/seed seed",
+    "start:api": "pnpm --filter @beacon/api start",
+    "cli": "pnpm --filter @beacon/api cli",
     "spike": "pnpm --filter @beacon/mcp-ops spike"
   },
   "devDependencies": {
