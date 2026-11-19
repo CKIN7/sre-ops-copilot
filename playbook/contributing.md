@@ -56,11 +56,12 @@ Reglas:
 - Una rama, un tema. Si el cambio crece, se parte en varias ramas.
 - Las ramas `feature/*`, `fix/*` y `docs/*` se borran después del merge.
 
-> **Excepción temporal (hito M1):** mientras no haya CI ni protección de `main`, los
-> commits del arranque van directos a `main`. Caduca al cerrar M1: el primer
-> commit de M2 abre `feature/*` y entra por PR con merge commit. (ADR-011 usa el
-> vocabulario anterior y lo llama «semana 1»; es el mismo hito.) Detalle y
-> disparador en [`docs/decisions/011-arranque-en-main.md`](../docs/decisions/011-arranque-en-main.md).
+> **Excepción cerrada (hito M1):** los commits del arranque fueron directos a `main`
+> porque aún no había CI ni protección. La excepción caducó al cerrar M1 y está cerrada
+> desde el 2026-11-19: `main` está protegida por el ruleset `main-protection` y todo
+> cambio entra por PR con merge commit. (ADR-011 usa el vocabulario anterior y lo llama
+> «semana 1»; es el mismo hito.) Detalle en
+> [`docs/decisions/011-arranque-en-main.md`](../docs/decisions/011-arranque-en-main.md).
 - `hotfix/*` se borra tras el tag.
 
 ### Nombres de rama
