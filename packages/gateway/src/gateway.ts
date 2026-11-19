@@ -1,6 +1,7 @@
 import type { ToolCallResult, ToolGateway } from "@beacon/core/ports/tool-gateway";
 
 import { assertToolAllowed, resolveAllowedTools } from "./allowlist.js";
+import { HttpMcpTransport } from "./http-transport.js";
 import type { McpTransport } from "./transport.js";
 import { parseToolArgs } from "./validate.js";
 
@@ -32,4 +33,30 @@ export function createToolGateway(options: CreateToolGatewayOptions): ToolGatewa
       };
     },
   };
+}
+
+export interface CreateHttpToolGatewayOptions {
+  /** URL del endpoint `POST /mcp` de mcp-ops. */
+  url: string;
+  /** Bearer de servicio; nunca es una credencial de usuario. */
+  token: string;
+  /** `agents.allowed_tools` resuelto server-side para este run. */
+  allowedTools: readonly string[];
+  timeoutMs?: number;
+}
+
+/**
+ * Composition del gateway sobre el transporte HTTP. La API no necesita conocer
+ * `HttpMcpTransport` ni cómo se presenta el bearer: solo pide un gateway para la
+ * allowlist del agente.
+ */
+export function createHttpToolGateway(options: CreateHttpToolGatewayOptions): ToolGateway {
+  return createToolGateway({
+    transport: new HttpMcpTransport({
+      url: options.url,
+      token: options.token,
+      timeoutMs: options.timeoutMs,
+    }),
+    allowedTools: options.allowedTools,
+  });
 }
