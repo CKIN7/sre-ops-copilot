@@ -9,6 +9,7 @@
     "typecheck": "tsc -p tsconfig.test.json",
     "test": "vitest run",
     "start": "node --env-file-if-exists=../../.env dist/server.js",
+    "start:http": "node --env-file-if-exists=../../.env dist/http-server.js",
     "spike": "pnpm run build && node --env-file-if-exists=../../.env dist/spike/spike-client.js"
   },
   "dependencies": {
