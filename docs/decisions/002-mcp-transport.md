@@ -70,8 +70,10 @@ paquetes del SDK?
 5. **No construir sobre `Roots`, `Sampling` ni `Logging`**, ni sobre `HTTP+SSE`.
 6. `zod@4.6.7` compartido entre `core` y el SDK; sin `zod-to-json-schema`.
 
-Fuera de alcance: el endpoint HTTP de producción no se implementa en este scaffold; llega en la
-semana 2 (plan §14). El spike actual usa únicamente stdio.
+Fuera de alcance en el scaffold: la implementación inicial solo cubría stdio. El endpoint
+HTTP stateless (`POST /mcp` con bearer de servicio y `/health`) se implementó en M2
+(2026-11-19) en `packages/mcp-ops/src/http`, con tests de contrato sobre `node:http`.
+El stdio sigue siendo el transporte local y de CI.
 
 ## Consecuencias
 
@@ -83,7 +85,7 @@ semana 2 (plan §14). El spike actual usa únicamente stdio.
   la UI; el SDK v2 es más nuevo que el paraguas 1.x y se fija con versión exacta.
 - **Seguimiento:**
   - Semana 2: transporte HTTP con tests de `HeaderMismatch`, versión de protocolo y ausencia de
-    sesión.
+    sesión. **Hecho en M2:** `packages/mcp-ops/test/http.contract.test.ts`.
   - Revisar en cada subida de SDK que la revisión fijada sigue soportada y que zod sigue en la
     misma major.
   - Antes de que expire la ventana de SEP-2577, confirmar que no quedó ninguna dependencia de
