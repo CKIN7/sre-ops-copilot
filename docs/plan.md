@@ -547,6 +547,10 @@ siendo la del §22.7: no se abre el hito siguiente hasta cerrar el actual.
 | M7 | `SandboxExecutor` (kind) + suite de contrato + deploy público con `DEMO_MODE` + circuit breaker | 6/6 contrato real; demo pública con techo de gasto y fallback a replay |
 | M8 | Runbook + simulacro de incidente + postmortem + README/ADRs/honestidad + benchmark + vídeo | Un desconocido entiende el proyecto en 5 min y no puede abusar de la demo |
 
+**Estado (2026-11-19):** M1 y M2 cerrados. M2 se verificó con un run real por CLI: la
+timeline (steps y tool calls) quedó en Postgres y el CLI la leyó de vuelta por la API.
+Siguiente: M3.
+
 **Recortes si vas justo:** terceros MCP, SSO, `DemoStackExecutor`, multi-región,
 `query_readonly_sql`.
 **Nunca recortes:** evals, aprobaciones, audit, presupuesto, `SimulatedExecutor` con fallos.

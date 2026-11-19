@@ -61,7 +61,8 @@ expand/contract y backup, según devops).
   tipos; cuando entre Drizzle ORM habrá que vigilar el drift entre las definiciones TS y el SQL
   (se mitigará con un test de contrato contra `information_schema`).
 - **Seguimiento:**
-  - Test de contrato de esquema cuando exista Drizzle ORM.
+  - **Hecho en M2:** `apps/api/test/schema.contract.test.ts` compara las columnas del
+    control plane entre el schema Drizzle y `information_schema`.
   - Job `migrations` en CI cuando exista CI (devops.md ya lo exige).
   - Revisitar `drizzle-kit` si el esquema supera ~15 tablas o entra más de una persona.
 

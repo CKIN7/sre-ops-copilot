@@ -61,7 +61,7 @@ function finalAnswer(observations: Observation[]): FinalAnswer {
     evidence.push(`get_deploys checkout: version mas reciente ${deploy}`);
   }
   if (runbooks !== null) {
-    evidence.push(`search_runbooks "rollback checkout": ${runbooks} coincidencias`);
+    evidence.push(`search_runbooks "rollback": ${runbooks} coincidencias`);
   }
   if (evidence.length === 0) {
     evidence.push("las tools no devolvieron datos en las ventanas consultadas");
@@ -117,7 +117,7 @@ export class MockModel implements Model {
         return {
           type: "tool_call",
           tool: "search_runbooks",
-          args: { query: "rollback checkout" },
+          args: { query: "rollback" },
           rationale: "buscar el procedimiento aprobado antes de proponer nada",
         };
       default:
