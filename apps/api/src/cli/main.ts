@@ -1,6 +1,6 @@
 import { ApiClient } from "./client.js";
 import { parseCliArgs, USAGE, type CliArgs } from "./args.js";
-import { formatRunResult, formatTimeline } from "./format.js";
+import { formatAuditVerification, formatRunResult, formatTimeline } from "./format.js";
 
 const DEFAULT_API_URL = "http://127.0.0.1:3000";
 
@@ -67,6 +67,31 @@ async function timelineCommand(
 }
 
 /**
+ * Verificación de la cadena de audit (ADR-012). Devuelve 1 si la cadena está rota:
+ * una manipulación detectada es un fallo del sistema, no un aviso.
+ */
+async function auditCommand(
+  args: CliArgs,
+  client: ApiClient,
+  options: RunCliOptions,
+): Promise<number> {
+  if (args.subcommand !== "verify") {
+    options.io.writeError(`subcomando desconocido: ${args.subcommand ?? "(ninguno)"}\n\n${USAGE}`);
+    return 2;
+  }
+
+  const verification = await client.verifyAudit();
+
+  options.io.write(
+    args.json
+      ? `${JSON.stringify(verification, null, 2)}\n`
+      : formatAuditVerification(verification),
+  );
+
+  return verification.ok ? 0 : 1;
+}
+
+/**
  * Punto de entrada testeable: recibe argv, entorno, fetch e IO. `cli.ts` solo
  * conecta esto con el proceso; ningún test necesita spawnear un servidor.
  */
@@ -103,6 +128,8 @@ export async function runCli(options: RunCliOptions): Promise<number> {
         return await runCommand(args, client, options);
       case "timeline":
         return await timelineCommand(args, client, options);
+      case "audit":
+        return await auditCommand(args, client, options);
       default:
         options.io.writeError(`comando desconocido: ${args.command}\n\n${USAGE}`);
         return 2;
