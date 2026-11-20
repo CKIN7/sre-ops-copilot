@@ -14,14 +14,15 @@ nada ni arruinarla.
 
 ## Estado
 
-**M2 cerrado (2026-11-19).** `mcp-ops` sirve las 10 tools de lectura por stdio y
-Streamable HTTP con bearer de servicio; el gateway aplica allowlist y validación; el
-orquestador v0 ejecuta runs con write-ahead; la API y el CLI producen la timeline en
-Postgres. El único modelo es `mock` guionizado: no hay LLM, tokens ni coste.
+**M3 cerrado (2026-11-20).** `mcp-ops` sirve las 10 tools de lectura por stdio y
+Streamable HTTP con bearer de servicio; el gateway aplica allowlist, validación, rate
+limit con ventana deslizante, redacción y audit encadenado por hash; el orquestador v0
+ejecuta runs con write-ahead; la API y el CLI producen la timeline en Postgres y
+verifican la cadena de audit (`beacon audit verify`). El único modelo es `mock`
+guionizado: no hay LLM, tokens ni coste.
 
-Lo que sigue es M3 (rate limit, secretos, audit) y M4 (dos fases, aprobaciones, UI). No
-inventar módulos, scripts ni cifras que no existan; si algo no está implementado,
-decirlo.
+Lo que sigue es M4 (dos fases, aprobaciones, UI) y M5 (evals). No inventar módulos,
+scripts ni cifras que no existan; si algo no está implementado, decirlo.
 
 ## Stack
 
