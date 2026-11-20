@@ -547,9 +547,33 @@ siendo la del §22.7: no se abre el hito siguiente hasta cerrar el actual.
 | M7 | `SandboxExecutor` (kind) + suite de contrato + deploy público con `DEMO_MODE` + circuit breaker | 6/6 contrato real; demo pública con techo de gasto y fallback a replay |
 | M8 | Runbook + simulacro de incidente + postmortem + README/ADRs/honestidad + benchmark + vídeo | Un desconocido entiende el proyecto en 5 min y no puede abusar de la demo |
 
-**Estado (2026-11-19):** M1 y M2 cerrados. M2 se verificó con un run real por CLI: la
+**Estado (2026-11-20):** M1, M2 y M3 cerrados. M2 se verificó con un run real por CLI: la
 timeline (steps y tool calls) quedó en Postgres y el CLI la leyó de vuelta por la API.
-Siguiente: M3.
+
+M3 se verificó con un run real y una comprobación de integridad:
+
+- El gateway aplica allowlist, validación, rate limit (ventana deslizante de tres
+  ámbitos en Postgres), redacción y audit. La allowlist, la validación y la redacción
+  ya existían; M3 añade el rate limit, el audit encadenado por hash y la suite de
+  políticas.
+- `audit_log` es append-only en la base (trigger) y encadenado por hash: `prev_hash` +
+  `hash` sobre una serialización canónica. Una fila insertada con un hash falso rompe
+  la cadena y el verificador dice dónde.
+- El payload auditado va redactado y solo se persiste su hash: un email, una IP o un
+  token no llegan a la tabla, ni cifrados.
+- El gateway falla cerrado: si el audit no está disponible, la tool no se invoca.
+- Verificación reproducible: `pnpm cli audit verify` (sale con `1` si la cadena está
+  rota) y `GET /audit/verify`.
+- La suite de políticas vive en `packages/gateway/test/policy.test.ts`: cada regla del
+  gateway tiene su caso, y el archivo es el inventario.
+
+Decisiones: ADR-003 (gateway como punto único de enforcement) y ADR-012 (audit
+encadenado y rate limit). Siguiente: M4 (dos fases, aprobaciones, UI).
+
+**Pendiente de M3 (no cerrado):** el intercambio de tokens (OAuth on-behalf-of) no
+existe, porque todavía no hay MCP de terceros a los que autenticarse. Lo que sí está
+resuelto es que el bearer de servicio nunca viaja en los argumentos, en el contexto ni
+en la auditoría.
 
 **Recortes si vas justo:** terceros MCP, SSO, `DemoStackExecutor`, multi-región,
 `query_readonly_sql`.
