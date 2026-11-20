@@ -1,4 +1,5 @@
 import type { RunTimeline } from "@beacon/core/domain/runs";
+import type { AuditChainVerification } from "@beacon/core/ports/audit-log";
 import type { RunResult } from "@beacon/orchestrator/orchestrator";
 
 const REQUEST_TIMEOUT_MS = 120_000;
@@ -61,6 +62,11 @@ export class ApiClient {
       `/runs/${encodeURIComponent(runId)}`,
       { method: "GET" },
     )) as RunTimeline;
+  }
+
+  /** Verifica la cadena de audit: recalcula los hashes y devuelve el veredicto. */
+  async verifyAudit(): Promise<AuditChainVerification> {
+    return (await this.#request("/audit/verify", { method: "GET" })) as AuditChainVerification;
   }
 
   async #request(path: string, init: RequestInitBody): Promise<unknown> {
