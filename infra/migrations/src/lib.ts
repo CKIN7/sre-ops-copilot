@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 export const MIGRATION_FILE_PATTERN = /^\d{4}_[a-z0-9-]+\.sql$/;
 
 export function isMigrationFile(fileName: string): boolean {
@@ -19,4 +21,30 @@ export function sortMigrationFiles(files: readonly string[]): string[] {
  */
 export function findNonMigrationSqlFiles(files: readonly string[]): string[] {
   return files.filter((file) => /\.sql$/i.test(file) && !isMigrationFile(file));
+}
+
+/** Normaliza los finales de línea a LF. */
+export function normalizeSql(sql: string): string {
+  return sql.replace(/\r\n/g, "\n");
+}
+
+/**
+ * Checksum del contenido normalizado a LF.
+ *
+ * El repo no fija los finales de línea con `.gitattributes`, así que el mismo archivo
+ * llega con CRLF en un checkout de Windows y con LF en CI. Hashear los bytes crudos
+ * hacía que la misma migración tuviera dos checksums distintos según la máquina, y una
+ * base ya migrada en Windows se rechazaba al validarla desde Linux (y al revés).
+ * Normalizar hace el checksum reproducible en cualquier plataforma.
+ */
+export function checksumOf(sql: string): string {
+  return createHash("sha256").update(normalizeSql(sql), "utf8").digest("hex");
+}
+
+/**
+ * Checksum de los bytes tal cual están en disco. Solo sirve para reconocer bases
+ * migradas antes de la normalización: el runner las acepta y reescribe su checksum.
+ */
+export function legacyChecksumOf(sql: string): string {
+  return createHash("sha256").update(sql, "utf8").digest("hex");
 }
