@@ -4,7 +4,9 @@ import type {
   StepKind,
   ToolCallStatus,
 } from "@beacon/core/domain/runs";
+import type { AuditAction } from "@beacon/core/ports/audit-log";
 import {
+  bigint,
   integer,
   jsonb,
   pgTable,
@@ -99,4 +101,26 @@ export const toolCalls = pgTable("tool_calls", {
   idempotencyKey: text("idempotency_key"),
   createdAt: timestamptz("created_at").notNull().defaultNow(),
   finishedAt: timestamptz("finished_at"),
+});
+
+/**
+ * Espejo Drizzle de `infra/migrations/migrations/0004_audit.sql`.
+ *
+ * Solo se guardan huellas: `payload_hash` del payload redactado, `prev_hash` de la
+ * fila anterior y `hash` de la fila completa. El payload no existe en la tabla.
+ */
+export const auditLog = pgTable("audit_log", {
+  id: bigint("id", { mode: "number" })
+    .primaryKey()
+    .generatedAlwaysAsIdentity(),
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => tenants.id, { onDelete: "cascade" }),
+  actor: text("actor").notNull(),
+  action: text("action").$type<AuditAction>().notNull(),
+  target: text("target").notNull(),
+  payloadHash: text("payload_hash").notNull(),
+  prevHash: text("prev_hash").notNull(),
+  hash: text("hash").notNull(),
+  createdAt: timestamptz("created_at").notNull(),
 });
