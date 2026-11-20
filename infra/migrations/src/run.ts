@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -6,8 +5,10 @@ import { fileURLToPath } from "node:url";
 import { Client } from "pg";
 
 import {
+  checksumOf,
   findNonMigrationSqlFiles,
   isMigrationFile,
+  legacyChecksumOf,
   migrationId,
   sortMigrationFiles,
 } from "./lib.js";
@@ -18,10 +19,6 @@ const LOCK_KEY = 827_346_192;
 interface AppliedMigrationRow {
   id: string;
   checksum: string;
-}
-
-function checksumOf(sql: string): string {
-  return createHash("sha256").update(sql, "utf8").digest("hex");
 }
 
 async function main(): Promise<void> {
@@ -66,17 +63,28 @@ async function main(): Promise<void> {
 
     let appliedCount = 0;
     let skippedCount = 0;
+    let rehashedCount = 0;
     const startedAt = performance.now();
 
     for (const file of files) {
       const id = migrationId(file);
       const sql = await readFile(path.join(MIGRATIONS_DIR, file), "utf8");
       const checksum = checksumOf(sql);
+      const legacyChecksum = legacyChecksumOf(sql);
       const previous = applied.get(id);
 
       if (previous !== undefined) {
         if (previous !== checksum) {
-          throw new Error(`checksum mismatch for already applied migration ${id}`);
+          // Bases migradas antes de normalizar guardan el checksum de los bytes
+          // crudos: se acepta y se reescribe al normalizado, sin tocar el SQL.
+          if (previous !== legacyChecksum) {
+            throw new Error(`checksum mismatch for already applied migration ${id}`);
+          }
+          await client.query("update schema_migrations set checksum = $2 where id = $1", [
+            id,
+            checksum,
+          ]);
+          rehashedCount += 1;
         }
         skippedCount += 1;
         console.log(`skip  ${id}`);
@@ -102,9 +110,8 @@ async function main(): Promise<void> {
     }
 
     console.log(
-      `migrations: ${appliedCount} aplicadas, ${skippedCount} omitidas en ${(
-        performance.now() - startedAt
-      ).toFixed(0)} ms`,
+      `migrations: ${appliedCount} aplicadas, ${skippedCount} omitidas, ` +
+        `${rehashedCount} rehasheadas en ${(performance.now() - startedAt).toFixed(0)} ms`,
     );
   } finally {
     await client.query("select pg_advisory_unlock($1::bigint)", [LOCK_KEY]).catch(() => undefined);
