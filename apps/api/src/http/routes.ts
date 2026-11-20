@@ -1,4 +1,5 @@
 import { AppError } from "@beacon/core/errors/app-error";
+import type { AuditLog } from "@beacon/core/ports/audit-log";
 import { createRunInputSchema } from "@beacon/core/schemas/runs";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
@@ -20,6 +21,7 @@ const runParamsSchema = z.object({ id: z.uuid() });
 export interface RouteDeps {
   authenticate: Authenticator;
   directory: PrincipalDirectory;
+  audit: AuditLog;
   service: RunService;
 }
 
@@ -62,5 +64,21 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
 
     const { id } = parseOrThrow(runParamsSchema, request.params);
     return deps.service.timeline(id, resolved.principal.tenantId);
+  });
+
+  /**
+   * Verificación de la cadena de audit (ADR-012): recalcula cada hash y comprueba el
+   * enlace con la fila anterior. Es la prueba de que la historia no fue reescrita.
+   */
+  app.get("/audit/verify", async (request) => {
+    const selection = deps.authenticate(request.headers.authorization);
+    const resolved = await deps.directory.resolve(selection);
+    if (!resolved) {
+      throw new AppError("forbidden", "token is not bound to an active principal", {
+        statusCode: 403,
+      });
+    }
+
+    return deps.audit.verify();
   });
 }
