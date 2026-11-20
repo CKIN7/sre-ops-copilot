@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { createToolGateway } from "../src/gateway.js";
 import type { McpTransport } from "../src/transport.js";
 import { FakeAuditLog } from "./support/fake-audit.js";
+import { FakeRateLimiter } from "./support/fake-rate-limiter.js";
 
 const CONTEXT: ToolCallContext = {
   tenantId: "00000000-0000-4000-8000-000000000001",
@@ -26,7 +27,7 @@ function recordingTransport(options: { throws?: boolean } = {}): {
       async callTool(request) {
         calls.push(request.name);
         if (options.throws) {
-          throw new Error("upstream caído");
+          throw new Error("upstream caÃ­do");
         }
         return { ok: true };
       },
@@ -34,14 +35,15 @@ function recordingTransport(options: { throws?: boolean } = {}): {
   };
 }
 
-describe("política de audit del gateway", () => {
-  it("audita la decisión antes de invocar la tool", async () => {
+describe("polÃ­tica de audit del gateway", () => {
+  it("audita la decisiÃ³n antes de invocar la tool", async () => {
     const audit = new FakeAuditLog();
     const { transport, calls } = recordingTransport();
     const gateway = createToolGateway({
       transport,
       allowedTools: ["list_services"],
       audit,
+      rateLimiter: new FakeRateLimiter(),
       actor: ACTOR,
     });
 
@@ -63,13 +65,14 @@ describe("política de audit del gateway", () => {
     });
   });
 
-  it("audita la denegación y no llama al transporte", async () => {
+  it("audita la denegaciÃ³n y no llama al transporte", async () => {
     const audit = new FakeAuditLog();
     const { transport, calls } = recordingTransport();
     const gateway = createToolGateway({
       transport,
       allowedTools: ["list_services"],
       audit,
+      rateLimiter: new FakeRateLimiter(),
       actor: ACTOR,
     });
 
@@ -81,13 +84,14 @@ describe("política de audit del gateway", () => {
     expect(audit.entries.map((entry) => entry.action)).toEqual(["tool.call.denied"]);
   });
 
-  it("audita los argumentos inválidos como denegación", async () => {
+  it("audita los argumentos invÃ¡lidos como denegaciÃ³n", async () => {
     const audit = new FakeAuditLog();
     const { transport, calls } = recordingTransport();
     const gateway = createToolGateway({
       transport,
       allowedTools: ["query_metrics"],
       audit,
+      rateLimiter: new FakeRateLimiter(),
       actor: ACTOR,
     });
 
@@ -110,6 +114,7 @@ describe("política de audit del gateway", () => {
       transport,
       allowedTools: ["list_services"],
       audit,
+      rateLimiter: new FakeRateLimiter(),
       actor: ACTOR,
     });
 
@@ -128,10 +133,11 @@ describe("política de audit del gateway", () => {
       transport,
       allowedTools: ["search_logs"],
       audit,
+      rateLimiter: new FakeRateLimiter(),
       actor: ACTOR,
     });
 
-    // Un query de logs puede traer PII: la redacción ocurre antes de persistir.
+    // Un query de logs puede traer PII: la redacciÃ³n ocurre antes de persistir.
     await gateway.call(
       "search_logs",
       {
@@ -149,7 +155,7 @@ describe("política de audit del gateway", () => {
     expect(payload).toContain("[redacted:secret]");
   });
 
-  it("falla cerrado: si el audit no está disponible, la tool no se invoca", async () => {
+  it("falla cerrado: si el audit no estÃ¡ disponible, la tool no se invoca", async () => {
     const audit = new FakeAuditLog();
     audit.unavailable = true;
     const { transport, calls } = recordingTransport();
@@ -157,6 +163,7 @@ describe("política de audit del gateway", () => {
       transport,
       allowedTools: ["list_services"],
       audit,
+      rateLimiter: new FakeRateLimiter(),
       actor: ACTOR,
     });
 
@@ -166,7 +173,7 @@ describe("política de audit del gateway", () => {
     expect(calls).toHaveLength(0);
   });
 
-  it("mantiene la denegación aunque no se pueda auditar", async () => {
+  it("mantiene la denegaciÃ³n aunque no se pueda auditar", async () => {
     const audit = new FakeAuditLog();
     audit.unavailable = true;
     const errors: unknown[] = [];
@@ -175,6 +182,7 @@ describe("política de audit del gateway", () => {
       transport,
       allowedTools: ["list_services"],
       audit,
+      rateLimiter: new FakeRateLimiter(),
       actor: ACTOR,
       onError: (error) => errors.push(error),
     });
