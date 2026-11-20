@@ -2,6 +2,7 @@ import { AppError } from "@beacon/core/errors/app-error";
 import type { AuditEntry, AuditLog } from "@beacon/core/ports/audit-log";
 import type { RateLimiter } from "@beacon/core/ports/rate-limiter";
 import type { ToolCallResult, ToolGateway } from "@beacon/core/ports/tool-gateway";
+import { redactValue } from "@beacon/core/redaction/redact";
 
 import { assertToolAllowed, resolveAllowedTools } from "./allowlist.js";
 import { buildAuditEntry } from "./audit.js";
@@ -133,12 +134,17 @@ export function createToolGateway(options: CreateToolGatewayOptions): ToolGatewa
 
       const startedAt = performance.now();
       try {
-        const result = await options.transport.callTool({ name: tool, args: parsed });
+        const raw = await options.transport.callTool({ name: tool, args: parsed });
         const latencyMs = Math.max(0, Math.round(performance.now() - startedAt));
+
+        // Defensa en profundidad: las tools ya redactan, pero el gateway no confía
+        // en ese contrato. Lo que sale hacia el modelo y hacia el audit va redactado.
+        const result = redactValue(raw);
 
         await auditCall("tool.call.result", tool, context, {
           args: parsed,
           latency_ms: latencyMs,
+          result,
         });
 
         return { result, latencyMs };
