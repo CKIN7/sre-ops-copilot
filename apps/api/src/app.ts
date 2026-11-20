@@ -2,6 +2,7 @@ import { AppError } from "@beacon/core/errors/app-error";
 import type { Model } from "@beacon/core/ports/model";
 import type { RunStore } from "@beacon/core/ports/run-store";
 import type { AuditLog } from "@beacon/core/ports/audit-log";
+import type { RateLimiter } from "@beacon/core/ports/rate-limiter";
 import { createHttpToolGateway } from "@beacon/gateway";
 import {
   MOCK_MODEL_ID,
@@ -23,6 +24,7 @@ import {
 } from "./application/run-service.js";
 import { createDb, type DbHandle } from "./adapters/db.js";
 import { DrizzleAuditLog } from "./adapters/audit-log.js";
+import { DrizzleRateLimiter } from "./adapters/rate-limiter.js";
 import { DrizzlePrincipalDirectory } from "./adapters/principal-directory.js";
 import { DrizzleRunStore } from "./adapters/run-store.js";
 import type { ApiConfig } from "./config.js";
@@ -39,6 +41,8 @@ export interface CreateAppOptions {
   directory?: PrincipalDirectory;
   /** Inyectable para tests; si falta, se construye sobre Postgres. */
   audit?: AuditLog;
+  /** Inyectable para tests; si falta, se construye sobre Postgres. */
+  rateLimiter?: RateLimiter;
   gatewayFactory?: GatewayFactory;
 }
 
@@ -74,19 +78,22 @@ export function createApp(options: CreateAppOptions): AppHandle {
   let store = options.store;
   let directory = options.directory;
   let audit = options.audit;
+  let rateLimiter = options.rateLimiter;
 
-  if (!store || !directory || !audit) {
+  if (!store || !directory || !audit || !rateLimiter) {
     dbHandle = createDb(config.databaseUrl);
     store ??= new DrizzleRunStore(dbHandle.db);
     directory ??= new DrizzlePrincipalDirectory(dbHandle.db);
     audit ??= new DrizzleAuditLog(dbHandle.db);
+    rateLimiter ??= new DrizzleRateLimiter(dbHandle.db, config.rateLimit);
   }
 
-  if (!store || !directory || !audit) {
+  if (!store || !directory || !audit || !rateLimiter) {
     throw new AppError("internal", "app dependencies are incomplete");
   }
 
   const auditLog = audit;
+  const limiter = rateLimiter;
   const gatewayFactory: GatewayFactory =
     options.gatewayFactory ??
     ((agent) =>
@@ -95,6 +102,7 @@ export function createApp(options: CreateAppOptions): AppHandle {
         token: config.mcpAuthToken,
         allowedTools: agent.allowedTools,
         audit: auditLog,
+        rateLimiter: limiter,
         actor: `agent:${agent.name}`,
       }));
 
