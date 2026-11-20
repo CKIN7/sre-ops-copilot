@@ -26,6 +26,7 @@ export class DrizzlePrincipalDirectory implements PrincipalDirectory {
         tenantId: tenants.id,
         userId: users.id,
         agentId: agents.id,
+        agentName: agents.name,
         model: agents.model,
         promptVersion: agents.promptVersion,
         allowedTools: agents.allowedTools,
@@ -53,6 +54,7 @@ export class DrizzlePrincipalDirectory implements PrincipalDirectory {
         agentId: row.agentId,
       },
       agent: {
+        name: row.agentName,
         model: row.model,
         promptVersion: row.promptVersion,
         allowedTools: row.allowedTools,

@@ -3,6 +3,7 @@ import { parseArgs } from "node:util";
 export interface CliArgs {
   command: string | undefined;
   runId: string | undefined;
+  subcommand: string | undefined;
   goal: string | undefined;
   json: boolean;
   api: string | undefined;
@@ -11,7 +12,7 @@ export interface CliArgs {
 }
 
 /**
- * Solo dos comandos: `run` y `timeline`. `parseArgs` en modo estricto para que
+ * Tres comandos: `run`, `timeline` y `audit`. `parseArgs` en modo estricto para que
  * un typo falle en vez de ignorarse en silencio.
  */
 export function parseCliArgs(argv: string[]): CliArgs {
@@ -31,6 +32,9 @@ export function parseCliArgs(argv: string[]): CliArgs {
   return {
     command: positionals[0],
     runId: positionals[1],
+    // `beacon audit verify` usa el segundo posicionable para el subcomando; `timeline`
+    // lo usa para el id del run. El subcomando se decide por el comando, no por la posicion.
+    subcommand: positionals[0] === "audit" ? positionals[1] : positionals[2],
     goal: values.goal,
     json: values.json,
     api: values.api,
@@ -42,6 +46,7 @@ export function parseCliArgs(argv: string[]): CliArgs {
 export const USAGE = `Uso:
   beacon run --goal "<objetivo>" [--json] [--api URL] [--token TOKEN]
   beacon timeline <runId> [--json] [--api URL] [--token TOKEN]
+  beacon audit verify [--json] [--api URL] [--token TOKEN]
 
 Variables de entorno:
   BEACON_API_URL   URL de la API (por defecto http://127.0.0.1:3000)

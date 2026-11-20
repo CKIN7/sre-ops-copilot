@@ -63,6 +63,14 @@
     "./ports/action-executor": {
       "types": "./dist/ports/action-executor.d.ts",
       "default": "./dist/ports/action-executor.js"
+    },
+    "./ports/audit-log": {
+      "types": "./dist/ports/audit-log.d.ts",
+      "default": "./dist/ports/audit-log.js"
+    },
+    "./ports/rate-limiter": {
+      "types": "./dist/ports/rate-limiter.d.ts",
+      "default": "./dist/ports/rate-limiter.js"
     }
   },
   "files": ["dist"],

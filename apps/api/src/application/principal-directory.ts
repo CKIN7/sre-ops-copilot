@@ -9,6 +9,8 @@ export interface PrincipalSelection {
 
 /** Configuración del agente necesaria para ejecutar un run. */
 export interface AgentBinding {
+  /** Nombre del agente en el control plane; es lo que se audita (`agent:<nombre>`). */
+  name: string;
   model: string;
   promptVersion: string;
   allowedTools: readonly string[];

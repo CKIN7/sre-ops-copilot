@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 
+import type { RateLimitPolicy } from "@beacon/core/ports/rate-limiter";
 import { z } from "zod";
 
 import type { PrincipalSelection } from "./application/principal-directory.js";
@@ -24,6 +25,11 @@ const envSchema = z.object({
   AUTH_TOKENS_JSON: z.string().min(2),
   MCP_URL: z.url(),
   MCP_AUTH_TOKEN: z.string().min(32),
+  // Rate limit del gateway (docs/plan.md §4.4): ventana deslizante por run, tenant y tool.
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().int().min(1_000).max(3_600_000).default(60_000),
+  RATE_LIMIT_RUN: z.coerce.number().int().min(1).default(60),
+  RATE_LIMIT_TENANT: z.coerce.number().int().min(1).default(600),
+  RATE_LIMIT_TOOL: z.coerce.number().int().min(1).default(120),
 });
 
 /**
@@ -53,6 +59,7 @@ export interface ApiConfig {
   mcpUrl: string;
   mcpAuthToken: string;
   tokens: readonly ResolvedAuthToken[];
+  rateLimit: RateLimitPolicy;
 }
 
 function formatIssues(error: z.ZodError): string {
@@ -103,5 +110,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     mcpUrl: parsed.data.MCP_URL,
     mcpAuthToken: parsed.data.MCP_AUTH_TOKEN,
     tokens: parseAuthTokens(parsed.data.AUTH_TOKENS_JSON),
+    rateLimit: {
+      run: parsed.data.RATE_LIMIT_RUN,
+      tenant: parsed.data.RATE_LIMIT_TENANT,
+      tool: parsed.data.RATE_LIMIT_TOOL,
+      windowMs: parsed.data.RATE_LIMIT_WINDOW_MS,
+    },
   };
 }

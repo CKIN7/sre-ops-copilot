@@ -310,4 +310,68 @@ describe("runCli", () => {
     expect(exitCode).toBe(2);
     expect(output.read().stderr).toContain("comando desconocido: deploy");
   });
+
+  it("verifica la cadena de audit con el comando audit verify", async () => {
+    const calls: RecordedCall[] = [];
+    const fetchImpl: typeof fetch = async (input, init) => {
+      calls.push({
+        url: typeof input === "string" ? input : input.toString(),
+        init,
+      });
+      return jsonResponse({ ok: true, entries: 6, brokenAt: null, reason: null });
+    };
+    const output = capture();
+
+    const exitCode = await runCli({
+      argv: ["audit", "verify"],
+      env: { BEACON_API_URL: "http://api.test", BEACON_TOKEN: "operator-token" },
+      fetch: fetchImpl,
+      io: output.io,
+    });
+
+    expect(exitCode).toBe(0);
+    expect(calls.map((call) => call.url)).toEqual(["http://api.test/audit/verify"]);
+    expect(output.read().stdout).toContain("cadena intacta (6 entradas verificadas)");
+  });
+
+  it("sale con 1 si la cadena de audit esta rota", async () => {
+    const fetchImpl: typeof fetch = async () =>
+      jsonResponse({
+        ok: false,
+        entries: 6,
+        brokenAt: "5",
+        reason: "prev_hash no enlaza con la fila anterior",
+      });
+    const output = capture();
+
+    const exitCode = await runCli({
+      argv: ["audit", "verify"],
+      env: { BEACON_API_URL: "http://api.test", BEACON_TOKEN: "operator-token" },
+      fetch: fetchImpl,
+      io: output.io,
+    });
+
+    expect(exitCode).toBe(1);
+    expect(output.read().stdout).toContain("CADENA ROTA");
+  });
+
+  it("rechaza un subcomando de audit desconocido con 2", async () => {
+    const calls: string[] = [];
+    const fetchImpl: typeof fetch = async (input) => {
+      calls.push(typeof input === "string" ? input : input.toString());
+      return jsonResponse({});
+    };
+    const output = capture();
+
+    const exitCode = await runCli({
+      argv: ["audit", "rehash"],
+      env: { BEACON_TOKEN: "operator-token" },
+      fetch: fetchImpl,
+      io: output.io,
+    });
+
+    expect(exitCode).toBe(2);
+    expect(output.read().stderr).toContain("subcomando desconocido: rehash");
+    expect(calls).toEqual([]);
+  });
 });

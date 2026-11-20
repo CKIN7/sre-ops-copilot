@@ -4,7 +4,9 @@ import type {
   StepKind,
   ToolCallStatus,
 } from "@beacon/core/domain/runs";
+import type { AuditAction } from "@beacon/core/ports/audit-log";
 import {
+  bigint,
   integer,
   jsonb,
   pgTable,
@@ -99,4 +101,44 @@ export const toolCalls = pgTable("tool_calls", {
   idempotencyKey: text("idempotency_key"),
   createdAt: timestamptz("created_at").notNull().defaultNow(),
   finishedAt: timestamptz("finished_at"),
+});
+
+/**
+ * Espejo Drizzle de `infra/migrations/migrations/0004_audit.sql`.
+ *
+ * Solo se guardan huellas: `payload_hash` del payload redactado, `prev_hash` de la
+ * fila anterior y `hash` de la fila completa. El payload no existe en la tabla.
+ */
+export const auditLog = pgTable("audit_log", {
+  id: bigint("id", { mode: "number" })
+    .primaryKey()
+    .generatedAlwaysAsIdentity(),
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => tenants.id, { onDelete: "cascade" }),
+  actor: text("actor").notNull(),
+  action: text("action").$type<AuditAction>().notNull(),
+  target: text("target").notNull(),
+  payloadHash: text("payload_hash").notNull(),
+  prevHash: text("prev_hash").notNull(),
+  hash: text("hash").notNull(),
+  createdAt: timestamptz("created_at").notNull(),
+});
+
+/**
+ * Espejo Drizzle de `infra/migrations/migrations/0005_rate_limit.sql`.
+ *
+ * Una fila por tool call aceptada; el límite se evalúa contando las filas de la
+ * ventana deslizante.
+ */
+export const rateLimitEvents = pgTable("rate_limit_events", {
+  id: bigint("id", { mode: "number" })
+    .primaryKey()
+    .generatedAlwaysAsIdentity(),
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => tenants.id, { onDelete: "cascade" }),
+  runId: uuid("run_id").references(() => runs.id, { onDelete: "cascade" }),
+  tool: text("tool").notNull(),
+  createdAt: timestamptz("created_at").notNull().defaultNow(),
 });
