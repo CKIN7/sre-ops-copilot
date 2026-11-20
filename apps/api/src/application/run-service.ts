@@ -8,7 +8,7 @@ import { Orchestrator, type RunResult } from "@beacon/orchestrator/orchestrator"
 
 import type { AgentBinding } from "./principal-directory.js";
 
-export type GatewayFactory = (allowedTools: readonly string[]) => ToolGateway;
+export type GatewayFactory = (agent: AgentBinding) => ToolGateway;
 
 export type ModelFactory = (agent: AgentBinding) => Model;
 
@@ -39,7 +39,7 @@ export class RunService {
   async start(command: StartRunCommand): Promise<RunResult> {
     const orchestrator = new Orchestrator({
       model: this.#deps.createModel(command.agent),
-      gateway: this.#deps.createGateway(command.agent.allowedTools),
+      gateway: this.#deps.createGateway(command.agent),
       store: this.#deps.store,
     });
 
