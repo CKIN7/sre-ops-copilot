@@ -32,7 +32,9 @@ export function parseCliArgs(argv: string[]): CliArgs {
   return {
     command: positionals[0],
     runId: positionals[1],
-    subcommand: positionals[2],
+    // `beacon audit verify` usa el segundo posicionable para el subcomando; `timeline`
+    // lo usa para el id del run. El subcomando se decide por el comando, no por la posicion.
+    subcommand: positionals[0] === "audit" ? positionals[1] : positionals[2],
     goal: values.goal,
     json: values.json,
     api: values.api,
