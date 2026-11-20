@@ -8,11 +8,13 @@ import type { RunResult } from "@beacon/orchestrator/orchestrator";
 import { describe, expect, it } from "vitest";
 
 import type {
+  AgentBinding,
   PrincipalDirectory,
   ResolvedPrincipal,
 } from "../src/application/principal-directory.js";
 import { createApp } from "../src/app.js";
 import { loadConfig } from "../src/config.js";
+import { MemoryAuditLog } from "./support/memory-audit-log.js";
 import { MemoryRunStore } from "./support/memory-run-store.js";
 
 const TOKEN = "test-operator-token-0123456789abcdef";
@@ -41,6 +43,7 @@ const RESOLVED: ResolvedPrincipal = {
     agentId: "33333333-3333-4333-8333-333333333333",
   },
   agent: {
+    name: "incident-copilot",
     model: MOCK_MODEL_ID,
     promptVersion: MOCK_PROMPT_VERSION,
     allowedTools: ALLOWED_TOOLS,
@@ -75,10 +78,12 @@ function toolResult(tool: string): unknown {
 
 function buildApp(overrides: { directory?: PrincipalDirectory; store?: MemoryRunStore } = {}) {
   const store = overrides.store ?? new MemoryRunStore();
+  const audit = new MemoryAuditLog();
   const calls: string[] = [];
 
-  const gatewayFactory = (allowedTools: readonly string[]): ToolGateway => {
-    expect(allowedTools).toEqual([...ALLOWED_TOOLS]);
+  const gatewayFactory = (agent: AgentBinding): ToolGateway => {
+    expect(agent.allowedTools).toEqual([...ALLOWED_TOOLS]);
+    expect(agent.name).toBe("incident-copilot");
     return {
       async call(tool): Promise<ToolCallResult> {
         calls.push(tool);
@@ -92,10 +97,11 @@ function buildApp(overrides: { directory?: PrincipalDirectory; store?: MemoryRun
     logger: false,
     store,
     directory: overrides.directory ?? DEFAULT_DIRECTORY,
+    audit,
     gatewayFactory,
   });
 
-  return { ...handle, store, calls };
+  return { ...handle, store, calls, audit };
 }
 
 const AUTH = { authorization: `Bearer ${TOKEN}` };
@@ -250,6 +256,26 @@ describe("API HTTP", () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.json()).toEqual({ status: "ok", service: "beacon-api" });
+    } finally {
+      await close();
+    }
+  });
+
+  it("verifica la cadena de audit solo con token válido", async () => {
+    const { app, close } = buildApp();
+
+    try {
+      const missing = await app.inject({ method: "GET", url: "/audit/verify" });
+      expect(missing.statusCode).toBe(401);
+
+      const response = await app.inject({
+        method: "GET",
+        url: "/audit/verify",
+        headers: AUTH,
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toMatchObject({ ok: true, brokenAt: null });
     } finally {
       await close();
     }
