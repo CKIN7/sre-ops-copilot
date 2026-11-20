@@ -17,6 +17,7 @@
 | 009 | Migraciones: SQL versionado en `infra/migrations` con runner propio (no `drizzle-kit`) | Aceptada |
 | 010 | `get_trace_summary` derivado de `metrics_series`; sin tabla de trazas | Aceptada |
 | 011 | Excepción de arranque: commits directos a `main` hasta cerrar la semana 1 | Caducada (cerrada con M1) |
+| 012 | Audit encadenado por hash y rate limit con ventana deslizante en Postgres | Aceptada |
 
 ## Por qué estas y no otras
 
@@ -35,6 +36,9 @@
   excepción caducó y se cerró con M1: el ruleset `main-protection` y el workflow de CI
   (`typecheck`, `lint`, `test`, `build`) ya están activos, y todo cambio entra por PR con merge
   commit.
+- **012** fija dónde vive el estado del rate limit (Postgres, con ventana deslizante real, no
+  contadores en memoria) y cómo el audit demuestra que nadie reescribió la historia: hash chain
+  con `prev_hash`, escritura serializada y verificación explícita.
 
 ## Decisiones abiertas
 
