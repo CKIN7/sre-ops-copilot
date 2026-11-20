@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { createToolGateway } from "../src/gateway.js";
 import type { McpToolRequest, McpTransport } from "../src/transport.js";
 import { FakeAuditLog } from "./support/fake-audit.js";
+import { FakeRateLimiter } from "./support/fake-rate-limiter.js";
 
 const CONTEXT: ToolCallContext = {
   tenantId: "00000000-0000-4000-8000-000000000001",
@@ -40,6 +41,7 @@ describe("createToolGateway", () => {
       transport,
       allowedTools: ["search_logs"],
       audit: new FakeAuditLog(),
+      rateLimiter: new FakeRateLimiter(),
       actor: ACTOR,
     });
 
@@ -62,6 +64,7 @@ describe("createToolGateway", () => {
       transport,
       allowedTools: ["list_services"],
       audit: new FakeAuditLog(),
+      rateLimiter: new FakeRateLimiter(),
       actor: ACTOR,
     });
 
@@ -77,22 +80,24 @@ describe("createToolGateway", () => {
       transport,
       allowedTools: ["list_services"],
       audit: new FakeAuditLog(),
+      rateLimiter: new FakeRateLimiter(),
       actor: ACTOR,
     });
 
     await expect(
-      // El modelo puede emitir cualquier string; el tipo es una promesa, no una garantía.
+      // El modelo puede emitir cualquier string; el tipo es una promesa, no una garantÃ­a.
       gateway.call("drop_table" as never, {}, CONTEXT),
     ).rejects.toBeInstanceOf(AppError);
     expect(calls).toHaveLength(0);
   });
 
-  it("rechaza argumentos inválidos antes de salir a la red", async () => {
+  it("rechaza argumentos invÃ¡lidos antes de salir a la red", async () => {
     const { transport, calls } = fakeTransport();
     const gateway = createToolGateway({
       transport,
       allowedTools: ["query_metrics"],
       audit: new FakeAuditLog(),
+      rateLimiter: new FakeRateLimiter(),
       actor: ACTOR,
     });
 
@@ -114,17 +119,19 @@ describe("createToolGateway", () => {
         transport,
         allowedTools: ["not_a_tool"],
         audit: new FakeAuditLog(),
+      rateLimiter: new FakeRateLimiter(),
         actor: ACTOR,
       }),
     ).toThrow(/unknown tools in allowlist/);
   });
 
-  it("una allowlist vacía bloquea todas las tools", async () => {
+  it("una allowlist vacÃ­a bloquea todas las tools", async () => {
     const { transport, calls } = fakeTransport();
     const gateway = createToolGateway({
       transport,
       allowedTools: [],
       audit: new FakeAuditLog(),
+      rateLimiter: new FakeRateLimiter(),
       actor: ACTOR,
     });
 
