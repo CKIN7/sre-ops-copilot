@@ -124,3 +124,21 @@ export const auditLog = pgTable("audit_log", {
   hash: text("hash").notNull(),
   createdAt: timestamptz("created_at").notNull(),
 });
+
+/**
+ * Espejo Drizzle de `infra/migrations/migrations/0005_rate_limit.sql`.
+ *
+ * Una fila por tool call aceptada; el límite se evalúa contando las filas de la
+ * ventana deslizante.
+ */
+export const rateLimitEvents = pgTable("rate_limit_events", {
+  id: bigint("id", { mode: "number" })
+    .primaryKey()
+    .generatedAlwaysAsIdentity(),
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => tenants.id, { onDelete: "cascade" }),
+  runId: uuid("run_id").references(() => runs.id, { onDelete: "cascade" }),
+  tool: text("tool").notNull(),
+  createdAt: timestamptz("created_at").notNull().defaultNow(),
+});
