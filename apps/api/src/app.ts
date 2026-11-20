@@ -1,6 +1,7 @@
 import { AppError } from "@beacon/core/errors/app-error";
 import type { Model } from "@beacon/core/ports/model";
 import type { RunStore } from "@beacon/core/ports/run-store";
+import type { AuditLog } from "@beacon/core/ports/audit-log";
 import { createHttpToolGateway } from "@beacon/gateway";
 import {
   MOCK_MODEL_ID,
@@ -21,6 +22,7 @@ import {
   type GatewayFactory,
 } from "./application/run-service.js";
 import { createDb, type DbHandle } from "./adapters/db.js";
+import { DrizzleAuditLog } from "./adapters/audit-log.js";
 import { DrizzlePrincipalDirectory } from "./adapters/principal-directory.js";
 import { DrizzleRunStore } from "./adapters/run-store.js";
 import type { ApiConfig } from "./config.js";
@@ -35,6 +37,8 @@ export interface CreateAppOptions {
   /** Inyectables para tests; si faltan, se construyen sobre Postgres. */
   store?: RunStore;
   directory?: PrincipalDirectory;
+  /** Inyectable para tests; si falta, se construye sobre Postgres. */
+  audit?: AuditLog;
   gatewayFactory?: GatewayFactory;
 }
 
@@ -69,24 +73,29 @@ export function createApp(options: CreateAppOptions): AppHandle {
   let dbHandle: DbHandle | undefined;
   let store = options.store;
   let directory = options.directory;
+  let audit = options.audit;
 
-  if (!store || !directory) {
+  if (!store || !directory || !audit) {
     dbHandle = createDb(config.databaseUrl);
     store ??= new DrizzleRunStore(dbHandle.db);
     directory ??= new DrizzlePrincipalDirectory(dbHandle.db);
+    audit ??= new DrizzleAuditLog(dbHandle.db);
   }
 
-  if (!store || !directory) {
+  if (!store || !directory || !audit) {
     throw new AppError("internal", "app dependencies are incomplete");
   }
 
+  const auditLog = audit;
   const gatewayFactory: GatewayFactory =
     options.gatewayFactory ??
-    ((allowedTools) =>
+    ((agent) =>
       createHttpToolGateway({
         url: config.mcpUrl,
         token: config.mcpAuthToken,
-        allowedTools,
+        allowedTools: agent.allowedTools,
+        audit: auditLog,
+        actor: `agent:${agent.name}`,
       }));
 
   const service = new RunService({
@@ -100,6 +109,7 @@ export function createApp(options: CreateAppOptions): AppHandle {
   registerRoutes(app, {
     authenticate: createAuthenticator(config.tokens),
     directory,
+    audit: auditLog,
     service,
   });
 
