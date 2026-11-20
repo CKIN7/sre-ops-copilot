@@ -1,4 +1,5 @@
 import type { RunTimeline } from "@beacon/core/domain/runs";
+import type { AuditChainVerification } from "@beacon/core/ports/audit-log";
 import type { RunResult } from "@beacon/orchestrator/orchestrator";
 
 export function formatRunResult(result: RunResult): string {
@@ -49,4 +50,21 @@ export function formatTimeline(timeline: RunTimeline): string {
   }
 
   return `${lines.join("\n")}\n`;
+}
+
+/**
+ * Veredicto de la cadena de audit. `ok: false` sale con código de salida 1: una
+ * cadena rota es un fallo, no un aviso.
+ */
+export function formatAuditVerification(verification: AuditChainVerification): string {
+  if (verification.ok) {
+    return `audit: cadena intacta (${verification.entries} entradas verificadas)\n`;
+  }
+
+  return [
+    `audit: CADENA ROTA en la entrada ${verification.brokenAt ?? "?"}`,
+    `  motivo: ${verification.reason ?? "desconocido"}`,
+    `  entradas revisadas: ${verification.entries}`,
+    "",
+  ].join("\n");
 }
