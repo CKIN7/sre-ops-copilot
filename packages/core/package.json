@@ -63,6 +63,10 @@
     "./ports/action-executor": {
       "types": "./dist/ports/action-executor.d.ts",
       "default": "./dist/ports/action-executor.js"
+    },
+    "./ports/audit-log": {
+      "types": "./dist/ports/audit-log.d.ts",
+      "default": "./dist/ports/audit-log.js"
     }
   },
   "files": ["dist"],
