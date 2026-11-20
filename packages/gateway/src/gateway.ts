@@ -1,5 +1,6 @@
 import { AppError } from "@beacon/core/errors/app-error";
 import type { AuditEntry, AuditLog } from "@beacon/core/ports/audit-log";
+import type { RateLimiter } from "@beacon/core/ports/rate-limiter";
 import type { ToolCallResult, ToolGateway } from "@beacon/core/ports/tool-gateway";
 
 import { assertToolAllowed, resolveAllowedTools } from "./allowlist.js";
@@ -14,6 +15,8 @@ export interface CreateToolGatewayOptions {
   allowedTools: readonly string[];
   /** Audit append-only. Obligatorio: una tool call sin auditar no se ejecuta. */
   audit: AuditLog;
+  /** Rate limit con ventana deslizante. Obligatorio: sin él no hay techo. */
+  rateLimiter: RateLimiter;
   /** `agent:<nombre>` de quien actúa. */
   actor: string;
   /** Aviso de fallos no fatales (por ejemplo, no se pudo auditar una denegación). */
@@ -32,10 +35,13 @@ export interface CreateToolGatewayOptions {
  * ejecuta. Un gateway que deja pasar tool calls sin registrar es exactamente el agujero
  * que este proyecto quiere cerrar. La denegación, en cambio, se audita en segundo plano:
  * si esa escritura falla, la denegación sigue siendo denegación.
+ *
+ * El rate limit va entre la validación y la llamada: una tool denegada por límite no
+ * consume presupuesto ni llega a `mcp-ops`.
  */
 export function createToolGateway(options: CreateToolGatewayOptions): ToolGateway {
   const allowed = new Set(resolveAllowedTools(options.allowedTools));
-  const { audit, actor, onError } = options;
+  const { audit, rateLimiter, actor, onError } = options;
 
   const auditCall = async (
     action: "tool.call.allowed" | "tool.call.denied" | "tool.call.error" | "tool.call.result",
@@ -92,6 +98,36 @@ export function createToolGateway(options: CreateToolGatewayOptions): ToolGatewa
         throw error;
       }
 
+      // Rate limit antes de la auditoría y de la llamada: una llamada rechazada por
+      // límite no consume presupuesto y no sale a la red.
+      const decision = await rateLimiter.consume({
+        tenantId: context.tenantId,
+        runId: context.runId,
+        tool,
+      });
+
+      if (!decision.allowed) {
+        await auditBestEffort("tool.call.denied", tool, context, {
+          reason: "rate_limited",
+          scope: decision.scope,
+          limit: decision.limit,
+          observed: decision.observed,
+        });
+        throw new AppError(
+          "rate_limited",
+          `rate limit exceeded for ${decision.scope ?? "unknown"} scope`,
+          {
+            statusCode: 429,
+            details: {
+              scope: decision.scope,
+              limit: decision.limit,
+              observed: decision.observed,
+              retryAfterMs: decision.retryAfterMs,
+            },
+          },
+        );
+      }
+
       // La auditoría va antes de la llamada: si falla, la tool no se invoca.
       await auditCall("tool.call.allowed", tool, context, { args: parsed });
 
@@ -126,6 +162,8 @@ export interface CreateHttpToolGatewayOptions {
   allowedTools: readonly string[];
   /** Audit append-only; obligatorio para que el gateway pueda auditar. */
   audit: AuditLog;
+  /** Rate limit con ventana deslizante; obligatorio para que haya techo. */
+  rateLimiter: RateLimiter;
   /** `agent:<nombre>` de quien actúa. */
   actor: string;
   /** Aviso de fallos no fatales. */
@@ -147,6 +185,7 @@ export function createHttpToolGateway(options: CreateHttpToolGatewayOptions): To
     }),
     allowedTools: options.allowedTools,
     audit: options.audit,
+    rateLimiter: options.rateLimiter,
     actor: options.actor,
     onError: options.onError,
   });
