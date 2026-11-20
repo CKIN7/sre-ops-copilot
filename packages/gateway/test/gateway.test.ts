@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { createToolGateway } from "../src/gateway.js";
 import type { McpToolRequest, McpTransport } from "../src/transport.js";
+import { FakeAuditLog } from "./support/fake-audit.js";
 
 const CONTEXT: ToolCallContext = {
   tenantId: "00000000-0000-4000-8000-000000000001",
@@ -13,6 +14,8 @@ const CONTEXT: ToolCallContext = {
   runId: "00000000-0000-4000-8000-000000000004",
   stepIdx: 1,
 };
+
+const ACTOR = "agent:incident-copilot";
 
 function fakeTransport(result: unknown = { ok: true }): {
   transport: McpTransport;
@@ -33,7 +36,12 @@ function fakeTransport(result: unknown = { ok: true }): {
 describe("createToolGateway", () => {
   it("valida, aplica defaults y devuelve el resultado con latencia", async () => {
     const { transport, calls } = fakeTransport({ returned: 3 });
-    const gateway = createToolGateway({ transport, allowedTools: ["search_logs"] });
+    const gateway = createToolGateway({
+      transport,
+      allowedTools: ["search_logs"],
+      audit: new FakeAuditLog(),
+      actor: ACTOR,
+    });
 
     const outcome = await gateway.call(
       "search_logs",
@@ -50,7 +58,12 @@ describe("createToolGateway", () => {
 
   it("rechaza una tool fuera de la allowlist sin llamar al transporte", async () => {
     const { transport, calls } = fakeTransport();
-    const gateway = createToolGateway({ transport, allowedTools: ["list_services"] });
+    const gateway = createToolGateway({
+      transport,
+      allowedTools: ["list_services"],
+      audit: new FakeAuditLog(),
+      actor: ACTOR,
+    });
 
     await expect(gateway.call("search_logs", { service: "checkout", query: "x" }, CONTEXT)).rejects.toMatchObject(
       { code: "forbidden", statusCode: 403 },
@@ -60,7 +73,12 @@ describe("createToolGateway", () => {
 
   it("rechaza un nombre de tool desconocido aunque intente colarse", async () => {
     const { transport, calls } = fakeTransport();
-    const gateway = createToolGateway({ transport, allowedTools: ["list_services"] });
+    const gateway = createToolGateway({
+      transport,
+      allowedTools: ["list_services"],
+      audit: new FakeAuditLog(),
+      actor: ACTOR,
+    });
 
     await expect(
       // El modelo puede emitir cualquier string; el tipo es una promesa, no una garantía.
@@ -71,7 +89,12 @@ describe("createToolGateway", () => {
 
   it("rechaza argumentos inválidos antes de salir a la red", async () => {
     const { transport, calls } = fakeTransport();
-    const gateway = createToolGateway({ transport, allowedTools: ["query_metrics"] });
+    const gateway = createToolGateway({
+      transport,
+      allowedTools: ["query_metrics"],
+      audit: new FakeAuditLog(),
+      actor: ACTOR,
+    });
 
     await expect(
       gateway.call(
@@ -86,14 +109,24 @@ describe("createToolGateway", () => {
   it("falla al construirse si la allowlist tiene una tool inexistente", () => {
     const { transport } = fakeTransport();
 
-    expect(() => createToolGateway({ transport, allowedTools: ["not_a_tool"] })).toThrow(
-      /unknown tools in allowlist/,
-    );
+    expect(() =>
+      createToolGateway({
+        transport,
+        allowedTools: ["not_a_tool"],
+        audit: new FakeAuditLog(),
+        actor: ACTOR,
+      }),
+    ).toThrow(/unknown tools in allowlist/);
   });
 
   it("una allowlist vacía bloquea todas las tools", async () => {
     const { transport, calls } = fakeTransport();
-    const gateway = createToolGateway({ transport, allowedTools: [] });
+    const gateway = createToolGateway({
+      transport,
+      allowedTools: [],
+      audit: new FakeAuditLog(),
+      actor: ACTOR,
+    });
 
     await expect(gateway.call("list_services", {}, CONTEXT)).rejects.toMatchObject({
       code: "forbidden",
