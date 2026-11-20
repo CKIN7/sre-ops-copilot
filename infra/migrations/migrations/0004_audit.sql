@@ -37,9 +37,17 @@ create unique index audit_log_hash_idx on audit_log (hash);
 -- hash chain sigue siendo necesaria porque un atacante con acceso al esquema puede
 -- quitar el trigger; con las dos capas, quitar el trigger no basta para alterar el
 -- registro sin romper la cadena.
-create function audit_log_append_only() returns trigger
+--
+-- Excepción: el borrado en cascada desde el tenant (`pg_trigger_depth() > 1`) sí pasa.
+-- Borrar un tenant es una acción administrativa explícita, y encadenar sus entradas
+-- dejaría la cadena global rota sin ningún hueco que explicar.
+create or replace function audit_log_append_only() returns trigger
 language plpgsql as $$
 begin
+  if tg_op = 'DELETE' and pg_trigger_depth() > 1 then
+    return old;
+  end if;
+
   raise exception 'audit_log es append-only: % no permitido', tg_op
     using errcode = 'restrict_violation';
 end;
