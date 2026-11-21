@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import type { RateLimitPolicy } from "@beacon/core/ports/rate-limiter";
+import { parseFaults, type Fault } from "@beacon/executors/faults";
 import { z } from "zod";
 
 import type { PrincipalSelection } from "./application/principal-directory.js";
@@ -30,6 +31,11 @@ const envSchema = z.object({
   RATE_LIMIT_RUN: z.coerce.number().int().min(1).default(60),
   RATE_LIMIT_TENANT: z.coerce.number().int().min(1).default(600),
   RATE_LIMIT_TOOL: z.coerce.number().int().min(1).default(120),
+  // Ejecución de acciones (ADR-005). Solo `simulated`: el `sandbox` real llega con
+  // M7 y su suite de contrato.
+  EXECUTOR: z.enum(["simulated"]).default("simulated"),
+  // Fallos inyectados del executor: `409,timeout,partial,rate_limited,readiness`.
+  FAULTS: z.string().default(""),
 });
 
 /**
@@ -60,6 +66,10 @@ export interface ApiConfig {
   mcpAuthToken: string;
   tokens: readonly ResolvedAuthToken[];
   rateLimit: RateLimitPolicy;
+  /** Nombre del executor de acciones. */
+  executor: "simulated";
+  /** Fallos inyectados: los que se prueban, no los que se esperan. */
+  faults: Fault[];
 }
 
 function formatIssues(error: z.ZodError): string {
@@ -116,5 +126,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       tool: parsed.data.RATE_LIMIT_TOOL,
       windowMs: parsed.data.RATE_LIMIT_WINDOW_MS,
     },
+    executor: parsed.data.EXECUTOR,
+    faults: parseFaults(parsed.data.FAULTS),
   };
 }
