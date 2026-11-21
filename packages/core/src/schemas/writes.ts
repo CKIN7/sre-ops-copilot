@@ -11,6 +11,7 @@ import {
   MAX_FLAG_VALUE_LENGTH,
   MAX_REASON_LENGTH,
   MAX_SILENCE_SECONDS,
+  PROPOSAL_STATUSES,
   RISK_LEVELS,
   WRITE_KINDS,
 } from "../domain/write-tools.js";
@@ -181,3 +182,19 @@ export const actionPlanSchema = z.object({
 });
 
 export type ActionPlan = z.infer<typeof actionPlanSchema>;
+
+/**
+ * Lo que el gateway devuelve al llamante cuando la tool es de escritura: el plan
+ * más la identidad de la propuesta y de su aprobación.
+ *
+ * El estado no tiene que ser `pending_approval`: repetir la misma propuesta
+ * devuelve la que ya existe, y esa puede estar ya aprobada o ejecutada.
+ */
+export const proposalResultSchema = z.object({
+  proposal_id: z.uuid(),
+  approval_id: z.uuid(),
+  status: z.enum(PROPOSAL_STATUSES),
+  plan: actionPlanSchema,
+});
+
+export type ProposalResult = z.infer<typeof proposalResultSchema>;
