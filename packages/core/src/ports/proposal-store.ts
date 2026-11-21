@@ -1,4 +1,4 @@
-import type { RiskLevel, WriteKind } from "../domain/write-tools.js";
+import type { ProposalStatus, RiskLevel, WriteKind } from "../domain/write-tools.js";
 import type { WriteToolName } from "../schemas/writes.js";
 
 /**
@@ -12,20 +12,8 @@ import type { WriteToolName } from "../schemas/writes.js";
  * conoce esta interfaz (ADR-003, decisión 5).
  */
 
-export const PROPOSAL_STATUSES = [
-  "pending_approval",
-  "approved",
-  "rejected",
-  "applied",
-  "noop",
-  "conflict",
-  "timeout",
-  "partial",
-  "degraded",
-  "failed",
-] as const;
-
-export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number];
+export { PROPOSAL_STATUSES } from "../domain/write-tools.js";
+export type { ProposalStatus };
 
 export type ApprovalDecision = "approved" | "rejected";
 
