@@ -141,11 +141,15 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
     return { proposal: result };
   });
 
+  /**
+   * La cola de propuestas. Cada una viene con su decisión y su efecto: la UI decide
+   * sobre una lista y, después de aprobar, necesita ver qué pasó al aplicarlo.
+   */
   app.get("/proposals", async (request) => {
     const resolved = await resolvePrincipal(request.headers.authorization);
     const query = parseOrThrow(proposalQuerySchema, request.query);
 
-    const proposals = await deps.proposals.list(resolved.principal.tenantId, {
+    const proposals = await deps.proposals.listDetails(resolved.principal.tenantId, {
       status: query.status,
       limit: query.limit,
     });
@@ -175,9 +179,7 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
     });
 
     return {
-      proposal: outcome.proposal,
-      approval: outcome.approval,
-      effect: outcome.effect,
+      proposal: await deps.proposals.detail(id, resolved.principal.tenantId),
       replayed: outcome.replayed,
     };
   });
@@ -187,12 +189,12 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
     const { id } = parseOrThrow(proposalParamsSchema, request.params);
     const body = parseOrThrow(decisionBodySchema, request.body ?? {});
 
-    const outcome = await deps.proposals.reject({
+    await deps.proposals.reject({
       principal: resolved.principal,
       proposalId: id,
       reason: body.reason ?? null,
     });
 
-    return { proposal: outcome.proposal, approval: outcome.approval };
+    return { proposal: await deps.proposals.detail(id, resolved.principal.tenantId) };
   });
 }
