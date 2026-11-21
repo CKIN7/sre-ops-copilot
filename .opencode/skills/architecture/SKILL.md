@@ -26,7 +26,7 @@ falta.
 | `gateway` | allowlist, presupuesto, aprobación, audit | `core` |
 | `orchestrator` | loop, estado, reanudación | `core` |
 | `executors` | `ActionExecutor` (simulated, sandbox) | `core` |
-| `evals` | harness, casos, fixtures, gate | `core`, `orchestrator`, `executors` |
+| `evals` | harness, casos, fixtures, gate | `core`, `gateway`, `orchestrator`, `executors`, `mcp-ops` (tools), `seed` (fixtures) |
 | `apps/*` | HTTP, cola, composición | todos |
 
 `core` no importa nada interno. Ningún paquete importa una app. `web` solo consume
@@ -67,7 +67,7 @@ HTTP → http → application → ports → adapters → DB / MCP / cola
 - `tenant_id`/`user_id` server-side, nunca del modelo.
 - Presupuesto con reserva atómica; idempotencia persistida.
 - Deny list explícita; post-condición verificada tras `apply`.
-- Cambio de prompt/tool/modelo → `pnpm evals`.
+- Cambio de prompt/tool/modelo → `pnpm evals` (y `pnpm evals:gate` antes del PR).
 
 ## Flujo para un cambio
 
