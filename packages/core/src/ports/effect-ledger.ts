@@ -1,3 +1,5 @@
+import type { EffectRecord, EffectStatus } from "../domain/proposals.js";
+
 /**
  * Registro de los efectos de una escritura (ADR-004 decisión 5, ADR-005).
  *
@@ -9,36 +11,8 @@
  * La implementación (Drizzle/Postgres) vive en `apps/api/src/adapters`.
  */
 
-export const EFFECT_STATUSES = [
-  "pending",
-  "applied",
-  "noop",
-  "conflict",
-  "timeout",
-  "partial",
-  "failed",
-] as const;
-
-export type EffectStatus = (typeof EFFECT_STATUSES)[number];
-
-export interface EffectRecord {
-  id: string;
-  proposalId: string;
-  tenantId: string;
-  idempotencyKey: string;
-  executor: string;
-  /** Estable por `idempotencyKey`: lo deriva de la clave, no de un UUID aleatorio. */
-  effectId: string;
-  status: EffectStatus;
-  /** `false` = se aplicó pero no se comprobó: nunca es un éxito. */
-  verified: boolean;
-  observedState: unknown;
-  evidence: string[];
-  durationMs: number;
-  errorCode: string | null;
-  createdAt: string;
-  appliedAt: string | null;
-}
+export { EFFECT_STATUSES } from "../domain/proposals.js";
+export type { EffectRecord, EffectStatus } from "../domain/proposals.js";
 
 export interface ReserveEffectInput {
   proposalId: string;
@@ -67,4 +41,6 @@ export interface EffectOutcome {
 export interface EffectLedger {
   reserveEffect(input: ReserveEffectInput): Promise<EffectReservation>;
   completeEffect(effectId: string, outcome: EffectOutcome): Promise<EffectRecord>;
+  /** El efecto de una propuesta, si ya se ejecutó. */
+  getEffectForProposal(proposalId: string): Promise<EffectRecord | null>;
 }
