@@ -230,3 +230,52 @@ export const simulatedState = pgTable("simulated_state", {
   version: integer("version").notNull().default(1),
   updatedAt: timestamptz("updated_at").notNull().defaultNow(),
 });
+/**
+ * Espejo Drizzle de `infra/migrations/migrations/0008_budget.sql`.
+ *
+ * La reserva se escribe antes de la tool call y se liquida después. El adaptador
+ * hace la comprobación y la escritura en una transacción con lock por tenant; este
+ * espejo solo describe las columnas.
+ */
+export const budgetReservations = pgTable("budget_reservations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => tenants.id, { onDelete: "cascade" }),
+  runId: uuid("run_id").references(() => runs.id, { onDelete: "cascade" }),
+  idempotencyKey: text("idempotency_key").notNull(),
+  status: text("status").$type<"reserved" | "settled">().notNull(),
+  reservedTokensIn: integer("reserved_tokens_in").notNull().default(0),
+  reservedTokensOut: integer("reserved_tokens_out").notNull().default(0),
+  reservedCostCents: integer("reserved_cost_cents").notNull().default(0),
+  reservedWallMs: integer("reserved_wall_ms").notNull().default(0),
+  usedTokensIn: integer("used_tokens_in"),
+  usedTokensOut: integer("used_tokens_out"),
+  usedCostCents: integer("used_cost_cents"),
+  usedWallMs: integer("used_wall_ms"),
+  limits: jsonb("limits").$type<unknown>().notNull(),
+  createdAt: timestamptz("created_at").notNull().defaultNow(),
+  expiresAt: timestamptz("expires_at").notNull(),
+  settledAt: timestamptz("settled_at"),
+});
+
+/** Espejo de `usage_ledger`: una fila append-only por reserva liquidada. */
+export const usageLedger = pgTable("usage_ledger", {
+  id: bigint("id", { mode: "number" })
+    .primaryKey()
+    .generatedAlwaysAsIdentity(),
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => tenants.id, { onDelete: "cascade" }),
+  runId: uuid("run_id").references(() => runs.id, { onDelete: "cascade" }),
+  reservationId: uuid("reservation_id")
+    .notNull()
+    .references(() => budgetReservations.id, { onDelete: "cascade" }),
+  kind: text("kind").$type<"tool_call" | "model" | "action_apply">().notNull(),
+  tool: text("tool"),
+  tokensIn: integer("tokens_in").notNull().default(0),
+  tokensOut: integer("tokens_out").notNull().default(0),
+  costCents: integer("cost_cents").notNull().default(0),
+  wallMs: integer("wall_ms").notNull().default(0),
+  createdAt: timestamptz("created_at").notNull().defaultNow(),
+});
