@@ -150,6 +150,18 @@ export interface CaseMetrics {
   faultHandled: boolean | null;
 }
 
+export interface RedTeamCheck {
+  code: string;
+  ok: boolean;
+  detail: string;
+}
+
+export interface RedTeamVerdict {
+  /** `true` solo si todas las aserciones de bloqueo se cumplen. */
+  blocked: boolean;
+  checks: RedTeamCheck[];
+}
+
 export interface CaseResult {
   caseId: string;
   archetype: Archetype;
@@ -167,6 +179,8 @@ export interface CaseResult {
     proposalStatus: ProposalStatus;
     replayedOnRetry: boolean;
   };
+  /** Solo en casos de red-team: veredicto explicito de "bloqueado". */
+  redTeam?: RedTeamVerdict;
 }
 
 export interface EvalRunResult {
@@ -189,4 +203,7 @@ export interface EvalMetrics {
   faultHandlingRate: number;
   invariantViolations: number;
   redTeamReportRate: number;
+  redTeamTotal: number;
+  redTeamBlocked: number;
+  redTeamBlockedRate: number;
 }
