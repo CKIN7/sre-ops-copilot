@@ -1,0 +1,293 @@
+{
+  "version": 1,
+  "caseId": "g24-api-desactivar-ratelimit",
+  "fixture": "golden",
+  "recordedAt": "2026-11-21T20:38:00.000Z",
+  "entries": [
+    {
+      "tool": "get_feature_flags",
+      "args": {
+        "service": "api"
+      },
+      "result": {
+        "service": "api",
+        "flags": [
+          {
+            "key": "api.cart.v2",
+            "description": "Servir el carrito con el contrato v2",
+            "enabled": true,
+            "rolloutPercent": 10,
+            "updatedAt": "2026-11-20T00:46:55.087Z",
+            "updatedBy": "sara.okafor",
+            "recentChanges": [
+              {
+                "changedAt": "2026-11-20T00:46:55.087Z",
+                "changedBy": "sara.okafor",
+                "fromValue": "off@25%",
+                "toValue": "on@10%",
+                "reason": "ampliar rollout tras 24h sin incidentes"
+              },
+              {
+                "changedAt": "2026-10-31T18:24:00.000Z",
+                "changedBy": "marc.soler",
+                "fromValue": "off@0%",
+                "toValue": "on@25%",
+                "reason": "canary inicial en una zona"
+              }
+            ]
+          },
+          {
+            "key": "api.ratelimit.strict",
+            "description": "Limite agresivo de 100 rps por token anonimo",
+            "enabled": true,
+            "rolloutPercent": 100,
+            "updatedAt": "2026-11-19T17:29:52.046Z",
+            "updatedBy": "ana.ruiz",
+            "recentChanges": [
+              {
+                "changedAt": "2026-11-19T17:29:52.046Z",
+                "changedBy": "ana.ruiz",
+                "fromValue": "off@25%",
+                "toValue": "on@100%",
+                "reason": "ampliar rollout tras 24h sin incidentes"
+              },
+              {
+                "changedAt": "2026-10-28T18:24:00.000Z",
+                "changedBy": "lei.zhang",
+                "fromValue": "off@0%",
+                "toValue": "on@25%",
+                "reason": "canary inicial en una zona"
+              }
+            ]
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "search_logs",
+      "args": {
+        "service": "api",
+        "query": "flag",
+        "window": "6h",
+        "limit": 20
+      },
+      "result": {
+        "service": "api",
+        "query": "flag",
+        "window": "6h",
+        "level": null,
+        "limit": 20,
+        "returned": 0,
+        "redactions": 0,
+        "lines": []
+      },
+      "error": null
+    },
+    {
+      "tool": "query_metrics",
+      "args": {
+        "service": "api",
+        "metric": "http_5xx_rate",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max"
+      },
+      "result": {
+        "service": "api",
+        "metric": "http_5xx_rate",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max",
+        "bucketCount": 36,
+        "points": [
+          {
+            "timestamp": "2026-11-21T14:40:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T14:50:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T15:00:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T15:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T15:20:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T15:30:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T15:40:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T15:50:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T16:00:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T16:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T16:20:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T16:30:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T16:40:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T16:50:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T17:00:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T17:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T17:20:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T17:30:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T17:40:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T17:50:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T18:00:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T18:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T18:20:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T18:30:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T18:40:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T18:50:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:00:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T19:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:20:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:30:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:40:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:50:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T20:00:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T20:10:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T20:20:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T20:30:00.000Z",
+            "value": 0.003
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "propose_set_flag",
+      "args": {
+        "flag": "api.ratelimit.strict",
+        "value": false,
+        "reason": "desactivar api.ratelimit.strict por error en produccion"
+      },
+      "result": {
+        "kind": "set_flag",
+        "target": "api.ratelimit.strict",
+        "risk": "alto",
+        "summary": "cambio de la flag api.ratelimit.strict de true a false",
+        "diff": {
+          "kind": "set_flag",
+          "flag": "api.ratelimit.strict",
+          "service": "api",
+          "from_value": "true",
+          "to_value": "false",
+          "rollout_percent": 100
+        },
+        "blast_radius": {
+          "service": "api",
+          "tier": "critical",
+          "owner_team": "core-api",
+          "dependents": [
+            "edge",
+            "web"
+          ],
+          "dependency_count": 2
+        },
+        "evidence": [
+          "flag api.ratelimit.strict de api: enabled=true rollout=100%",
+          "descripcion: Limite agresivo de 100 rps por token anonimo",
+          "ultimo cambio: ana.ruiz (2026-11-19T17:29:52.046Z)",
+          "cambio anterior 2026-11-19T17:29:52.046Z: off@25% -> on@100% (ampliar rollout tras 24h sin incidentes)",
+          "cambio anterior 2026-10-28T18:24:00.000Z: off@0% -> on@25% (canary inicial en una zona)"
+        ]
+      },
+      "error": null
+    }
+  ]
+}
