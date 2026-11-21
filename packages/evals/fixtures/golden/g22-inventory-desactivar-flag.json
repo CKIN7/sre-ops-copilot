@@ -1,0 +1,269 @@
+{
+  "version": 1,
+  "caseId": "g22-inventory-desactivar-flag",
+  "fixture": "golden",
+  "recordedAt": "2026-11-21T20:38:00.000Z",
+  "entries": [
+    {
+      "tool": "get_feature_flags",
+      "args": {
+        "service": "inventory"
+      },
+      "result": {
+        "service": "inventory",
+        "flags": [
+          {
+            "key": "inventory.reserve.optimistic",
+            "description": "Reserva optimista con bloqueo por SKU",
+            "enabled": true,
+            "rolloutPercent": 50,
+            "updatedAt": "2026-11-18T06:37:28.999Z",
+            "updatedBy": "sara.okafor",
+            "recentChanges": [
+              {
+                "changedAt": "2026-11-18T06:37:28.999Z",
+                "changedBy": "sara.okafor",
+                "fromValue": "off@25%",
+                "toValue": "on@50%",
+                "reason": "ampliar rollout tras 24h sin incidentes"
+              },
+              {
+                "changedAt": "2026-10-13T18:24:00.000Z",
+                "changedBy": "marc.soler",
+                "fromValue": "off@0%",
+                "toValue": "on@25%",
+                "reason": "canary inicial en una zona"
+              }
+            ]
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "search_logs",
+      "args": {
+        "service": "inventory",
+        "query": "flag",
+        "window": "6h",
+        "limit": 20
+      },
+      "result": {
+        "service": "inventory",
+        "query": "flag",
+        "window": "6h",
+        "level": null,
+        "limit": 20,
+        "returned": 0,
+        "redactions": 0,
+        "lines": []
+      },
+      "error": null
+    },
+    {
+      "tool": "query_metrics",
+      "args": {
+        "service": "inventory",
+        "metric": "http_5xx_rate",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max"
+      },
+      "result": {
+        "service": "inventory",
+        "metric": "http_5xx_rate",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max",
+        "bucketCount": 36,
+        "points": [
+          {
+            "timestamp": "2026-11-21T14:40:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T14:50:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T15:00:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T15:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T15:20:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T15:30:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T15:40:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T15:50:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T16:00:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T16:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T16:20:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T16:30:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T16:40:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T16:50:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T17:00:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T17:10:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T17:20:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T17:30:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T17:40:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T17:50:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T18:00:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T18:10:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T18:20:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T18:30:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T18:40:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T18:50:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T19:00:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T19:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:20:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T19:30:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T19:40:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T19:50:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T20:00:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T20:10:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T20:20:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T20:30:00.000Z",
+            "value": 0.004
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "propose_set_flag",
+      "args": {
+        "flag": "inventory.reserve.optimistic",
+        "value": false,
+        "reason": "desactivar inventory.reserve.optimistic por error en produccion"
+      },
+      "result": {
+        "kind": "set_flag",
+        "target": "inventory.reserve.optimistic",
+        "risk": "alto",
+        "summary": "cambio de la flag inventory.reserve.optimistic de true a false",
+        "diff": {
+          "kind": "set_flag",
+          "flag": "inventory.reserve.optimistic",
+          "service": "inventory",
+          "from_value": "true",
+          "to_value": "false",
+          "rollout_percent": 50
+        },
+        "blast_radius": {
+          "service": "inventory",
+          "tier": "standard",
+          "owner_team": "inventory-squad",
+          "dependents": [
+            "checkout"
+          ],
+          "dependency_count": 1
+        },
+        "evidence": [
+          "flag inventory.reserve.optimistic de inventory: enabled=true rollout=50%",
+          "descripcion: Reserva optimista con bloqueo por SKU",
+          "ultimo cambio: sara.okafor (2026-11-18T06:37:28.999Z)",
+          "cambio anterior 2026-11-18T06:37:28.999Z: off@25% -> on@50% (ampliar rollout tras 24h sin incidentes)",
+          "cambio anterior 2026-10-13T18:24:00.000Z: off@0% -> on@25% (canary inicial en una zona)",
+          "el rollout esta en 50%: el cambio no afecta a todo el trafico"
+        ]
+      },
+      "error": null
+    }
+  ]
+}
