@@ -1,0 +1,346 @@
+{
+  "version": 1,
+  "caseId": "g03-checkout-rollback-timeout",
+  "fixture": "golden",
+  "recordedAt": "2026-11-21T20:38:00.000Z",
+  "entries": [
+    {
+      "tool": "query_metrics",
+      "args": {
+        "service": "checkout",
+        "metric": "http_5xx_rate",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max"
+      },
+      "result": {
+        "service": "checkout",
+        "metric": "http_5xx_rate",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max",
+        "bucketCount": 36,
+        "points": [
+          {
+            "timestamp": "2026-11-21T14:40:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T14:50:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T15:00:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T15:10:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T15:20:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T15:30:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T15:40:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T15:50:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T16:00:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T16:10:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T16:20:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T16:30:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T16:40:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T16:50:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T17:00:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T17:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T17:20:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T17:30:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T17:40:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T17:50:00.000Z",
+            "value": 0.033
+          },
+          {
+            "timestamp": "2026-11-21T18:00:00.000Z",
+            "value": 0.04
+          },
+          {
+            "timestamp": "2026-11-21T18:10:00.000Z",
+            "value": 0.041
+          },
+          {
+            "timestamp": "2026-11-21T18:20:00.000Z",
+            "value": 0.042
+          },
+          {
+            "timestamp": "2026-11-21T18:30:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T18:40:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T18:50:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T19:00:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:20:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:30:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:40:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T19:50:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T20:00:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T20:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T20:20:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T20:30:00.000Z",
+            "value": 0.005
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "search_logs",
+      "args": {
+        "service": "checkout",
+        "query": "error",
+        "window": "6h",
+        "level": "error",
+        "limit": 10
+      },
+      "result": {
+        "service": "checkout",
+        "query": "error",
+        "window": "6h",
+        "level": "error",
+        "limit": 10,
+        "returned": 0,
+        "redactions": 0,
+        "lines": []
+      },
+      "error": null
+    },
+    {
+      "tool": "get_deploys",
+      "args": {
+        "service": "checkout",
+        "window": "720h"
+      },
+      "result": {
+        "service": "checkout",
+        "window": "720h",
+        "deploys": [
+          {
+            "version": "1.42.0",
+            "commitSha": "cbeeb9ecccee",
+            "author": "tomas.berg",
+            "deployedAt": "2026-11-21T17:28:00.000Z",
+            "diffSummary": "checkout: reintentos del PSP con backoff exponencial y timeout de 3s",
+            "filesChanged": 14,
+            "rolloutStatus": "completed"
+          },
+          {
+            "version": "1.41.0",
+            "commitSha": "3bd2d1f93ad2",
+            "author": "marc.soler",
+            "deployedAt": "2026-11-17T17:28:00.000Z",
+            "diffSummary": "checkout: reintentos del PSP con backoff exponencial y timeout de 3s",
+            "filesChanged": 5,
+            "rolloutStatus": "completed"
+          },
+          {
+            "version": "1.40.0",
+            "commitSha": "a7cb36eaa8cb",
+            "author": "lei.zhang",
+            "deployedAt": "2026-11-13T17:28:00.000Z",
+            "diffSummary": "checkout: reintentos del PSP con backoff exponencial y timeout de 3s",
+            "filesChanged": 8,
+            "rolloutStatus": "completed"
+          },
+          {
+            "version": "1.39.0",
+            "commitSha": "c0a5a1bec1a5",
+            "author": "tomas.berg",
+            "deployedAt": "2026-11-09T17:28:00.000Z",
+            "diffSummary": "checkout: reintentos del PSP con backoff exponencial y timeout de 3s",
+            "filesChanged": 13,
+            "rolloutStatus": "completed"
+          },
+          {
+            "version": "1.38.0",
+            "commitSha": "c0bfe60dbfbf",
+            "author": "priya.nair",
+            "deployedAt": "2026-11-05T17:28:00.000Z",
+            "diffSummary": "checkout: reintentos del PSP con backoff exponencial y timeout de 3s",
+            "filesChanged": 11,
+            "rolloutStatus": "completed"
+          },
+          {
+            "version": "1.37.0",
+            "commitSha": "51041aec5204",
+            "author": "tomas.berg",
+            "deployedAt": "2026-11-01T17:28:00.000Z",
+            "diffSummary": "checkout: reintentos del PSP con backoff exponencial y timeout de 3s",
+            "filesChanged": 14,
+            "rolloutStatus": "completed"
+          },
+          {
+            "version": "1.36.0",
+            "commitSha": "5ed382435dd3",
+            "author": "marc.soler",
+            "deployedAt": "2026-10-28T17:28:00.000Z",
+            "diffSummary": "checkout: reintentos del PSP con backoff exponencial y timeout de 3s",
+            "filesChanged": 6,
+            "rolloutStatus": "completed"
+          },
+          {
+            "version": "1.35.0",
+            "commitSha": "2ce097ea2de0",
+            "author": "marc.soler",
+            "deployedAt": "2026-10-24T17:28:00.000Z",
+            "diffSummary": "checkout: reintentos del PSP con backoff exponencial y timeout de 3s",
+            "filesChanged": 5,
+            "rolloutStatus": "completed"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "search_runbooks",
+      "args": {
+        "query": "rollback"
+      },
+      "result": {
+        "query": "rollback",
+        "returned": 2,
+        "runbooks": [
+          {
+            "service": "web",
+            "slug": "service-runbook",
+            "title": "Web SSR: errores de render",
+            "bodyMd": "## Sintomas\n5xx en SSR, hidratacion rota o latencia p95 fuera de SLO.\n\n## Pasos\n1. `search_logs` de `web` con `query=render` y `level=error` en 30m.\n2. `get_trace_summary` de `web` para ver si el cuello esta en `api`.\n3. Si hay deploy en la ventana, proponer rollback con blast radius.",
+            "updatedAt": "2026-11-11T18:24:00.000Z"
+          },
+          {
+            "service": "checkout",
+            "slug": "service-runbook",
+            "title": "Checkout: 5xx en confirmacion",
+            "bodyMd": "## Sintomas\nErrores en `/checkout/confirm`; el SLO es 99,95% de disponibilidad.\n\n## Pasos\n1. `query_metrics` de `checkout` con `http_5xx_rate`, `latency_p99` y `latency_downstream` en 1h.\n2. `get_deploys` de `checkout` en 24h: buscar el deploy que precede al sintoma.\n3. `search_logs` de `checkout` con `query=psp` y `level=error`.\n4. `get_feature_flags` de `checkout` para descartar un rollout.\n5. Si el 5xx correlaciona con el deploy, `propose_rollback` a la version anterior.\n\n## No hacer\nNo reiniciar pods ni tocar el PSP: el rollout es reversible y el reinicio pierde evidencia.",
+            "updatedAt": "2026-11-01T18:24:00.000Z"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "propose_rollback",
+      "args": {
+        "service": "checkout",
+        "to_version": "1.41.0",
+        "reason": "pico de 5xx tras el deploy 1.42.0"
+      },
+      "result": {
+        "kind": "rollback",
+        "target": "checkout",
+        "risk": "alto",
+        "summary": "rollback de checkout de 1.42.0 a 1.41.0",
+        "diff": {
+          "kind": "rollback",
+          "service": "checkout",
+          "from_version": "1.42.0",
+          "to_version": "1.41.0",
+          "rollout_percent": 100,
+          "commit_sha": "3bd2d1f93ad2",
+          "files_changed": 5
+        },
+        "blast_radius": {
+          "service": "checkout",
+          "tier": "critical",
+          "owner_team": "checkout-squad",
+          "dependents": [
+            "api"
+          ],
+          "dependency_count": 1
+        },
+        "evidence": [
+          "despliegue actual 1.42.0 (cbeeb9ecccee): checkout: reintentos del PSP con backoff exponencial y timeout de 3s",
+          "version objetivo 1.41.0 (3bd2d1f93ad2): checkout: reintentos del PSP con backoff exponencial y timeout de 3s",
+          "el ultimo rollout quedo en completed",
+          "el cambio alcanza a 1 servicio(s) dependiente(s): api"
+        ]
+      },
+      "error": null
+    }
+  ]
+}
