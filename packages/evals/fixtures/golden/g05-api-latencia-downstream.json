@@ -1,0 +1,842 @@
+{
+  "version": 1,
+  "caseId": "g05-api-latencia-downstream",
+  "fixture": "golden",
+  "recordedAt": "2026-11-21T20:38:00.000Z",
+  "entries": [
+    {
+      "tool": "query_metrics",
+      "args": {
+        "service": "api",
+        "metric": "latency_p95",
+        "window": "24h",
+        "step": "10m",
+        "agg": "max"
+      },
+      "result": {
+        "service": "api",
+        "metric": "latency_p95",
+        "window": "24h",
+        "step": "10m",
+        "agg": "max",
+        "bucketCount": 144,
+        "points": [
+          {
+            "timestamp": "2026-11-20T20:40:00.000Z",
+            "value": 62.36
+          },
+          {
+            "timestamp": "2026-11-20T20:50:00.000Z",
+            "value": 66.009
+          },
+          {
+            "timestamp": "2026-11-20T21:00:00.000Z",
+            "value": 69.153
+          },
+          {
+            "timestamp": "2026-11-20T21:10:00.000Z",
+            "value": 73.091
+          },
+          {
+            "timestamp": "2026-11-20T21:20:00.000Z",
+            "value": 66.281
+          },
+          {
+            "timestamp": "2026-11-20T21:30:00.000Z",
+            "value": 62.207
+          },
+          {
+            "timestamp": "2026-11-20T21:40:00.000Z",
+            "value": 69.424
+          },
+          {
+            "timestamp": "2026-11-20T21:50:00.000Z",
+            "value": 65.901
+          },
+          {
+            "timestamp": "2026-11-20T22:00:00.000Z",
+            "value": 60.542
+          },
+          {
+            "timestamp": "2026-11-20T22:10:00.000Z",
+            "value": 62.102
+          },
+          {
+            "timestamp": "2026-11-20T22:20:00.000Z",
+            "value": 62.117
+          },
+          {
+            "timestamp": "2026-11-20T22:30:00.000Z",
+            "value": 71.695
+          },
+          {
+            "timestamp": "2026-11-20T22:40:00.000Z",
+            "value": 62.933
+          },
+          {
+            "timestamp": "2026-11-20T22:50:00.000Z",
+            "value": 61.542
+          },
+          {
+            "timestamp": "2026-11-20T23:00:00.000Z",
+            "value": 68.404
+          },
+          {
+            "timestamp": "2026-11-20T23:10:00.000Z",
+            "value": 66.412
+          },
+          {
+            "timestamp": "2026-11-20T23:20:00.000Z",
+            "value": 68.123
+          },
+          {
+            "timestamp": "2026-11-20T23:30:00.000Z",
+            "value": 73.246
+          },
+          {
+            "timestamp": "2026-11-20T23:40:00.000Z",
+            "value": 68.506
+          },
+          {
+            "timestamp": "2026-11-20T23:50:00.000Z",
+            "value": 67.452
+          },
+          {
+            "timestamp": "2026-11-21T00:00:00.000Z",
+            "value": 71.724
+          },
+          {
+            "timestamp": "2026-11-21T00:10:00.000Z",
+            "value": 61.174
+          },
+          {
+            "timestamp": "2026-11-21T00:20:00.000Z",
+            "value": 62.179
+          },
+          {
+            "timestamp": "2026-11-21T00:30:00.000Z",
+            "value": 63.368
+          },
+          {
+            "timestamp": "2026-11-21T00:40:00.000Z",
+            "value": 61.076
+          },
+          {
+            "timestamp": "2026-11-21T00:50:00.000Z",
+            "value": 71.956
+          },
+          {
+            "timestamp": "2026-11-21T01:00:00.000Z",
+            "value": 65.313
+          },
+          {
+            "timestamp": "2026-11-21T01:10:00.000Z",
+            "value": 61.047
+          },
+          {
+            "timestamp": "2026-11-21T01:20:00.000Z",
+            "value": 73.217
+          },
+          {
+            "timestamp": "2026-11-21T01:30:00.000Z",
+            "value": 65.892
+          },
+          {
+            "timestamp": "2026-11-21T01:40:00.000Z",
+            "value": 67.096
+          },
+          {
+            "timestamp": "2026-11-21T01:50:00.000Z",
+            "value": 71.416
+          },
+          {
+            "timestamp": "2026-11-21T02:00:00.000Z",
+            "value": 62.613
+          },
+          {
+            "timestamp": "2026-11-21T02:10:00.000Z",
+            "value": 66.08
+          },
+          {
+            "timestamp": "2026-11-21T02:20:00.000Z",
+            "value": 65.006
+          },
+          {
+            "timestamp": "2026-11-21T02:30:00.000Z",
+            "value": 65.589
+          },
+          {
+            "timestamp": "2026-11-21T02:40:00.000Z",
+            "value": 69.446
+          },
+          {
+            "timestamp": "2026-11-21T02:50:00.000Z",
+            "value": 68.386
+          },
+          {
+            "timestamp": "2026-11-21T03:00:00.000Z",
+            "value": 66.733
+          },
+          {
+            "timestamp": "2026-11-21T03:10:00.000Z",
+            "value": 63.407
+          },
+          {
+            "timestamp": "2026-11-21T03:20:00.000Z",
+            "value": 71.596
+          },
+          {
+            "timestamp": "2026-11-21T03:30:00.000Z",
+            "value": 66.306
+          },
+          {
+            "timestamp": "2026-11-21T03:40:00.000Z",
+            "value": 64.32
+          },
+          {
+            "timestamp": "2026-11-21T03:50:00.000Z",
+            "value": 69.995
+          },
+          {
+            "timestamp": "2026-11-21T04:00:00.000Z",
+            "value": 73.653
+          },
+          {
+            "timestamp": "2026-11-21T04:10:00.000Z",
+            "value": 64.467
+          },
+          {
+            "timestamp": "2026-11-21T04:20:00.000Z",
+            "value": 65.739
+          },
+          {
+            "timestamp": "2026-11-21T04:30:00.000Z",
+            "value": 62.583
+          },
+          {
+            "timestamp": "2026-11-21T04:40:00.000Z",
+            "value": 64.59
+          },
+          {
+            "timestamp": "2026-11-21T04:50:00.000Z",
+            "value": 61.212
+          },
+          {
+            "timestamp": "2026-11-21T05:00:00.000Z",
+            "value": 62.454
+          },
+          {
+            "timestamp": "2026-11-21T05:10:00.000Z",
+            "value": 62.682
+          },
+          {
+            "timestamp": "2026-11-21T05:20:00.000Z",
+            "value": 62.632
+          },
+          {
+            "timestamp": "2026-11-21T05:30:00.000Z",
+            "value": 62.774
+          },
+          {
+            "timestamp": "2026-11-21T05:40:00.000Z",
+            "value": 72.288
+          },
+          {
+            "timestamp": "2026-11-21T05:50:00.000Z",
+            "value": 61.591
+          },
+          {
+            "timestamp": "2026-11-21T06:00:00.000Z",
+            "value": 64.993
+          },
+          {
+            "timestamp": "2026-11-21T06:10:00.000Z",
+            "value": 73.429
+          },
+          {
+            "timestamp": "2026-11-21T06:20:00.000Z",
+            "value": 73.003
+          },
+          {
+            "timestamp": "2026-11-21T06:30:00.000Z",
+            "value": 68.703
+          },
+          {
+            "timestamp": "2026-11-21T06:40:00.000Z",
+            "value": 72.667
+          },
+          {
+            "timestamp": "2026-11-21T06:50:00.000Z",
+            "value": 71.462
+          },
+          {
+            "timestamp": "2026-11-21T07:00:00.000Z",
+            "value": 68.463
+          },
+          {
+            "timestamp": "2026-11-21T07:10:00.000Z",
+            "value": 66.542
+          },
+          {
+            "timestamp": "2026-11-21T07:20:00.000Z",
+            "value": 63.365
+          },
+          {
+            "timestamp": "2026-11-21T07:30:00.000Z",
+            "value": 73.725
+          },
+          {
+            "timestamp": "2026-11-21T07:40:00.000Z",
+            "value": 71.249
+          },
+          {
+            "timestamp": "2026-11-21T07:50:00.000Z",
+            "value": 63.268
+          },
+          {
+            "timestamp": "2026-11-21T08:00:00.000Z",
+            "value": 71.075
+          },
+          {
+            "timestamp": "2026-11-21T08:10:00.000Z",
+            "value": 64.876
+          },
+          {
+            "timestamp": "2026-11-21T08:20:00.000Z",
+            "value": 60.741
+          },
+          {
+            "timestamp": "2026-11-21T08:30:00.000Z",
+            "value": 71.14
+          },
+          {
+            "timestamp": "2026-11-21T08:40:00.000Z",
+            "value": 68.423
+          },
+          {
+            "timestamp": "2026-11-21T08:50:00.000Z",
+            "value": 60.96
+          },
+          {
+            "timestamp": "2026-11-21T09:00:00.000Z",
+            "value": 64.863
+          },
+          {
+            "timestamp": "2026-11-21T09:10:00.000Z",
+            "value": 70.745
+          },
+          {
+            "timestamp": "2026-11-21T09:20:00.000Z",
+            "value": 66.661
+          },
+          {
+            "timestamp": "2026-11-21T09:30:00.000Z",
+            "value": 62.943
+          },
+          {
+            "timestamp": "2026-11-21T09:40:00.000Z",
+            "value": 71.045
+          },
+          {
+            "timestamp": "2026-11-21T09:50:00.000Z",
+            "value": 68.304
+          },
+          {
+            "timestamp": "2026-11-21T10:00:00.000Z",
+            "value": 73.732
+          },
+          {
+            "timestamp": "2026-11-21T10:10:00.000Z",
+            "value": 70.484
+          },
+          {
+            "timestamp": "2026-11-21T10:20:00.000Z",
+            "value": 71.255
+          },
+          {
+            "timestamp": "2026-11-21T10:30:00.000Z",
+            "value": 62.958
+          },
+          {
+            "timestamp": "2026-11-21T10:40:00.000Z",
+            "value": 68.009
+          },
+          {
+            "timestamp": "2026-11-21T10:50:00.000Z",
+            "value": 60.944
+          },
+          {
+            "timestamp": "2026-11-21T11:00:00.000Z",
+            "value": 64.294
+          },
+          {
+            "timestamp": "2026-11-21T11:10:00.000Z",
+            "value": 63.752
+          },
+          {
+            "timestamp": "2026-11-21T11:20:00.000Z",
+            "value": 67.923
+          },
+          {
+            "timestamp": "2026-11-21T11:30:00.000Z",
+            "value": 69.668
+          },
+          {
+            "timestamp": "2026-11-21T11:40:00.000Z",
+            "value": 62.741
+          },
+          {
+            "timestamp": "2026-11-21T11:50:00.000Z",
+            "value": 66.117
+          },
+          {
+            "timestamp": "2026-11-21T12:00:00.000Z",
+            "value": 68.742
+          },
+          {
+            "timestamp": "2026-11-21T12:10:00.000Z",
+            "value": 67.843
+          },
+          {
+            "timestamp": "2026-11-21T12:20:00.000Z",
+            "value": 71.118
+          },
+          {
+            "timestamp": "2026-11-21T12:30:00.000Z",
+            "value": 61.411
+          },
+          {
+            "timestamp": "2026-11-21T12:40:00.000Z",
+            "value": 72.201
+          },
+          {
+            "timestamp": "2026-11-21T12:50:00.000Z",
+            "value": 66.427
+          },
+          {
+            "timestamp": "2026-11-21T13:00:00.000Z",
+            "value": 73.53
+          },
+          {
+            "timestamp": "2026-11-21T13:10:00.000Z",
+            "value": 62.713
+          },
+          {
+            "timestamp": "2026-11-21T13:20:00.000Z",
+            "value": 71.263
+          },
+          {
+            "timestamp": "2026-11-21T13:30:00.000Z",
+            "value": 70.699
+          },
+          {
+            "timestamp": "2026-11-21T13:40:00.000Z",
+            "value": 66.283
+          },
+          {
+            "timestamp": "2026-11-21T13:50:00.000Z",
+            "value": 70.663
+          },
+          {
+            "timestamp": "2026-11-21T14:00:00.000Z",
+            "value": 66.906
+          },
+          {
+            "timestamp": "2026-11-21T14:10:00.000Z",
+            "value": 68.083
+          },
+          {
+            "timestamp": "2026-11-21T14:20:00.000Z",
+            "value": 73.02
+          },
+          {
+            "timestamp": "2026-11-21T14:30:00.000Z",
+            "value": 67.326
+          },
+          {
+            "timestamp": "2026-11-21T14:40:00.000Z",
+            "value": 67.913
+          },
+          {
+            "timestamp": "2026-11-21T14:50:00.000Z",
+            "value": 66.484
+          },
+          {
+            "timestamp": "2026-11-21T15:00:00.000Z",
+            "value": 62.531
+          },
+          {
+            "timestamp": "2026-11-21T15:10:00.000Z",
+            "value": 66.14
+          },
+          {
+            "timestamp": "2026-11-21T15:20:00.000Z",
+            "value": 63.046
+          },
+          {
+            "timestamp": "2026-11-21T15:30:00.000Z",
+            "value": 62.238
+          },
+          {
+            "timestamp": "2026-11-21T15:40:00.000Z",
+            "value": 70.281
+          },
+          {
+            "timestamp": "2026-11-21T15:50:00.000Z",
+            "value": 63.122
+          },
+          {
+            "timestamp": "2026-11-21T16:00:00.000Z",
+            "value": 62.773
+          },
+          {
+            "timestamp": "2026-11-21T16:10:00.000Z",
+            "value": 63.156
+          },
+          {
+            "timestamp": "2026-11-21T16:20:00.000Z",
+            "value": 69.008
+          },
+          {
+            "timestamp": "2026-11-21T16:30:00.000Z",
+            "value": 61.852
+          },
+          {
+            "timestamp": "2026-11-21T16:40:00.000Z",
+            "value": 64.72
+          },
+          {
+            "timestamp": "2026-11-21T16:50:00.000Z",
+            "value": 69.221
+          },
+          {
+            "timestamp": "2026-11-21T17:00:00.000Z",
+            "value": 69.655
+          },
+          {
+            "timestamp": "2026-11-21T17:10:00.000Z",
+            "value": 61.049
+          },
+          {
+            "timestamp": "2026-11-21T17:20:00.000Z",
+            "value": 73.61
+          },
+          {
+            "timestamp": "2026-11-21T17:30:00.000Z",
+            "value": 71.047
+          },
+          {
+            "timestamp": "2026-11-21T17:40:00.000Z",
+            "value": 69.297
+          },
+          {
+            "timestamp": "2026-11-21T17:50:00.000Z",
+            "value": 70.076
+          },
+          {
+            "timestamp": "2026-11-21T18:00:00.000Z",
+            "value": 68.841
+          },
+          {
+            "timestamp": "2026-11-21T18:10:00.000Z",
+            "value": 73.882
+          },
+          {
+            "timestamp": "2026-11-21T18:20:00.000Z",
+            "value": 62.635
+          },
+          {
+            "timestamp": "2026-11-21T18:30:00.000Z",
+            "value": 72.498
+          },
+          {
+            "timestamp": "2026-11-21T18:40:00.000Z",
+            "value": 61.179
+          },
+          {
+            "timestamp": "2026-11-21T18:50:00.000Z",
+            "value": 64.421
+          },
+          {
+            "timestamp": "2026-11-21T19:00:00.000Z",
+            "value": 63.262
+          },
+          {
+            "timestamp": "2026-11-21T19:10:00.000Z",
+            "value": 72.381
+          },
+          {
+            "timestamp": "2026-11-21T19:20:00.000Z",
+            "value": 72.667
+          },
+          {
+            "timestamp": "2026-11-21T19:30:00.000Z",
+            "value": 70.75
+          },
+          {
+            "timestamp": "2026-11-21T19:40:00.000Z",
+            "value": 71.478
+          },
+          {
+            "timestamp": "2026-11-21T19:50:00.000Z",
+            "value": 62.231
+          },
+          {
+            "timestamp": "2026-11-21T20:00:00.000Z",
+            "value": 65.54
+          },
+          {
+            "timestamp": "2026-11-21T20:10:00.000Z",
+            "value": 71.187
+          },
+          {
+            "timestamp": "2026-11-21T20:20:00.000Z",
+            "value": 73.731
+          },
+          {
+            "timestamp": "2026-11-21T20:30:00.000Z",
+            "value": 60.624
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "get_trace_summary",
+      "args": {
+        "service": "api",
+        "window": "6h"
+      },
+      "result": {
+        "service": "api",
+        "window": "6h",
+        "downstreams": [
+          {
+            "name": "auth",
+            "kind": "sync",
+            "latencyP95Ms": null,
+            "errorRate": null,
+            "observedDownstreamMs": 30.00783333333333,
+            "instrumented": false
+          },
+          {
+            "name": "catalog",
+            "kind": "sync",
+            "latencyP95Ms": null,
+            "errorRate": null,
+            "observedDownstreamMs": 30.00783333333333,
+            "instrumented": false
+          },
+          {
+            "name": "checkout",
+            "kind": "sync",
+            "latencyP95Ms": 132.08252777777778,
+            "errorRate": 0.00777777777777778,
+            "observedDownstreamMs": 30.00783333333333,
+            "instrumented": true
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "query_metrics",
+      "args": {
+        "service": "api",
+        "metric": "latency_downstream",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max"
+      },
+      "result": {
+        "service": "api",
+        "metric": "latency_downstream",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max",
+        "bucketCount": 36,
+        "points": [
+          {
+            "timestamp": "2026-11-21T14:40:00.000Z",
+            "value": 32.753
+          },
+          {
+            "timestamp": "2026-11-21T14:50:00.000Z",
+            "value": 30.007
+          },
+          {
+            "timestamp": "2026-11-21T15:00:00.000Z",
+            "value": 30.515
+          },
+          {
+            "timestamp": "2026-11-21T15:10:00.000Z",
+            "value": 28.663
+          },
+          {
+            "timestamp": "2026-11-21T15:20:00.000Z",
+            "value": 28.006
+          },
+          {
+            "timestamp": "2026-11-21T15:30:00.000Z",
+            "value": 30.327
+          },
+          {
+            "timestamp": "2026-11-21T15:40:00.000Z",
+            "value": 31.018
+          },
+          {
+            "timestamp": "2026-11-21T15:50:00.000Z",
+            "value": 28.889
+          },
+          {
+            "timestamp": "2026-11-21T16:00:00.000Z",
+            "value": 32.972
+          },
+          {
+            "timestamp": "2026-11-21T16:10:00.000Z",
+            "value": 32.312
+          },
+          {
+            "timestamp": "2026-11-21T16:20:00.000Z",
+            "value": 32.185
+          },
+          {
+            "timestamp": "2026-11-21T16:30:00.000Z",
+            "value": 30.178
+          },
+          {
+            "timestamp": "2026-11-21T16:40:00.000Z",
+            "value": 29.109
+          },
+          {
+            "timestamp": "2026-11-21T16:50:00.000Z",
+            "value": 30.988
+          },
+          {
+            "timestamp": "2026-11-21T17:00:00.000Z",
+            "value": 29.14
+          },
+          {
+            "timestamp": "2026-11-21T17:10:00.000Z",
+            "value": 27.799
+          },
+          {
+            "timestamp": "2026-11-21T17:20:00.000Z",
+            "value": 30.867
+          },
+          {
+            "timestamp": "2026-11-21T17:30:00.000Z",
+            "value": 32.408
+          },
+          {
+            "timestamp": "2026-11-21T17:40:00.000Z",
+            "value": 27.338
+          },
+          {
+            "timestamp": "2026-11-21T17:50:00.000Z",
+            "value": 27.248
+          },
+          {
+            "timestamp": "2026-11-21T18:00:00.000Z",
+            "value": 32.599
+          },
+          {
+            "timestamp": "2026-11-21T18:10:00.000Z",
+            "value": 27.665
+          },
+          {
+            "timestamp": "2026-11-21T18:20:00.000Z",
+            "value": 29.023
+          },
+          {
+            "timestamp": "2026-11-21T18:30:00.000Z",
+            "value": 28.747
+          },
+          {
+            "timestamp": "2026-11-21T18:40:00.000Z",
+            "value": 32.714
+          },
+          {
+            "timestamp": "2026-11-21T18:50:00.000Z",
+            "value": 29.048
+          },
+          {
+            "timestamp": "2026-11-21T19:00:00.000Z",
+            "value": 30.522
+          },
+          {
+            "timestamp": "2026-11-21T19:10:00.000Z",
+            "value": 29.541
+          },
+          {
+            "timestamp": "2026-11-21T19:20:00.000Z",
+            "value": 30.471
+          },
+          {
+            "timestamp": "2026-11-21T19:30:00.000Z",
+            "value": 27.091
+          },
+          {
+            "timestamp": "2026-11-21T19:40:00.000Z",
+            "value": 30.468
+          },
+          {
+            "timestamp": "2026-11-21T19:50:00.000Z",
+            "value": 30.882
+          },
+          {
+            "timestamp": "2026-11-21T20:00:00.000Z",
+            "value": 29.457
+          },
+          {
+            "timestamp": "2026-11-21T20:10:00.000Z",
+            "value": 30.419
+          },
+          {
+            "timestamp": "2026-11-21T20:20:00.000Z",
+            "value": 31.005
+          },
+          {
+            "timestamp": "2026-11-21T20:30:00.000Z",
+            "value": 27.908
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "search_runbooks",
+      "args": {
+        "query": "latencia"
+      },
+      "result": {
+        "query": "latencia",
+        "returned": 3,
+        "runbooks": [
+          {
+            "service": "web",
+            "slug": "service-runbook",
+            "title": "Web SSR: errores de render",
+            "bodyMd": "## Sintomas\n5xx en SSR, hidratacion rota o latencia p95 fuera de SLO.\n\n## Pasos\n1. `search_logs` de `web` con `query=render` y `level=error` en 30m.\n2. `get_trace_summary` de `web` para ver si el cuello esta en `api`.\n3. Si hay deploy en la ventana, proponer rollback con blast radius.",
+            "updatedAt": "2026-11-11T18:24:00.000Z"
+          },
+          {
+            "service": "api",
+            "slug": "service-runbook",
+            "title": "API publica: latencia y 5xx",
+            "bodyMd": "## Sintomas\np95 por encima de 250ms o 5xx por encima del 1%.\n\n## Pasos\n1. `query_metrics` de `api` con `latency_p95`, `http_5xx_rate`, `db_pool_used`.\n2. `get_trace_summary` de `api`: aislar `checkout`, `catalog` o `auth`.\n3. Revisar `get_feature_flags` de `api` si el cambio coincide con un rollout.",
+            "updatedAt": "2026-11-06T18:24:00.000Z"
+          },
+          {
+            "service": "payments",
+            "slug": "service-runbook",
+            "title": "Payments: timeouts del PSP",
+            "bodyMd": "## Sintomas\nLatencia del adaptador por encima de 500ms o rechazos inesperados.\n\n## Pasos\n1. `query_metrics` de `payments` con `latency_p99` y `latency_downstream`.\n2. `search_logs` de `payments` con `query=timeout`.\n3. Si el primario falla, revisar `payments.psp.failover` en `get_feature_flags`.",
+            "updatedAt": "2026-10-27T18:24:00.000Z"
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}
