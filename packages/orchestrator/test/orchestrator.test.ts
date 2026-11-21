@@ -110,6 +110,14 @@ class FakeStore implements RunStore {
   async getTimeline(): Promise<null> {
     return null;
   }
+
+  async getRun(): Promise<null> {
+    return null;
+  }
+
+  async listRuns(): Promise<Run[]> {
+    return [];
+  }
 }
 
 function scriptedModel(decisions: ModelDecision[]): Model {
