@@ -8,7 +8,7 @@ import type {
   EffectReservation,
   ReserveEffectInput,
 } from "@beacon/core/ports/effect-ledger";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 import type { Database } from "./db.js";
 import { actionEffects } from "./schema.js";
@@ -89,8 +89,7 @@ export class DrizzleEffectLedger implements EffectLedger {
     return { reserved: false, effect: toEffect(found) };
   }
 
-  async completeEffect(effectId: string, outcome: EffectOutcome): Promise<EffectRecord> {
-    const updated = await this.#db
+  async completeEffect(effectId: string, outcome: EffectOutcome): Promise<EffectRecord> {    const updated = await this.#db
       .update(actionEffects)
       .set({
         status: outcome.status,
@@ -109,5 +108,17 @@ export class DrizzleEffectLedger implements EffectLedger {
       throw new AppError("internal", "action_effects update returned no row");
     }
     return toEffect(row);
+  }
+
+  async getEffectForProposal(proposalId: string): Promise<EffectRecord | null> {
+    const rows = await this.#db
+      .select()
+      .from(actionEffects)
+      .where(eq(actionEffects.proposalId, proposalId))
+      .orderBy(desc(actionEffects.createdAt))
+      .limit(1);
+
+    const row = rows[0];
+    return row ? toEffect(row) : null;
   }
 }

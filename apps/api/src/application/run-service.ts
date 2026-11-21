@@ -1,8 +1,8 @@
 import type { Principal } from "@beacon/core/domain/principal";
-import type { RunTimeline, RunTrigger } from "@beacon/core/domain/runs";
+import type { Run, RunTimeline, RunTrigger } from "@beacon/core/domain/runs";
 import { AppError } from "@beacon/core/errors/app-error";
 import type { Model } from "@beacon/core/ports/model";
-import type { RunStore } from "@beacon/core/ports/run-store";
+import type { ListRunsOptions, RunStore } from "@beacon/core/ports/run-store";
 import type { ToolGateway } from "@beacon/core/ports/tool-gateway";
 import { Orchestrator, type RunResult } from "@beacon/orchestrator/orchestrator";
 
@@ -58,5 +58,10 @@ export class RunService {
       throw new AppError("not_found", "run not found", { statusCode: 404 });
     }
     return timeline;
+  }
+
+  /** Runs recientes del tenant: la pantalla de inicio de la UI. */
+  async list(tenantId: string, options?: ListRunsOptions): Promise<Run[]> {
+    return this.#deps.store.listRuns(tenantId, options);
   }
 }

@@ -7,6 +7,7 @@ import type {
 } from "@beacon/core/domain/runs";
 import { AppError } from "@beacon/core/errors/app-error";
 import type {
+  ListRunsOptions,
   AppendStepInput,
   AppendToolCallInput,
   CompleteToolCallInput,
@@ -14,7 +15,7 @@ import type {
   FinishRunRecordInput,
   RunStore,
 } from "@beacon/core/ports/run-store";
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 
 import type { Database } from "./db.js";
 import { runs, steps, toolCalls } from "./schema.js";
@@ -227,6 +228,35 @@ export class DrizzleRunStore implements RunStore {
     return {
       run: toRun(runRow),
       steps: timelineSteps,
+      // Las propuestas del run las compone la capa de aplicación: el store de runs no
+      // conoce el control plane de escrituras.
+      proposals: [],
     };
+  }
+
+  async getRun(runId: string, tenantId: string): Promise<Run | null> {
+    const [row] = await this.#db
+      .select()
+      .from(runs)
+      .where(and(eq(runs.id, runId), eq(runs.tenantId, tenantId)))
+      .limit(1);
+
+    return row ? toRun(row) : null;
+  }
+
+  async listRuns(tenantId: string, options: ListRunsOptions = {}): Promise<Run[]> {
+    const limit = Math.min(Math.max(options.limit ?? 50, 1), 200);
+    const where = options.status
+      ? and(eq(runs.tenantId, tenantId), eq(runs.status, options.status))
+      : eq(runs.tenantId, tenantId);
+
+    const rows = await this.#db
+      .select()
+      .from(runs)
+      .where(where)
+      .orderBy(desc(runs.createdAt))
+      .limit(limit);
+
+    return rows.map(toRun);
   }
 }

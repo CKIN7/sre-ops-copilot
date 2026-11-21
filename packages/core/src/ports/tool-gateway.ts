@@ -13,6 +13,12 @@ export interface ToolCallContext {
   agentId: string;
   runId: string | null;
   stepIdx: number;
+  /**
+   * Id de la tool call que originó esta llamada, si la hay. El orquestador crea la
+   * fila antes de llamar al gateway (write-ahead), así que una escritura puede
+   * engancharse a su tool call y verse en la timeline del run.
+   */
+  toolCallId?: string | null;
 }
 
 export interface ToolCallResult {

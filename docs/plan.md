@@ -472,6 +472,28 @@ Sin esto, la demo arranca vacía y el visitante no sabe qué pedir.
 
 Declarar lo que no es real es señal de senioridad. Que te lo descubran, no.
 
+### 11.8 Estado de la UI (M4b)
+
+`apps/web` es una app de React (Vite, TanStack Query, Tailwind v4) que habla **solo**
+con la API por `/api`. No toca Postgres ni `mcp-ops`.
+
+Implementado y verificado:
+
+- **Runs:** lista de runs y, al elegir uno, su timeline: steps, tool calls con los args
+  **redactados**, latencia, coste, tokens y el estado de las escrituras del run. Las
+  propuestas que propuso el modelo cuelgan de su tool call; las abiertas desde la API
+  se listan aparte en "Escrituras del run", para que su `apply` no quede invisible.
+- **Aprobaciones:** la cola de propuestas con el diff, el radio de impacto (servicio,
+  tier, equipo y dependientes), la evidencia y los botones de aprobar y rechazar. Las
+  dos decisiones exigen un motivo, que queda en la auditoría. **Aprobar ejecuta el
+  `apply`**: es la misma llamada que decide y aplica, y el efecto es idempotente.
+- **Token:** en local el proxy de Vite inyecta el bearer del `.env` para que el token de
+  servicio no llegue al bundle del navegador. Si la API responde 401, la UI pide uno.
+
+Pendiente (no existe todavía): dashboard de coste y p95, replay desde fixtures, vista
+de eval, escenarios guiados de la demo pública y la vista `/about` con la tabla de
+honestidad (§11.7), que hoy solo vive en el README.
+
 ---
 
 ## 12. Demo: tres capas
@@ -581,8 +603,7 @@ Decisiones: ADR-003 (gateway como punto único de enforcement) y ADR-012 (audit
 encadenado y rate limit). Siguiente: M4 (dos fases, aprobaciones, UI).
 
 **Estado (2026-11-21): M4a (backend) cerrado.** M1, M2, M3 y M4a están cerrados. M4b
-(UI) y M5 (evals) siguen abiertos.
-
+(UI) se cerró más tarde el mismo día; M5 (evals) sigue abierto.
 M4a se verificó contra Postgres real (`apps/api/test/proposals.integration.test.ts`):
 
 - Las tres tools `propose_*` de `mcp-ops` **no mutan nada**: calculan el plan (diff,
@@ -605,14 +626,39 @@ M4a se verificó contra Postgres real (`apps/api/test/proposals.integration.test
   Postgres (`simulated_state`, sembrado por el seed). Los cinco fallos de §6.4 se
   inyectan por constructor o por `FAULTS`.
 
-**Pendiente de M4a (no cerrado):** la UI de aprobación (M4b), el CLI de aprobaciones, la
-reanudación del run tras la aprobación (el `apply` se encadena hoy en la misma llamada
-de la API) y el `SandboxExecutor` real (M7).
-
 **Pendiente de M3 (no cerrado):** el intercambio de tokens (OAuth on-behalf-of) no
 existe, porque todavía no hay MCP de terceros a los que autenticarse. Lo que sí está
 resuelto es que el bearer de servicio nunca viaja en los argumentos, en el contexto ni
 en la auditoría.
+
+**Estado (2026-11-21): M4b (UI) cerrado.** M1, M2, M3, M4a y M4b están cerrados. M5
+(evals) sigue abierto.
+
+M4b se verificó de punta a punta con el stack real (mcp-ops HTTP + API + Postgres + UI
+en el navegador), no solo con tests:
+
+- La UI (`apps/web`) habla solo con la API. En local el proxy de Vite inyecta el bearer
+  del `.env`: el token de servicio no llega al bundle del navegador.
+- Un run creado por el CLI aparece en la lista y su timeline se lee desde la API con
+  los steps, las tool calls y los args redactados.
+- Una propuesta abierta desde la API aparece en la cola de aprobaciones con el diff,
+  el radio de impacto (con sus dependientes) y la evidencia.
+- **Aprobar desde la UI ejecuta el `apply`**: la propuesta pasó a `applied`, el efecto
+  quedó `verified` con su duración, y `simulated_state` en Postgres cambió a la versión
+  objetivo. El motivo escrito por la persona quedó en la decisión y en el audit.
+- La timeline del run muestra el estado del `apply`, también para las propuestas que no
+  cuelgan de una tool call (abiertas desde la API).
+- `GET /audit/verify` siguió devolviendo `ok: true` (18 entradas) después de aprobar
+  desde la UI: la decisión humana y el efecto quedan encadenados.
+- Los endpoints de propuestas devuelven siempre la misma forma (propuesta + decisión +
+  efecto), para que la UI no tenga que adivinar el contrato.
+
+**Pendiente de M4b (no cerrado):** el dashboard de coste y p95, el replay desde
+fixtures, la vista de eval, los escenarios guiados de la demo pública y la vista
+`/about` con la tabla de honestidad (§11.7).
+
+**Pendiente de M4a (no cerrado):** la reanudación del run tras la aprobación (el
+`apply` se encadena hoy en la misma llamada de la API) y el `SandboxExecutor` real (M7).
 
 **Recortes si vas justo:** terceros MCP, SSO, `DemoStackExecutor`, multi-región,
 `query_readonly_sql`.

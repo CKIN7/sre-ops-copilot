@@ -15,6 +15,8 @@ import type {
 import { createApp } from "../src/app.js";
 import { loadConfig } from "../src/config.js";
 import { MemoryAuditLog } from "./support/memory-audit-log.js";
+import { MemoryEffectLedger } from "./support/memory-effect-ledger.js";
+import { MemoryProposalStore } from "./support/memory-proposal-store.js";
 import { MemoryRunStore } from "./support/memory-run-store.js";
 
 const TOKEN = "test-operator-token-0123456789abcdef";
@@ -98,6 +100,8 @@ function buildApp(overrides: { directory?: PrincipalDirectory; store?: MemoryRun
     store,
     directory: overrides.directory ?? DEFAULT_DIRECTORY,
     audit,
+    proposalStore: new MemoryProposalStore(),
+    effectLedger: new MemoryEffectLedger(),
     gatewayFactory,
   });
 

@@ -80,6 +80,7 @@ const TIMELINE: RunTimeline = {
       ],
     },
   ],
+  proposals: [],
 };
 
 function jsonResponse(body: unknown, status = 200): Response {

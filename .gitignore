@@ -23,6 +23,7 @@ logs/
 *.log
 npm-debug.log*
 pnpm-debug.log*
+tmp-*.err
 
 # Editor y sistema
 .DS_Store

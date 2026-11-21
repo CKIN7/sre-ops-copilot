@@ -1,6 +1,7 @@
 import { AppError } from "@beacon/core/errors/app-error";
 import type { AuditLog } from "@beacon/core/ports/audit-log";
 import { PROPOSAL_STATUSES } from "@beacon/core/domain/write-tools";
+import { RUN_STATUSES } from "@beacon/core/domain/runs";
 import { createRunInputSchema } from "@beacon/core/schemas/runs";
 import { WRITE_TOOL_NAMES } from "@beacon/core/schemas/writes";
 import type { FastifyInstance } from "fastify";
@@ -21,11 +22,18 @@ const startRunBodySchema = createRunInputSchema.extend({
 
 const runParamsSchema = z.object({ id: z.uuid() });
 
+const listRunsQuerySchema = z.object({
+  status: z.enum(RUN_STATUSES).optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+});
+
 const proposalParamsSchema = z.object({ id: z.uuid() });
 
 const proposeBodySchema = z.object({
   tool: z.enum(WRITE_TOOL_NAMES as [string, ...string[]]),
   args: z.record(z.string(), z.unknown()),
+  /** Run al que se ancla la propuesta; se valida contra el tenant. */
+  run_id: z.uuid().nullish(),
 });
 
 const proposalQuerySchema = z.object({
@@ -82,11 +90,23 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
     return { run: result };
   });
 
+  app.get("/runs", async (request) => {
+    const resolved = await resolvePrincipal(request.headers.authorization);
+    const query = parseOrThrow(listRunsQuerySchema, request.query);
+
+    return { runs: await deps.service.list(resolved.principal.tenantId, query) };
+  });
+
   app.get("/runs/:id", async (request) => {
     const resolved = await resolvePrincipal(request.headers.authorization);
 
     const { id } = parseOrThrow(runParamsSchema, request.params);
-    return deps.service.timeline(id, resolved.principal.tenantId);
+    const timeline = await deps.service.timeline(id, resolved.principal.tenantId);
+    // Las propuestas del run cuelgan de la timeline: son las escrituras que propuso
+    // y lo que pasó con ellas (plan §11).
+    const proposals = await deps.proposals.forRun(id, resolved.principal.tenantId);
+
+    return { ...timeline, proposals };
   });
 
   /**
@@ -114,17 +134,22 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
       agent: resolved.agent,
       tool: body.tool,
       args: body.args,
+      runId: body.run_id ?? null,
     });
 
     reply.status(201).header("location", `/proposals/${result.proposal_id}`);
     return { proposal: result };
   });
 
+  /**
+   * La cola de propuestas. Cada una viene con su decisión y su efecto: la UI decide
+   * sobre una lista y, después de aprobar, necesita ver qué pasó al aplicarlo.
+   */
   app.get("/proposals", async (request) => {
     const resolved = await resolvePrincipal(request.headers.authorization);
     const query = parseOrThrow(proposalQuerySchema, request.query);
 
-    const proposals = await deps.proposals.list(resolved.principal.tenantId, {
+    const proposals = await deps.proposals.listDetails(resolved.principal.tenantId, {
       status: query.status,
       limit: query.limit,
     });
@@ -135,7 +160,7 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
     const resolved = await resolvePrincipal(request.headers.authorization);
     const { id } = parseOrThrow(proposalParamsSchema, request.params);
 
-    return { proposal: await deps.proposals.get(id, resolved.principal.tenantId) };
+    return { proposal: await deps.proposals.detail(id, resolved.principal.tenantId) };
   });
 
   /**
@@ -154,9 +179,7 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
     });
 
     return {
-      proposal: outcome.proposal,
-      approval: outcome.approval,
-      effect: outcome.effect,
+      proposal: await deps.proposals.detail(id, resolved.principal.tenantId),
       replayed: outcome.replayed,
     };
   });
@@ -166,12 +189,12 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps): void {
     const { id } = parseOrThrow(proposalParamsSchema, request.params);
     const body = parseOrThrow(decisionBodySchema, request.body ?? {});
 
-    const outcome = await deps.proposals.reject({
+    await deps.proposals.reject({
       principal: resolved.principal,
       proposalId: id,
       reason: body.reason ?? null,
     });
 
-    return { proposal: outcome.proposal, approval: outcome.approval };
+    return { proposal: await deps.proposals.detail(id, resolved.principal.tenantId) };
   });
 }

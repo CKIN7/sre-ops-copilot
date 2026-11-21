@@ -135,14 +135,18 @@ export class DrizzleProposalStore implements ProposalStore {
     options: ListProposalsOptions = {},
   ): Promise<ProposalRecord[]> {
     const limit = Math.min(Math.max(options.limit ?? 50, 1), 200);
-    const where = options.status
-      ? and(eq(proposals.tenantId, tenantId), eq(proposals.status, options.status))
-      : eq(proposals.tenantId, tenantId);
+    const conditions = [eq(proposals.tenantId, tenantId)];
+    if (options.status) {
+      conditions.push(eq(proposals.status, options.status));
+    }
+    if (options.runId) {
+      conditions.push(eq(proposals.runId, options.runId));
+    }
 
     const rows = await this.#db
       .select()
       .from(proposals)
-      .where(where)
+      .where(and(...conditions))
       .orderBy(desc(proposals.createdAt))
       .limit(limit);
 

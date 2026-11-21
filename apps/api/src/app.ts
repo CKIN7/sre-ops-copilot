@@ -150,6 +150,8 @@ export function createApp(options: CreateAppOptions): AppHandle {
 
   const proposals = new ProposalService({
     store: proposalStore,
+    effects: effectLedger,
+    runs: store,
     applier,
     createGateway: gatewayFactory,
   });

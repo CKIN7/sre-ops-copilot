@@ -1,4 +1,9 @@
-import type { ProposalStatus, RiskLevel, WriteKind } from "../domain/write-tools.js";
+import type { ApprovalRecord, ProposalRecord } from "../domain/proposals.js";
+import type {
+  ProposalStatus,
+  RiskLevel,
+  WriteKind,
+} from "../domain/write-tools.js";
 import type { WriteToolName } from "../schemas/writes.js";
 
 /**
@@ -12,49 +17,15 @@ import type { WriteToolName } from "../schemas/writes.js";
  * conoce esta interfaz (ADR-003, decisión 5).
  */
 
-export { PROPOSAL_STATUSES } from "../domain/write-tools.js";
-export type { ProposalStatus };
-
-export type ApprovalDecision = "approved" | "rejected";
-
-export interface ProposalRecord {
-  id: string;
-  /** Id de la aprobación, acuñado al proponer: la referencia no cambia al decidir. */
-  approvalId: string;
-  tenantId: string;
-  kind: WriteKind;
-  tool: WriteToolName;
-  status: ProposalStatus;
-  risk: RiskLevel;
-  /** Qué se toca: el servicio, la flag o la alerta. */
-  target: string;
-  /** Argumentos **ya redactados**: es lo que se ejecutará. */
-  args: unknown;
-  diff: unknown;
-  blastRadius: unknown;
-  evidence: string[];
-  idempotencyKey: string;
-  /** `null` = propuesta abierta fuera de un run. */
-  runId: string | null;
-  toolCallId: string | null;
-  createdAt: string;
-  decidedAt: string | null;
-  appliedAt: string | null;
-}
-
-export interface ApprovalRecord {
-  id: string;
-  proposalId: string;
-  tenantId: string;
-  /** `user:<uuid>`: el id resuelto server-side, nunca un email. */
-  approver: string;
-  decision: ApprovalDecision;
-  reason: string | null;
-  decidedAt: string;
-}
+export type { ProposalStatus, RiskLevel } from "../domain/write-tools.js";
+export type {
+  ApprovalDecision,
+  ApprovalRecord,
+  ProposalRecord,
+} from "../domain/proposals.js";
 
 export interface CreateProposalInput {
-  /** Id acuñado por la aplicación: el audit lo cita antes de que la fila exista. */
+  /** Id acuñado por la aplicación: el audit lo cita antes de que exista la fila. */
   id: string;
   /** Id de la aprobación, acuñado junto con la propuesta. */
   approvalId: string;
@@ -74,6 +45,8 @@ export interface CreateProposalInput {
 
 export interface ListProposalsOptions {
   status?: ProposalStatus;
+  /** Filtra por run: las propuestas que abrió un run concreto. */
+  runId?: string;
   limit?: number;
 }
 
@@ -81,7 +54,7 @@ export interface DecideApprovalInput {
   proposalId: string;
   tenantId: string;
   approver: string;
-  decision: ApprovalDecision;
+  decision: "approved" | "rejected";
   reason: string | null;
   decidedAt: string;
 }

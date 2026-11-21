@@ -75,7 +75,7 @@ export function createProposalWriter(options: ProposalWriterOptions): ProposalWr
         evidence: redactValue(plan.evidence) as string[],
         idempotencyKey: key,
         runId: context.runId,
-        toolCallId: null,
+        toolCallId: context.toolCallId ?? null,
       };
 
       // La propuesta se persiste antes de auditarla: si la intención ya se propuso,

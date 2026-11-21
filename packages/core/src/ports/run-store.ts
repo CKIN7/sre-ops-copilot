@@ -52,6 +52,11 @@ export interface CompleteToolCallInput {
   finishedAt: string;
 }
 
+export interface ListRunsOptions {
+  limit?: number;
+  status?: RunStatus;
+}
+
 /**
  * Puerto de persistencia del control plane. La implementación (Drizzle/Postgres)
  * vive en `apps/api`; el orquestador solo conoce esta interfaz.
@@ -64,4 +69,8 @@ export interface RunStore {
   appendToolCall(input: AppendToolCallInput): Promise<ToolCall>;
   completeToolCall(input: CompleteToolCallInput): Promise<void>;
   getTimeline(runId: string, tenantId: string): Promise<RunTimeline | null>;
+  /** Un run concreto del tenant; `null` si no existe o es de otro tenant. */
+  getRun(runId: string, tenantId: string): Promise<Run | null>;
+  /** Runs recientes de un tenant: lo que la UI lista en su pantalla de inicio. */
+  listRuns(tenantId: string, options?: ListRunsOptions): Promise<Run[]>;
 }

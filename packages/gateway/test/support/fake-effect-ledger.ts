@@ -65,4 +65,8 @@ export class FakeEffectLedger implements EffectLedger {
     record.appliedAt = outcome.appliedAt;
     return record;
   }
+
+  async getEffectForProposal(proposalId: string): Promise<EffectRecord | null> {
+    return [...this.effects.values()].find((effect) => effect.proposalId === proposalId) ?? null;
+  }
 }
