@@ -14,23 +14,30 @@ nada ni arruinarla.
 
 ## Estado
 
-**M4b cerrado (2026-11-21).** M3 había dejado `mcp-ops` con las 10 tools de lectura por
-stdio y Streamable HTTP con bearer de servicio, el gateway con allowlist, validación,
-rate limit con ventana deslizante, redacción y audit encadenado por hash verificable con
-`pnpm cli audit verify`, el orquestador v0 con write-ahead y la API y el CLI produciendo
-la timeline en Postgres. M4a añade las escrituras en dos fases: tres tools `propose_*`
-que solo calculan el plan, el gateway que lo persiste como propuesta con su
-`approval_id`, y un `apply` interno que no se ejecuta sin aprobación humana, es
-idempotente ante rettento y maneja `409`, `timeout` y post-condición no verificada
-(`degraded`). El `SimulatedExecutor` es determinista y muta estado versionado en
-Postgres. M4b añade `apps/web`: la UI lee la API (nunca Postgres ni `mcp-ops`), muestra
-la timeline de un run con el estado de sus escrituras y la cola de aprobaciones con el
-diff, el radio de impacto y la evidencia; aprobar desde la UI **ejecuta** el `apply`.
-El único modelo es `mock` guionizado: no hay LLM, tokens ni coste.
+**M5 cerrado (2026-11-21).** M1, M2, M3, M4a, M4b y M5 están cerrados. M3 dejó
+`mcp-ops` con las 10 tools de lectura por stdio y Streamable HTTP con bearer de
+servicio, el gateway con allowlist, validación, rate limit con ventana deslizante,
+redacción y audit encadenado por hash verificable con `pnpm cli audit verify`, el
+orquestador v0 con write-ahead y la API y el CLI produciendo la timeline en Postgres.
+M4a añade las escrituras en dos fases: tres tools `propose_*` que solo calculan el
+plan, el gateway que lo persiste como propuesta con su `approval_id`, y un `apply`
+interno que no se ejecuta sin aprobación humana, es idempotente ante rettento y maneja
+`409`, `timeout` y post-condición no verificada (`degraded`). El `SimulatedExecutor`
+es determinista y muta estado versionado en Postgres. M4b añade `apps/web`: la UI lee
+la API (nunca Postgres ni `mcp-ops`), muestra la timeline de un run con el estado de
+sus escrituras y la cola de aprobaciones; aprobar desde la UI **ejecuta** el `apply`.
+M5 añade `packages/evals`: 40 casos de golden set sobre los 10 arquetipos, 20 de
+red-team, fixtures VCR, aserciones de final/trayectoria/invariantes, gate en CI y
+meta-eval. Medido: `pass@1` 100% (60/60), `pass@5` 100% (coincide con `pass@1` por el
+modelo determinista), fault-handling 5/5, false-action rate 0%, coste 0 céntimos
+(no hay LLM) y red-team reportado 20/20. El meta-eval degrada `query_metrics` y lleva
+`pass@1` al 0%; el control neutro sigue en 100%. No hay juez LLM: la rúbrica es
+determinista.
 
-Lo que sigue es M5 (evals) y la reanudación del run tras la aprobación (el `apply` se
-encadena hoy en la misma llamada de la API). No inventar módulos, scripts ni cifras que
-no existan; si algo no está implementado, decirlo.
+Lo que sigue es la reanudación del run tras la aprobación (el `apply` se encadena hoy
+en la misma llamada de la API) y M6 (presupuestos, OTel, k6, modelo de coste). No
+inventar módulos, scripts ni cifras que no existan; si algo no está implementado,
+decirlo.
 
 ## Stack
 
@@ -79,6 +86,15 @@ pnpm build
 pnpm typecheck
 pnpm lint
 pnpm test
+
+# Evals (M5): 60 casos sobre fixtures, gate de CI y meta-eval
+pnpm evals
+pnpm evals:gate
+pnpm evals:meta
+
+# Re-grabar fixtures; con DATABASE_URL usa las tools reales; sin el, el generador
+# determinista del seed en un instante fijo
+pnpm evals:record
 
 # Postgres local + esquema + datos
 docker compose --env-file .env -f infra/compose/docker-compose.yml up -d --wait
