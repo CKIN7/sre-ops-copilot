@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+/*
+ * Estilo base de la UI de Beacon (plan §11).
+ *
+ * Fondo oscuro y tipografía de sistema: la UI es de guardia, se lee de un vistazo y
+ * no compite con el contenido. El color lo pone el estado (aplicado, degradado,
+ * pendiente), no la decoración.
+ */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: #0b0f14;
+  color: #e6edf3;
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+code,
+pre {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
