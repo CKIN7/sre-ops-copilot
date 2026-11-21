@@ -130,6 +130,7 @@ describeIntegration("escrituras en dos fases contra Postgres real (ADR-004)", ()
               "propose_set_flag",
               "propose_silence_alert",
             ],
+            budgetCents: 10,
           },
         };
       },
