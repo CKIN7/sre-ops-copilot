@@ -10,7 +10,8 @@ export type RateLimitScopeKind = "run" | "tenant" | "tool";
 
 export interface RateLimitInput {
   tenantId: string;
-  runId: string;
+  /** `null` = llamada fuera de un run (una propuesta abierta desde la API). */
+  runId: string | null;
   tool: string;
 }
 
