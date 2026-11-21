@@ -36,6 +36,18 @@
       "types": "./dist/schemas/tools.d.ts",
       "default": "./dist/schemas/tools.js"
     },
+    "./schemas/writes": {
+      "types": "./dist/schemas/writes.d.ts",
+      "default": "./dist/schemas/writes.js"
+    },
+    "./domain/tool-args": {
+      "types": "./dist/domain/tool-args.d.ts",
+      "default": "./dist/domain/tool-args.js"
+    },
+    "./domain/write-tools": {
+      "types": "./dist/domain/write-tools.d.ts",
+      "default": "./dist/domain/write-tools.js"
+    },
     "./schemas/runs": {
       "types": "./dist/schemas/runs.d.ts",
       "default": "./dist/schemas/runs.js"
@@ -63,6 +75,22 @@
     "./ports/action-executor": {
       "types": "./dist/ports/action-executor.d.ts",
       "default": "./dist/ports/action-executor.js"
+    },
+    "./ports/action-state": {
+      "types": "./dist/ports/action-state.d.ts",
+      "default": "./dist/ports/action-state.js"
+    },
+    "./ports/action-applier": {
+      "types": "./dist/ports/action-applier.d.ts",
+      "default": "./dist/ports/action-applier.js"
+    },
+    "./ports/proposal-store": {
+      "types": "./dist/ports/proposal-store.d.ts",
+      "default": "./dist/ports/proposal-store.js"
+    },
+    "./ports/effect-ledger": {
+      "types": "./dist/ports/effect-ledger.d.ts",
+      "default": "./dist/ports/effect-ledger.js"
     },
     "./ports/audit-log": {
       "types": "./dist/ports/audit-log.d.ts",
