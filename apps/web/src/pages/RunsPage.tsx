@@ -34,7 +34,9 @@ export function RunsPage({ client }: { client: ApiClient }) {
         </h2>
         {runs.isPending && <p className="mt-3 text-xs text-slate-500">cargando…</p>}
         {runs.isError && (
-          <p className="mt-3 text-xs text-rose-300">no se pudieron cargar los runs</p>
+          <p className="mt-3 text-xs text-rose-300">
+            no se pudieron cargar los runs: {String(runs.error?.message ?? runs.error)}
+          </p>
         )}
         <ul className="mt-2 space-y-1">
           {(runs.data ?? []).map((run) => (
@@ -63,14 +65,16 @@ export function RunsPage({ client }: { client: ApiClient }) {
       </section>
 
       <section>
-        {timeline.isPending && <p className="text-xs text-slate-500">cargando timeline…</p>}
+        {runId === null && (
+          <p className="text-xs text-slate-500">elige un run para ver su timeline</p>
+        )}
+        {runId !== null && timeline.isPending && (
+          <p className="text-xs text-slate-500">cargando timeline…</p>
+        )}
         {timeline.isError && (
           <p className="text-xs text-rose-300">no se pudo cargar la timeline</p>
         )}
         {timeline.data && <TimelineView timeline={timeline.data} />}
-        {!timeline.data && !timeline.isPending && !timeline.isError && (
-          <p className="text-xs text-slate-500">elige un run para ver su timeline</p>
-        )}
       </section>
     </div>
   );
