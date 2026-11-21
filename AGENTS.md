@@ -14,14 +14,18 @@ nada ni arruinarla.
 
 ## Estado
 
-**M3 cerrado (2026-11-20).** `mcp-ops` sirve las 10 tools de lectura por stdio y
-Streamable HTTP con bearer de servicio; el gateway aplica allowlist, validación, rate
-limit con ventana deslizante, redacción y audit encadenado por hash; el orquestador v0
-ejecuta runs con write-ahead; la API y el CLI producen la timeline en Postgres y
-verifican la cadena de audit (`beacon audit verify`). El único modelo es `mock`
-guionizado: no hay LLM, tokens ni coste.
+**M4a cerrado (2026-11-21).** M3 había dejado `mcp-ops` con las 10 tools de lectura por
+stdio y Streamable HTTP con bearer de servicio, el gateway con allowlist, validación,
+rate limit con ventana deslizante, redacción y audit encadenado por hash verificable con
+`pnpm cli audit verify`, el orquestador v0 con write-ahead y la API y el CLI produciendo
+la timeline en Postgres. M4a añade las escrituras en dos fases: tres tools `propose_*`
+que solo calculan el plan, el gateway que lo persiste como propuesta con su
+`approval_id`, y un `apply` interno que no se ejecuta sin aprobación humana, es
+idempotente ante rettento y maneja `409`, `timeout` y post-condición no verificada
+(`degraded`). El `SimulatedExecutor` es determinista y muta estado versionado en
+Postgres. El único modelo es `mock` guionizado: no hay LLM, tokens ni coste.
 
-Lo que sigue es M4 (dos fases, aprobaciones, UI) y M5 (evals). No inventar módulos,
+Lo que sigue es M4b (UI de aprobación y timeline) y M5 (evals). No inventar módulos,
 scripts ni cifras que no existan; si algo no está implementado, decirlo.
 
 ## Stack
@@ -81,6 +85,10 @@ $env:SEED_SCALE="0.1"; pnpm db:seed
 pnpm --filter @beacon/mcp-ops start:http
 pnpm start:api
 pnpm cli run --goal "Investiga el pico de errores 5xx en checkout"
+
+# Escritura en dos fases: proponer y aprobar (la aprobación ejecuta el apply)
+curl.exe -X POST http://127.0.0.1:3000/proposals -H "authorization: Bearer $env:BEACON_TOKEN" -H "content-type: application/json" -d '{"tool":"propose_rollback","args":{"service":"checkout","to_version":"1.41.0","reason":"pico de 5xx"}}'
+curl.exe -X POST http://127.0.0.1:3000/proposals/<proposal_id>/approve -H "authorization: Bearer $env:BEACON_TOKEN" -H "content-type: application/json" -d '{"reason":"adelante"}'
 ```
 
 `pnpm test` incluye integración contra `DATABASE_URL`; sin esa variable los tests que
