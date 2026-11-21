@@ -219,7 +219,9 @@ describeIntegration("escrituras en dos fases contra Postgres real (ADR-004)", ()
       headers: AUTH,
     });
     expect(detail.statusCode).toBe(200);
-    expect(detail.json<{ proposal: { id: string } }>().proposal.id).toBe(proposalId);
+    expect(
+      detail.json<{ proposal: { proposal: { id: string } } }>().proposal.proposal.id,
+    ).toBe(proposalId);
   });
 
   it("no ejecuta nada hasta que un humano aprueba", async () => {
