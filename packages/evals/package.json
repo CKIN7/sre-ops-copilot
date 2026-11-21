@@ -1,0 +1,44 @@
+{
+  "name": "@beacon/evals",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./harness": {
+      "types": "./dist/harness/runner.d.ts",
+      "default": "./dist/harness/runner.js"
+    },
+    "./cases": {
+      "types": "./dist/cases/golden-set.d.ts",
+      "default": "./dist/cases/golden-set.js"
+    }
+  },
+  "files": [
+    "dist",
+    "fixtures"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "vitest run",
+    "evals": "node dist/cli/eval-cli.js",
+    "gate": "node dist/cli/gate-cli.js",
+    "meta": "node dist/cli/meta-eval-cli.js",
+    "record": "node dist/cli/record-cli.js"
+  },
+  "dependencies": {
+    "@beacon/core": "workspace:*",
+    "@beacon/executors": "workspace:*",
+    "@beacon/gateway": "workspace:*",
+    "@beacon/mcp-ops": "workspace:*",
+    "@beacon/orchestrator": "workspace:*",
+    "pg": "8.23.1",
+    "@beacon/seed": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@types/pg": "8.23.1",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  }
+}
