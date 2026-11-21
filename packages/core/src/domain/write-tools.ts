@@ -10,13 +10,32 @@
 export const WRITE_KINDS = ["rollback", "set_flag", "silence_alert"] as const;
 export type WriteKind = (typeof WRITE_KINDS)[number];
 
-/**
- * Riesgo de la acción. `silence_alert` es de riesgo medio: tapa una señal, no rompe
+/** Riesgo de la acción. `silence_alert` es de riesgo medio: tapa una señal, no rompe
  * el servicio. Todas las escrituras, sin embargo, exigen aprobación humana: el
  * riesgo modula la atención que pide, no la exigencia de un humano (ADR-004).
  */
 export const RISK_LEVELS = ["alto", "medio", "bajo"] as const;
 export type RiskLevel = (typeof RISK_LEVELS)[number];
+
+/**
+ * Estados de una propuesta. `pending_approval` es el normal; el resto son lo que
+ * pasó con ella: aprobada y ejecutada, rechazada, en conflicto, a medias o
+ * degradada por no verificar la post-condición.
+ */
+export const PROPOSAL_STATUSES = [
+  "pending_approval",
+  "approved",
+  "rejected",
+  "applied",
+  "noop",
+  "conflict",
+  "timeout",
+  "partial",
+  "degraded",
+  "failed",
+] as const;
+
+export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number];
 
 /** `propose_silence_alert`: 24 h como máximo. */
 export const MAX_SILENCE_SECONDS = 24 * 3600;
