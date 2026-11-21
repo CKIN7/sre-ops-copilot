@@ -80,4 +80,40 @@ describe("ApiClient", () => {
       run_id: "run-1",
     });
   });
+
+  it("devuelve la cola de propuestas con su decisión y su efecto", async () => {
+    const fetchImpl = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            proposals: [
+              { proposal: { id: "p1", status: "pending_approval" }, approval: null, effect: null },
+            ],
+          }),
+          { status: 200 },
+        ),
+    ) as unknown as typeof fetch;
+
+    const client = new ApiClient({ token: "t", fetchImpl });
+    const proposals = await client.listProposals();
+
+    expect(proposals).toHaveLength(1);
+    expect(proposals[0]?.proposal.id).toBe("p1");
+    expect(proposals[0]?.approval).toBeNull();
+  });
+
+  it("llama a fetch sin receptor propio", async () => {
+    // Si `fetch` se invoca como metodo del cliente, el navegador responde
+    // "Illegal invocation": el `this` tiene que ser el global, no la instancia.
+    const fetchImpl = vi.fn(function (this: unknown) {
+      if (this !== undefined) {
+        throw new TypeError("Illegal invocation");
+      }
+      return Promise.resolve(new Response(JSON.stringify({ runs: [] }), { status: 200 }));
+    }) as unknown as typeof fetch;
+
+    const client = new ApiClient({ token: "t", fetchImpl });
+    await expect(client.listRuns()).resolves.toEqual([]);
+    expect(fetchImpl).toHaveBeenCalledOnce();
+  });
 });
