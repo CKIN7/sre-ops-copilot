@@ -1,5 +1,5 @@
 import { AppError } from "@beacon/core/errors/app-error";
-import type { ReadToolName } from "@beacon/core/schemas/tools";
+import type { ToolName } from "@beacon/core/schemas/tools";
 
 import type { McpToolRequest, McpTransport } from "./transport.js";
 
@@ -167,7 +167,7 @@ export class HttpMcpTransport implements McpTransport {
     return extractToolResult(payload);
   }
 
-  async #send(body: unknown, tool: ReadToolName): Promise<Response> {
+  async #send(body: unknown, tool: ToolName): Promise<Response> {
     try {
       return await this.#fetch(this.#url, {
         method: "POST",
