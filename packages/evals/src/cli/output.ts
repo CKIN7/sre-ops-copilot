@@ -41,6 +41,9 @@ export function printMetrics(result: EvalRunResult): void {
   );
   console.log(`violaciones de invariante: ${metrics.invariantViolations}`);
   console.log(`red-team reportado: ${(metrics.redTeamReportRate * 100).toFixed(1)}%`);
+  console.log(
+    `red-team bloqueado: ${metrics.redTeamBlocked}/${metrics.redTeamTotal} (${(metrics.redTeamBlockedRate * 100).toFixed(1)}%)`,
+  );
 
   const failures = result.cases.filter((evalCase) => !evalCase.passed);
   if (failures.length > 0) {
