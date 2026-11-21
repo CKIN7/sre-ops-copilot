@@ -157,10 +157,20 @@ interno que exige aprobación + `idempotency_key` y delega en un `ActionExecutor
 | Tool | Riesgo | Aprobación |
 |---|---|---|
 | `propose_rollback({service, to_version, reason})` | alto | sí |
-| `propose_flag_change({flag, value, reason})` | alto | sí |
-| `silence_alert({alert_id, duration, reason})` | medio | sí si `duration > 1h` |
+| `propose_set_flag({flag, value, reason})` | alto | sí |
+| `propose_silence_alert({alert_id, duration, reason})` | medio (bajo si `duration ≤ 1h`) | sí |
 | `create_incident({severity, summary, evidence})` | bajo | no, pero auditado |
 | `add_incident_note({incident_id, note})` | bajo | no, pero auditado |
+
+`create_incident` y `add_incident_note` siguen **pendientes**: necesitan la tabla
+`incidents`, que todavía no existe (§7, migración 0002). No se han construido.
+
+**Desviación deliberada (ADR-004):** la tabla original preveía auto-aprobar
+`silence_alert` cuando `duration ≤ 1h`. No se implementa: una escritura sin humano
+contradice el no negociable 2 de `AGENTS.md` y la tesis del proyecto. El riesgo del
+silencio sigue diferenciándose (`bajo` hasta una hora, `medio` después); lo que cambia es
+que **toda** escritura pasa por un humano. El `apply` no es una tool del modelo y no
+está en ninguna allowlist: es una operación interna del gateway.
 
 ### 3.5 Deny list deliberada
 
@@ -569,6 +579,35 @@ M3 se verificó con un run real y una comprobación de integridad:
 
 Decisiones: ADR-003 (gateway como punto único de enforcement) y ADR-012 (audit
 encadenado y rate limit). Siguiente: M4 (dos fases, aprobaciones, UI).
+
+**Estado (2026-11-21): M4a (backend) cerrado.** M1, M2, M3 y M4a están cerrados. M4b
+(UI) y M5 (evals) siguen abiertos.
+
+M4a se verificó contra Postgres real (`apps/api/test/proposals.integration.test.ts`):
+
+- Las tres tools `propose_*` de `mcp-ops` **no mutan nada**: calculan el plan (diff,
+  radio de impacto con los dependientes, riesgo y evidencia) sobre el dominio sembrado.
+- El gateway persiste el plan como `proposals` (idempotente por
+  `(tenant_id, idempotency_key)`) y devuelve `proposal_id` y `approval_id`. Repetir la
+  misma propuesta devuelve la misma, con el mismo `approval_id`.
+- El `apply` no es una tool y no está en ninguna allowlist: es una operación interna
+  del gateway que exige una decisión humana persistida. Sin aprobación, `apply` es un
+  403 y no se ejecuta nada.
+- La idempotencia del `apply` es una **restricción** (`action_effects.idempotency_key`
+  única), no una comprobación: repetir la aprobación devuelve el efecto guardado y el
+  ejecutor no se vuelve a llamar.
+- `409`, `timeout`, `partial` y `readiness` quedan registrados con su estado observado
+  y no se reintentan a ciegas. Un efecto aplicado pero no verificado deja la propuesta
+  en `degraded`: nunca se reporta como éxito.
+- Las dos fases van auditadas (`proposal.created`, `proposal.approved`, `action.applied`)
+  y la cadena sigue verificándose con `beacon audit verify`.
+- El `SimulatedExecutor` es determinista y muta un documento de estado versionado en
+  Postgres (`simulated_state`, sembrado por el seed). Los cinco fallos de §6.4 se
+  inyectan por constructor o por `FAULTS`.
+
+**Pendiente de M4a (no cerrado):** la UI de aprobación (M4b), el CLI de aprobaciones, la
+reanudación del run tras la aprobación (el `apply` se encadena hoy en la misma llamada
+de la API) y el `SandboxExecutor` real (M7).
 
 **Pendiente de M3 (no cerrado):** el intercambio de tokens (OAuth on-behalf-of) no
 existe, porque todavía no hay MCP de terceros a los que autenticarse. Lo que sí está
