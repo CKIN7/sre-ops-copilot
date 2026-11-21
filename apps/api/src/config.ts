@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 
+import type { BudgetUsage } from "@beacon/core/ports/budget";
 import type { RateLimitPolicy } from "@beacon/core/ports/rate-limiter";
 import { parseFaults, type Fault } from "@beacon/executors/faults";
 import { z } from "zod";
@@ -31,6 +32,16 @@ const envSchema = z.object({
   RATE_LIMIT_RUN: z.coerce.number().int().min(1).default(60),
   RATE_LIMIT_TENANT: z.coerce.number().int().min(1).default(600),
   RATE_LIMIT_TOOL: z.coerce.number().int().min(1).default(120),
+  // Presupuesto (docs/plan.md §4.5). El coste por run lo pone `agents.budget_cents`;
+  // estos valores son los techos de tokens/reloj y el agregado del tenant.
+  BUDGET_RUN_TOKENS_IN: z.coerce.number().int().min(0).default(200_000),
+  BUDGET_RUN_TOKENS_OUT: z.coerce.number().int().min(0).default(50_000),
+  BUDGET_RUN_WALL_MS: z.coerce.number().int().min(0).default(90_000),
+  BUDGET_TENANT_COST_CENTS: z.coerce.number().int().min(0).default(10_000),
+  BUDGET_TENANT_TOKENS_IN: z.coerce.number().int().min(0).default(5_000_000),
+  BUDGET_TENANT_TOKENS_OUT: z.coerce.number().int().min(0).default(1_000_000),
+  BUDGET_TENANT_WALL_MS: z.coerce.number().int().min(0).default(3_600_000),
+  BUDGET_RESERVATION_TTL_MS: z.coerce.number().int().min(1_000).default(300_000),
   // Ejecución de acciones (ADR-005). Solo `simulated`: el `sandbox` real llega con
   // M7 y su suite de contrato.
   EXECUTOR: z.enum(["simulated"]).default("simulated"),
@@ -66,6 +77,14 @@ export interface ApiConfig {
   mcpAuthToken: string;
   tokens: readonly ResolvedAuthToken[];
   rateLimit: RateLimitPolicy;
+  /** Overrides de presupuesto; el coste por run sale del agente. */
+  budget: {
+    overrides: {
+      perRun?: Partial<BudgetUsage>;
+      perTenant?: Partial<BudgetUsage>;
+    };
+    reservationTtlMs: number;
+  };
   /** Nombre del executor de acciones. */
   executor: "simulated";
   /** Fallos inyectados: los que se prueban, no los que se esperan. */
@@ -128,5 +147,21 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     },
     executor: parsed.data.EXECUTOR,
     faults: parseFaults(parsed.data.FAULTS),
+    budget: {
+      overrides: {
+        perRun: {
+          tokensIn: parsed.data.BUDGET_RUN_TOKENS_IN,
+          tokensOut: parsed.data.BUDGET_RUN_TOKENS_OUT,
+          wallMs: parsed.data.BUDGET_RUN_WALL_MS,
+        },
+        perTenant: {
+          tokensIn: parsed.data.BUDGET_TENANT_TOKENS_IN,
+          tokensOut: parsed.data.BUDGET_TENANT_TOKENS_OUT,
+          costCents: parsed.data.BUDGET_TENANT_COST_CENTS,
+          wallMs: parsed.data.BUDGET_TENANT_WALL_MS,
+        },
+      },
+      reservationTtlMs: parsed.data.BUDGET_RESERVATION_TTL_MS,
+    },
   };
 }
