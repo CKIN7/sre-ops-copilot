@@ -34,6 +34,9 @@ alter table audit_log
 
 create table proposals (
   id uuid primary key default gen_random_uuid(),
+  -- Id de la aprobación, acuñado al proponer: la referencia no cambia al decidir, y
+  -- es lo que el llamante recibe para poder aprobar más adelante.
+  approval_id uuid not null,
   tenant_id uuid not null references tenants (id) on delete cascade,
   -- Qué se propone, no qué tool lo propuso: el par (kind, tool) es fijo.
   kind text not null check (kind in ('rollback', 'set_flag', 'silence_alert')),
@@ -78,7 +81,9 @@ create index proposals_tenant_status_idx on proposals (tenant_id, status);
 -- Una decisión por propuesta: es terminal. Repetir la aprobación devuelve la existente
 -- en vez de abrir un hilo de decisiones que nadie sabe cuál manda.
 create table approvals (
-  id uuid primary key default gen_random_uuid(),
+  -- El id lo aporta la aplicación y es el `approval_id` de la propuesta: la
+  -- aprobación nace con la propuesta y no cambia al decidirse.
+  id uuid primary key,
   proposal_id uuid not null references proposals (id) on delete cascade,
   tenant_id uuid not null references tenants (id) on delete cascade,
   -- `user:<uuid>`: el id resuelto server-side, nunca un email (la PII no se persiste).
