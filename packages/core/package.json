@@ -44,6 +44,10 @@
       "types": "./dist/domain/tool-args.d.ts",
       "default": "./dist/domain/tool-args.js"
     },
+    "./domain/idempotency": {
+      "types": "./dist/domain/idempotency.d.ts",
+      "default": "./dist/domain/idempotency.js"
+    },
     "./domain/write-tools": {
       "types": "./dist/domain/write-tools.d.ts",
       "default": "./dist/domain/write-tools.js"
@@ -111,6 +115,7 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@types/node": "22.20.5",
     "typescript": "6.0.3",
     "vitest": "5.1.0"
   }
