@@ -19,6 +19,16 @@ export function TimelineView({ timeline }: { timeline: RunTimeline }) {
     }
   }
 
+  /**
+   * Los ids de las tool calls que están en la timeline. Una propuesta abierta desde
+   * la API (no desde el modelo) no cuelga de ninguna: se lista aparte para que su
+   * `apply` siga siendo visible.
+   */
+  const callIds = new Set(steps.flatMap((step) => step.toolCalls.map((call) => call.id)));
+  const detached = proposals.filter(
+    (detail) => !detail.proposal.toolCallId || !callIds.has(detail.proposal.toolCallId),
+  );
+
   return (
     <div className="space-y-4">
       <header className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
@@ -108,6 +118,41 @@ export function TimelineView({ timeline }: { timeline: RunTimeline }) {
           </li>
         ))}
       </ol>
+
+      {detached.length > 0 && (
+        <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Escrituras del run
+          </h3>
+          <p className="mt-1 text-[11px] text-slate-500">
+            Propuestas abiertas fuera de una tool call del modelo (por ejemplo, desde la
+            API). El estado del `apply` es el mismo que en las ancladas.
+          </p>
+          <ul className="mt-2 space-y-2">
+            {detached.map((detail) => (
+              <li key={detail.proposal.id} className="rounded-md bg-slate-950/60 p-2 text-xs">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold text-slate-200">{detail.proposal.tool}</span>
+                  <span className="text-slate-400">→ {detail.proposal.target}</span>
+                  <StatusBadge status={detail.proposal.status} />
+                  {detail.effect && (
+                    <>
+                      <StatusBadge
+                        status={detail.effect.verified ? "ok" : "degraded"}
+                        label={detail.effect.verified ? "verificado" : "sin verificar"}
+                      />
+                      <span className="text-slate-500">{detail.effect.durationMs} ms</span>
+                    </>
+                  )}
+                </div>
+                {detail.effect?.errorCode && (
+                  <p className="mt-1 text-rose-300">{detail.effect.errorCode}</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
