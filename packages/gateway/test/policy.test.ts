@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { createActionApplier, createToolGateway } from "../src/gateway.js";
 import type { McpTransport } from "../src/transport.js";
 import { FakeAuditLog } from "./support/fake-audit.js";
+import { FakeBudget } from "./support/fake-budget.js";
 import { FakeEffectLedger } from "./support/fake-effect-ledger.js";
 import { FakeExecutor } from "./support/fake-executor.js";
 import { FakeProposalStore } from "./support/fake-proposal-store.js";
@@ -31,6 +32,11 @@ const CONTEXT: ToolCallContext = {
 };
 
 const ACTOR = "agent:incident-copilot";
+
+const LIMITS = {
+  perRun: { tokensIn: 1_000, tokensOut: 1_000, costCents: 10, wallMs: 90_000 },
+  perTenant: { tokensIn: 10_000, tokensOut: 10_000, costCents: 100, wallMs: 3_600_000 },
+};
 
 interface Harness {
   transport: McpTransport;
@@ -593,13 +599,128 @@ const REGLAS: PolicyRule[] = [
       expect(denied?.payload).toMatchObject({ reason: "approval_required" });
     },
   },
+  {
+    id: "presupuesto-antes-de-la-llamada",
+    regla: "la reserva de presupuesto ocurre antes de llamar y se liquida despues",
+    comprueba: async () => {
+      const h = harness();
+      const budget = new FakeBudget();
+      const gateway = createToolGateway({
+        transport: h.transport,
+        allowedTools: ["list_services"],
+        audit: h.audit,
+        rateLimiter: h.rateLimiter,
+        budget,
+        budgetLimits: LIMITS,
+        usageMeter: {
+          estimate: () => ({ tokensIn: 10, tokensOut: 5, costCents: 3, wallMs: 0 }),
+        },
+        actor: ACTOR,
+      });
+
+      const outcome = await gateway.call("list_services", {}, CONTEXT);
+
+      expect(h.calls).toEqual(["list_services"]);
+      expect(budget.reserves).toHaveLength(1);
+      expect(budget.reserves[0]?.estimate).toMatchObject({ costCents: 3 });
+      expect(budget.settlements).toHaveLength(1);
+      expect(outcome.usage).toMatchObject({ costCents: 3, tokensIn: 10 });
+    },
+  },
+  {
+    id: "presupuesto-rebasado-no-llama",
+    regla: "si el presupuesto no alcanza, la tool no se ejecuta y queda auditado",
+    comprueba: async () => {
+      const h = harness();
+      const budget = new FakeBudget();
+      budget.deny = {
+        reason: "budget_exceeded",
+        dimension: "costCents",
+        scope: "tenant",
+        limit: 10,
+        observed: 10,
+        requested: 1,
+      };
+      const gateway = createToolGateway({
+        transport: h.transport,
+        allowedTools: ["list_services"],
+        audit: h.audit,
+        rateLimiter: h.rateLimiter,
+        budget,
+        budgetLimits: LIMITS,
+        actor: ACTOR,
+      });
+
+      await expect(gateway.call("list_services", {}, CONTEXT)).rejects.toMatchObject({
+        code: "budget_exceeded",
+        statusCode: 402,
+      });
+      expect(h.calls).toHaveLength(0);
+      expect(budget.settlements).toHaveLength(0);
+      expect(h.audit.entries.map((entry) => entry.action)).toEqual(["tool.call.denied"]);
+      expect(h.audit.entries[0]?.payload).toMatchObject({ reason: "budget_exceeded" });
+    },
+  },
+  {
+    id: "presupuesto-se-liquida-si-la-tool-falla",
+    regla: "una tool que falla no deja la reserva de presupuesto abierta",
+    comprueba: async () => {
+      const calls: string[] = [];
+      const budget = new FakeBudget();
+      const audit = new FakeAuditLog();
+      const gateway = createToolGateway({
+        transport: {
+          async callTool(request) {
+            calls.push(request.name);
+            throw new Error("mcp no disponible");
+          },
+        },
+        allowedTools: ["list_services"],
+        audit,
+        rateLimiter: new FakeRateLimiter(),
+        budget,
+        budgetLimits: LIMITS,
+        actor: ACTOR,
+      });
+
+      await expect(gateway.call("list_services", {}, CONTEXT)).rejects.toThrow(
+        "mcp no disponible",
+      );
+      expect(calls).toHaveLength(1);
+      expect(budget.settlements).toHaveLength(1);
+    },
+  },
+  {
+    id: "presupuesto-se-libera-si-el-audit-falla",
+    regla: "si el audit no esta disponible, la tool no se llama y la reserva se libera",
+    comprueba: async () => {
+      const h = harness();
+      const budget = new FakeBudget();
+      h.audit.unavailable = true;
+      const gateway = createToolGateway({
+        transport: h.transport,
+        allowedTools: ["list_services"],
+        audit: h.audit,
+        rateLimiter: h.rateLimiter,
+        budget,
+        budgetLimits: LIMITS,
+        actor: ACTOR,
+      });
+
+      await expect(gateway.call("list_services", {}, CONTEXT)).rejects.toThrow(
+        "audit no disponible",
+      );
+      expect(h.calls).toHaveLength(0);
+      expect(budget.releases).toHaveLength(1);
+    },
+  },
 ];
 
 describe("politicas del gateway", () => {
   it("cubre todas las reglas declaradas", () => {
     const ids = REGLAS.map((rule) => rule.id);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(ids.length).toBeGreaterThanOrEqual(24);
+    expect(ids.length).toBeGreaterThanOrEqual(28);
   });
 
   for (const rule of REGLAS) {
