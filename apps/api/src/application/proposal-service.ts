@@ -1,4 +1,5 @@
 import type { Principal } from "@beacon/core/domain/principal";
+import type { ProposalDetail } from "@beacon/core/domain/proposals";
 import type { ProposalStatus } from "@beacon/core/domain/write-tools";
 import { AppError } from "@beacon/core/errors/app-error";
 import type {
@@ -6,11 +7,13 @@ import type {
   ApplyOutcome,
   RejectOutcome,
 } from "@beacon/core/ports/action-applier";
+import type { EffectLedger } from "@beacon/core/ports/effect-ledger";
 import type {
   ListProposalsOptions,
   ProposalRecord,
   ProposalStore,
 } from "@beacon/core/ports/proposal-store";
+import type { RunStore } from "@beacon/core/ports/run-store";
 import {
   WRITE_TOOL_NAMES,
   proposalResultSchema,
@@ -30,6 +33,8 @@ export type ProposalResult = {
 
 export interface ProposalServiceDeps {
   store: ProposalStore;
+  effects: EffectLedger;
+  runs: RunStore;
   applier: ActionApplier;
   createGateway: GatewayFactory;
 }
@@ -39,6 +44,11 @@ export interface ProposeCommand {
   agent: AgentBinding;
   tool: string;
   args: unknown;
+  /**
+   * Run al que se ancla la propuesta. `null` = propuesta suelta (un operador la
+   * abre sin run). El run se valida contra el tenant: no se cuelga de otro.
+   */
+  runId?: string | null;
 }
 
 /**
@@ -65,6 +75,14 @@ export class ProposalService {
       });
     }
 
+    const runId = command.runId ?? null;
+    if (runId !== null) {
+      const run = await this.#deps.runs.getRun(runId, command.principal.tenantId);
+      if (!run) {
+        throw new AppError("not_found", "run not found", { statusCode: 404 });
+      }
+    }
+
     const gateway = this.#deps.createGateway(command.agent);
     const outcome = await gateway.call(
       command.tool as WriteToolName,
@@ -74,7 +92,7 @@ export class ProposalService {
         userId: command.principal.userId,
         agentId: command.principal.agentId,
         // Una propuesta puede abrirla un operador fuera de un run.
-        runId: null,
+        runId,
         stepIdx: 0,
       },
     );
@@ -97,12 +115,31 @@ export class ProposalService {
     return this.#deps.store.listProposals(tenantId, options);
   }
 
-  async get(id: string, tenantId: string): Promise<ProposalRecord> {
+  /**
+   * Las propuestas de un run, cada una con su decisión y su efecto. Es lo que la
+   * UI cuelga de la timeline para mostrar que un `apply` quedó `applied` o
+   * `degraded` (plan §11).
+   */
+  async forRun(runId: string, tenantId: string): Promise<ProposalDetail[]> {
+    const proposals = await this.#deps.store.listProposals(tenantId, { runId });
+    return Promise.all(proposals.map((proposal) => this.#detail(proposal)));
+  }
+
+  /** Una propuesta con su decisión y su efecto. */
+  async detail(id: string, tenantId: string): Promise<ProposalDetail> {
     const proposal = await this.#deps.store.getProposal(id, tenantId);
     if (!proposal) {
       throw new AppError("not_found", "proposal not found", { statusCode: 404 });
     }
-    return proposal;
+    return this.#detail(proposal);
+  }
+
+  async #detail(proposal: ProposalRecord): Promise<ProposalDetail> {
+    const [approval, effect] = await Promise.all([
+      this.#deps.store.getApproval(proposal.id),
+      this.#deps.effects.getEffectForProposal(proposal.id),
+    ]);
+    return { proposal, approval, effect };
   }
 
   async approve(command: {
