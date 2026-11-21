@@ -22,8 +22,13 @@ import {
  * el gateway, porque es quien sabe el `tenant_id` (server-side) y quien decide qué
  * se audita.
  *
- * **Falla cerrado:** si el audit no está disponible, la propuesta no se persiste y
- * la llamada falla. Una propuesta sin registro es una vía libre para escribir.
+ * Lo que se guarda es lo redactado, y lo que se ejecuta son esos mismos valores:
+ * una propuesta no puede decir una cosa y hacer otra.
+ *
+ * Si el audit falla, la llamada falla y la propuesta se queda pendiente: sin una
+ * aprobación no se ejecuta nada, así que una propuesta sin auditar no es una vía
+ * libre para escribir. La fase que sí es peligrosa (el `apply`) tiene su propio
+ * audit previo y bloqueante.
  */
 export interface ProposalWriterOptions {
   proposals: ProposalStore;
@@ -73,15 +78,19 @@ export function createProposalWriter(options: ProposalWriterOptions): ProposalWr
         toolCallId: null,
       };
 
-      // El audit va antes de la escritura: si no se puede auditar, no hay propuesta.
+      // La propuesta se persiste antes de auditarla: si la intención ya se propuso,
+      // la fila que ya existe manda, y su `id` es el que hay que citar. Auditar
+      // antes citaría un id fantasma en el reintento.
+      const proposal = await options.proposals.createProposal(input);
+
       await options.audit.append({
         tenantId: context.tenantId,
         actor: options.actor,
         action: "proposal.created",
         target: `${tool}#${context.runId ?? "no-run"}`,
         payload: redactValue({
-          proposal_id: input.id,
-          approval_id: input.approvalId,
+          proposal_id: proposal.id,
+          approval_id: proposal.approvalId,
           kind,
           risk: plan.risk,
           target: plan.target,
@@ -89,7 +98,7 @@ export function createProposalWriter(options: ProposalWriterOptions): ProposalWr
         }),
       });
 
-      return options.proposals.createProposal(input);
+      return proposal;
     },
   };
 }
