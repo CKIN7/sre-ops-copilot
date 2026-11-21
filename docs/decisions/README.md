@@ -31,6 +31,9 @@
 - **005** permite demo segura y evals deterministas sin renunciar a una prueba real
   contra `kind`.
 - **006** evita abuso y caídas: la demo pública nunca ejecuta escrituras reales.
+- **007** fija un harness determinista con modelo guionizado y fixtures VCR, en vez de
+  un juez LLM que no se puede calibrar; el meta-eval demuestra que el harness detecta
+  una degradación de catálogo y sus límites quedan escritos.
 - **009** deja el SQL como única fuente de verdad del esquema y evita un paquete `db` que la
   estructura objetivo no contempla; Drizzle ORM sigue siendo la capa de consulta.
 - **010** evita una tabla de trazas fuera del modelo aprobado y que `get_trace_summary`
