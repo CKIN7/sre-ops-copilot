@@ -1,11 +1,17 @@
-import type { ReadToolName } from "../schemas/tools.js";
+import type { ToolName } from "../schemas/tools.js";
 
-/** Contexto server-side de una tool call; nunca lo rellena el modelo. */
+/**
+ * Contexto server-side de una tool call; nunca lo rellena el modelo.
+ *
+ * `runId` es `null` cuando la llamada no viene de un run: una propuesta puede
+ * abrirla un operador desde la API. El tenant y el usuario siempre vienen del borde
+ * autenticado.
+ */
 export interface ToolCallContext {
   tenantId: string;
   userId: string;
   agentId: string;
-  runId: string;
+  runId: string | null;
   stepIdx: number;
 }
 
@@ -19,5 +25,5 @@ export interface ToolCallResult {
  * no conoce el transporte ni el SDK de MCP: solo este puerto.
  */
 export interface ToolGateway {
-  call(tool: ReadToolName, args: unknown, context: ToolCallContext): Promise<ToolCallResult>;
+  call(tool: ToolName, args: unknown, context: ToolCallContext): Promise<ToolCallResult>;
 }
