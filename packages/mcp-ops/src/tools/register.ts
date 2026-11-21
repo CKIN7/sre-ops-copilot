@@ -11,6 +11,11 @@ import {
   searchLogsInputSchema,
   searchRunbooksInputSchema,
 } from "@beacon/core/schemas/tools";
+import {
+  proposeRollbackInputSchema,
+  proposeSetFlagInputSchema,
+  proposeSilenceAlertInputSchema,
+} from "@beacon/core/schemas/writes";
 import type { Pool } from "pg";
 
 import { getDeploys } from "./get-deploys.js";
@@ -20,6 +25,9 @@ import { getService } from "./get-service.js";
 import { getTraceSummary } from "./get-trace-summary.js";
 import { listAlerts } from "./list-alerts.js";
 import { listServices } from "./list-services.js";
+import { proposeRollback } from "./propose-rollback.js";
+import { proposeSetFlag } from "./propose-set-flag.js";
+import { proposeSilenceAlert } from "./propose-silence-alert.js";
 import { queryMetrics } from "./query-metrics.js";
 import { searchLogs } from "./search-logs.js";
 import { searchRunbooks } from "./search-runbooks.js";
@@ -137,5 +145,43 @@ export function registerTools(server: McpServer, pool: Pool): void {
       inputSchema: searchRunbooksInputSchema,
     },
     async (input) => asText(await searchRunbooks(pool, input.query)),
+  );
+
+  // --- Escrituras en dos fases (ADR-004) ---------------------------------------
+  // Estas tools **no mutan nada**: calculan el plan de la escritura (diff, radio de
+  // impacto y evidencia) y lo devuelven. Quien persiste la propuesta y pide la
+  // aprobación humana es el gateway, no el servidor MCP.
+
+  server.registerTool(
+    "propose_rollback",
+    {
+      title: "Propose rollback",
+      description:
+        "Calcula el plan de un rollback: de que version a cual, que cambio hay y a que servicios alcanza. No ejecuta nada: devuelve el plan para que un humano lo apruebe.",
+      inputSchema: proposeRollbackInputSchema,
+    },
+    async (input) => asText(await proposeRollback(pool, input)),
+  );
+
+  server.registerTool(
+    "propose_set_flag",
+    {
+      title: "Propose flag change",
+      description:
+        "Calcula el plan de un cambio de feature flag: valor actual, valor propuesto y rollout. No ejecuta nada: devuelve el plan para que un humano lo apruebe.",
+      inputSchema: proposeSetFlagInputSchema,
+    },
+    async (input) => asText(await proposeSetFlag(pool, input)),
+  );
+
+  server.registerTool(
+    "propose_silence_alert",
+    {
+      title: "Propose alert silence",
+      description:
+        "Calcula el plan de silenciar una alerta durante un tiempo. No ejecuta nada: devuelve el plan para que un humano lo apruebe.",
+      inputSchema: proposeSilenceAlertInputSchema,
+    },
+    async (input) => asText(await proposeSilenceAlert(pool, input)),
   );
 }
