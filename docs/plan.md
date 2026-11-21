@@ -404,6 +404,49 @@ Se publica el enlace al último run real en el README: es la prueba de que el ad
 
 ---
 
+### 8.7 Estado de M5 (2026-11-21)
+
+`packages/evals` existe y el hito está cerrado contra su DoD: `pass@1` medido y
+reproducible, y el gate bloquea una regresión inyectada.
+
+**Implementado y medido:**
+
+- 40 casos de golden set (4 por arquetipo) y 20 de red-team, con fixtures
+  versionadas. Los cinco fallos de §6.4 están repartidos por el set.
+- Aserciones en tres niveles: rúbrica determinista de la respuesta final,
+  trayectoria (orden, deny list, escritura única) e invariantes (sin secretos, sin
+  identidad del modelo, sin escritura sin propuesta, presupuesto y post-condición).
+- Gate en CI (`pnpm evals:gate`) contra `packages/evals/baseline.json`: falla si
+  `pass@1` cae más de 3 pp, si el coste supera el 120% o si hay una violación de
+  invariante.
+- Meta-eval (`pnpm evals:meta`): mutar la descripción de `query_metrics` baja
+  `pass@1` del 100% al 0% y hace fallar los 60 casos; una mutación neutra de
+  `get_oncall` no cambia el resultado. La mutación se detecta por selección de tool,
+  no por comparar hashes de fixtures.
+- Resultado medido con `pnpm evals:gate` el 2026-11-21: **60/60**, `pass@1` 100%,
+  `pass@5` 100%, precisión de selección de tool 100%, tools inventadas 0%,
+  false-action rate 0%, coste medio 0 céntimos, p95 4 ms, fault-handling 5/5,
+  violaciones de invariante 0, red-team reportado 20/20.
+
+**Decisiones y límites, dichos sin adornos:**
+
+- **No hay juez LLM.** La aserción final es una rúbrica de reglas deterministas. No
+  existen los 10 juicios humanos contra los que calibrar un juez del §8.2, así que no
+  se implementa uno falso.
+- **El modelo es guionizado.** `ScriptedEvalModel` no gasta tokens ni coste. El coste
+  medio de 0 céntimos es real para este sistema, no una estimación.
+- **`pass@5` se mide, pero coincide con `pass@1`.** El harness repite cinco veces y
+  calcula "al menos uno de cinco"; con un modelo determinista y fixtures, las cinco
+  repeticiones son idénticas. La igualdad es una propiedad, no un atajo.
+- **Fixtures:** el camino normal es grabar contra Postgres con `pnpm evals:record`.
+  Sin `DATABASE_URL`, el mismo comando las regenera con el generador determinista del
+  seed en un instante fijo; no reproduce el SQL de agregación al bit, y así se
+  documenta en `packages/evals/README.md`.
+- **Red-team:** los 20 casos viven ya en el paquete y cubren logs, runbooks, alertas
+  y descripciones de deploy. Sus fixtures son autoradas porque el seed contiene tres
+  inyecciones y no veinte; el resto de vectores no se pueden grabar de un dataset que
+  no los tiene. La aserción propia (el agente reporta el intento) está implementada.
+
 ## 9. Seguridad (threat model)
 
 | Amenaza | Mitigación |
@@ -652,6 +695,30 @@ en el navegador), no solo con tests:
   desde la UI: la decisión humana y el efecto quedan encadenados.
 - Los endpoints de propuestas devuelven siempre la misma forma (propuesta + decisión +
   efecto), para que la UI no tenga que adivinar el contrato.
+
+**Estado (2026-11-21): M5 (evals) cerrado.** M1, M2, M3, M4a, M4b y M5 están
+cerrados. M5 se verificó con el set completo de 60 casos (40 golden + 20 red-team)
+sobre fixtures:
+
+- `pnpm evals:gate` mide `pass@1` 100% (60/60), `pass@5` 100%, precisión de selección
+  de tool 100%, tools inventadas 0%, false-action rate 0%, coste medio 0 céntimos,
+  p95 4 ms, fault-handling 5/5, cero violaciones de invariante y red-team reportado
+  20/20.
+- El gate compara con `packages/evals/baseline.json` y falla con caída >3 pp, coste
+  >120% o cualquier violación de invariante.
+- `pnpm evals:meta` midió la degradación: `query_metrics` mutada lleva `pass@1` a 0%
+  (60/60 casos afectados) y el control neutro de `get_oncall` sigue en 100%.
+- No hay juez LLM ni LLM real: la rúbrica es determinista y el coste es 0 porque no
+  hay proveedor. `pass@5 == pass@1` por el modelo determinista, medido con cinco
+  repeticiones reales.
+- La suite completa de `pnpm test` con `DATABASE_URL` necesita un seed reciente: las
+  tools usan ventanas relativas a `now()`. En una base con el seed viejo, dos tests
+  de contrato de `query_metrics`/`get_trace_summary` fallan por falta de puntos en la
+  ventana de 2 h; no es una regresión de M5 y se corrige re-sembrando.
+
+**Pendiente de M5 (no cerrado):** el modo live semanal programado (existe el modo
+live y el grabador, pero no un cron) y un juez LLM calibrado (no hay juicios humanos;
+no se implementa hasta que existan).
 
 **Pendiente de M4b (no cerrado):** el dashboard de coste y p95, el replay desde
 fixtures, la vista de eval, los escenarios guiados de la demo pública y la vista
