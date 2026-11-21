@@ -80,6 +80,24 @@ jobs:
       - run: pnpm db:seed
       - run: pnpm test
 
+
+  evals:
+    name: evals
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Las fixtures del golden set no necesitan Postgres: el gate es determinista.
+      - run: pnpm build
+      - run: pnpm evals:gate
+      - run: pnpm evals:meta
+
   build:
     name: build
     runs-on: ubuntu-latest

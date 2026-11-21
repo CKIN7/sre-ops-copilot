@@ -1,0 +1,220 @@
+{
+  "version": 1,
+  "caseId": "g33-inventory-falsa-alarma",
+  "fixture": "golden",
+  "recordedAt": "2026-11-21T20:38:00.000Z",
+  "entries": [
+    {
+      "tool": "list_alerts",
+      "args": {
+        "service": "inventory",
+        "status": "firing",
+        "window": "24h"
+      },
+      "result": {
+        "window": "24h",
+        "service": "inventory",
+        "status": "firing",
+        "alerts": [
+          {
+            "id": "59",
+            "name": "InventoryQueueBacklog",
+            "service": "inventory",
+            "severity": "ticket",
+            "status": "firing",
+            "startedAt": "2026-11-21T15:24:00.000Z",
+            "resolvedAt": null,
+            "summary": "queue_depth por encima de 500 mensajes durante 10m"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "query_metrics",
+      "args": {
+        "service": "inventory",
+        "metric": "queue_depth",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max"
+      },
+      "result": {
+        "service": "inventory",
+        "metric": "queue_depth",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max",
+        "bucketCount": 36,
+        "points": [
+          {
+            "timestamp": "2026-11-21T14:40:00.000Z",
+            "value": 6
+          },
+          {
+            "timestamp": "2026-11-21T14:50:00.000Z",
+            "value": 6
+          },
+          {
+            "timestamp": "2026-11-21T15:00:00.000Z",
+            "value": 5
+          },
+          {
+            "timestamp": "2026-11-21T15:10:00.000Z",
+            "value": 3
+          },
+          {
+            "timestamp": "2026-11-21T15:20:00.000Z",
+            "value": 6
+          },
+          {
+            "timestamp": "2026-11-21T15:30:00.000Z",
+            "value": 3
+          },
+          {
+            "timestamp": "2026-11-21T15:40:00.000Z",
+            "value": 5
+          },
+          {
+            "timestamp": "2026-11-21T15:50:00.000Z",
+            "value": 5
+          },
+          {
+            "timestamp": "2026-11-21T16:00:00.000Z",
+            "value": 3
+          },
+          {
+            "timestamp": "2026-11-21T16:10:00.000Z",
+            "value": 6
+          },
+          {
+            "timestamp": "2026-11-21T16:20:00.000Z",
+            "value": 6
+          },
+          {
+            "timestamp": "2026-11-21T16:30:00.000Z",
+            "value": 3
+          },
+          {
+            "timestamp": "2026-11-21T16:40:00.000Z",
+            "value": 3
+          },
+          {
+            "timestamp": "2026-11-21T16:50:00.000Z",
+            "value": 5
+          },
+          {
+            "timestamp": "2026-11-21T17:00:00.000Z",
+            "value": 6
+          },
+          {
+            "timestamp": "2026-11-21T17:10:00.000Z",
+            "value": 4
+          },
+          {
+            "timestamp": "2026-11-21T17:20:00.000Z",
+            "value": 7
+          },
+          {
+            "timestamp": "2026-11-21T17:30:00.000Z",
+            "value": 3
+          },
+          {
+            "timestamp": "2026-11-21T17:40:00.000Z",
+            "value": 7
+          },
+          {
+            "timestamp": "2026-11-21T17:50:00.000Z",
+            "value": 4
+          },
+          {
+            "timestamp": "2026-11-21T18:00:00.000Z",
+            "value": 4
+          },
+          {
+            "timestamp": "2026-11-21T18:10:00.000Z",
+            "value": 6
+          },
+          {
+            "timestamp": "2026-11-21T18:20:00.000Z",
+            "value": 6
+          },
+          {
+            "timestamp": "2026-11-21T18:30:00.000Z",
+            "value": 4
+          },
+          {
+            "timestamp": "2026-11-21T18:40:00.000Z",
+            "value": 4
+          },
+          {
+            "timestamp": "2026-11-21T18:50:00.000Z",
+            "value": 4
+          },
+          {
+            "timestamp": "2026-11-21T19:00:00.000Z",
+            "value": 4
+          },
+          {
+            "timestamp": "2026-11-21T19:10:00.000Z",
+            "value": 6
+          },
+          {
+            "timestamp": "2026-11-21T19:20:00.000Z",
+            "value": 6
+          },
+          {
+            "timestamp": "2026-11-21T19:30:00.000Z",
+            "value": 4
+          },
+          {
+            "timestamp": "2026-11-21T19:40:00.000Z",
+            "value": 4
+          },
+          {
+            "timestamp": "2026-11-21T19:50:00.000Z",
+            "value": 4
+          },
+          {
+            "timestamp": "2026-11-21T20:00:00.000Z",
+            "value": 3
+          },
+          {
+            "timestamp": "2026-11-21T20:10:00.000Z",
+            "value": 4
+          },
+          {
+            "timestamp": "2026-11-21T20:20:00.000Z",
+            "value": 4
+          },
+          {
+            "timestamp": "2026-11-21T20:30:00.000Z",
+            "value": 4
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "search_logs",
+      "args": {
+        "service": "inventory",
+        "query": "error",
+        "window": "6h",
+        "level": "error",
+        "limit": 10
+      },
+      "result": {
+        "service": "inventory",
+        "query": "error",
+        "window": "6h",
+        "level": "error",
+        "limit": 10,
+        "returned": 0,
+        "redactions": 0,
+        "lines": []
+      },
+      "error": null
+    }
+  ]
+}

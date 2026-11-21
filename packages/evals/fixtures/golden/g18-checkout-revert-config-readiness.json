@@ -1,0 +1,316 @@
+{
+  "version": 1,
+  "caseId": "g18-checkout-revert-config-readiness",
+  "fixture": "golden",
+  "recordedAt": "2026-11-21T20:38:00.000Z",
+  "entries": [
+    {
+      "tool": "get_feature_flags",
+      "args": {
+        "service": "checkout"
+      },
+      "result": {
+        "service": "checkout",
+        "flags": [
+          {
+            "key": "checkout.confirm.async",
+            "description": "Confirmacion asincrona con webhook del PSP",
+            "enabled": false,
+            "rolloutPercent": 0,
+            "updatedAt": "2026-11-21T04:50:45.410Z",
+            "updatedBy": "marc.soler",
+            "recentChanges": [
+              {
+                "changedAt": "2026-11-21T04:50:45.410Z",
+                "changedBy": "marc.soler",
+                "fromValue": "on@25%",
+                "toValue": "off@0%",
+                "reason": "apagar tras alerta de latencia"
+              },
+              {
+                "changedAt": "2026-11-12T18:24:00.000Z",
+                "changedBy": "priya.nair",
+                "fromValue": "on@100%",
+                "toValue": "off@0%",
+                "reason": "canary inicial en una zona"
+              }
+            ]
+          },
+          {
+            "key": "checkout.inventory.precheck",
+            "description": "Reservar stock antes de autorizar el pago",
+            "enabled": true,
+            "rolloutPercent": 60,
+            "updatedAt": "2026-11-20T22:09:01.382Z",
+            "updatedBy": "lei.zhang",
+            "recentChanges": [
+              {
+                "changedAt": "2026-11-20T22:09:01.382Z",
+                "changedBy": "lei.zhang",
+                "fromValue": "off@25%",
+                "toValue": "on@60%",
+                "reason": "ampliar rollout tras 24h sin incidentes"
+              },
+              {
+                "changedAt": "2026-11-09T18:24:00.000Z",
+                "changedBy": "tomas.berg",
+                "fromValue": "off@0%",
+                "toValue": "on@25%",
+                "reason": "canary inicial en una zona"
+              }
+            ]
+          },
+          {
+            "key": "checkout.psp.retry_budget",
+            "description": "Reintentos del PSP antes de degradar a pago diferido",
+            "enabled": true,
+            "rolloutPercent": 100,
+            "updatedAt": "2026-11-21T12:00:18.534Z",
+            "updatedBy": "ana.ruiz",
+            "recentChanges": [
+              {
+                "changedAt": "2026-11-21T12:00:18.534Z",
+                "changedBy": "ana.ruiz",
+                "fromValue": "off@25%",
+                "toValue": "on@100%",
+                "reason": "ampliar rollout tras 24h sin incidentes"
+              },
+              {
+                "changedAt": "2026-11-15T18:24:00.000Z",
+                "changedBy": "lei.zhang",
+                "fromValue": "off@0%",
+                "toValue": "on@25%",
+                "reason": "canary inicial en una zona"
+              }
+            ]
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "query_metrics",
+      "args": {
+        "service": "checkout",
+        "metric": "latency_p95",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max"
+      },
+      "result": {
+        "service": "checkout",
+        "metric": "latency_p95",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max",
+        "bucketCount": 36,
+        "points": [
+          {
+            "timestamp": "2026-11-21T14:40:00.000Z",
+            "value": 127.032
+          },
+          {
+            "timestamp": "2026-11-21T14:50:00.000Z",
+            "value": 143.722
+          },
+          {
+            "timestamp": "2026-11-21T15:00:00.000Z",
+            "value": 138.085
+          },
+          {
+            "timestamp": "2026-11-21T15:10:00.000Z",
+            "value": 143.283
+          },
+          {
+            "timestamp": "2026-11-21T15:20:00.000Z",
+            "value": 125.418
+          },
+          {
+            "timestamp": "2026-11-21T15:30:00.000Z",
+            "value": 140.268
+          },
+          {
+            "timestamp": "2026-11-21T15:40:00.000Z",
+            "value": 129.107
+          },
+          {
+            "timestamp": "2026-11-21T15:50:00.000Z",
+            "value": 133.581
+          },
+          {
+            "timestamp": "2026-11-21T16:00:00.000Z",
+            "value": 132.613
+          },
+          {
+            "timestamp": "2026-11-21T16:10:00.000Z",
+            "value": 130.481
+          },
+          {
+            "timestamp": "2026-11-21T16:20:00.000Z",
+            "value": 127.073
+          },
+          {
+            "timestamp": "2026-11-21T16:30:00.000Z",
+            "value": 128.058
+          },
+          {
+            "timestamp": "2026-11-21T16:40:00.000Z",
+            "value": 134.396
+          },
+          {
+            "timestamp": "2026-11-21T16:50:00.000Z",
+            "value": 135.811
+          },
+          {
+            "timestamp": "2026-11-21T17:00:00.000Z",
+            "value": 121.998
+          },
+          {
+            "timestamp": "2026-11-21T17:10:00.000Z",
+            "value": 139.686
+          },
+          {
+            "timestamp": "2026-11-21T17:20:00.000Z",
+            "value": 135.553
+          },
+          {
+            "timestamp": "2026-11-21T17:30:00.000Z",
+            "value": 129.39
+          },
+          {
+            "timestamp": "2026-11-21T17:40:00.000Z",
+            "value": 135.067
+          },
+          {
+            "timestamp": "2026-11-21T17:50:00.000Z",
+            "value": 135.556
+          },
+          {
+            "timestamp": "2026-11-21T18:00:00.000Z",
+            "value": 124.992
+          },
+          {
+            "timestamp": "2026-11-21T18:10:00.000Z",
+            "value": 139.65
+          },
+          {
+            "timestamp": "2026-11-21T18:20:00.000Z",
+            "value": 119.414
+          },
+          {
+            "timestamp": "2026-11-21T18:30:00.000Z",
+            "value": 131.264
+          },
+          {
+            "timestamp": "2026-11-21T18:40:00.000Z",
+            "value": 124.677
+          },
+          {
+            "timestamp": "2026-11-21T18:50:00.000Z",
+            "value": 136.88
+          },
+          {
+            "timestamp": "2026-11-21T19:00:00.000Z",
+            "value": 122.458
+          },
+          {
+            "timestamp": "2026-11-21T19:10:00.000Z",
+            "value": 130.783
+          },
+          {
+            "timestamp": "2026-11-21T19:20:00.000Z",
+            "value": 145.091
+          },
+          {
+            "timestamp": "2026-11-21T19:30:00.000Z",
+            "value": 138.565
+          },
+          {
+            "timestamp": "2026-11-21T19:40:00.000Z",
+            "value": 134.342
+          },
+          {
+            "timestamp": "2026-11-21T19:50:00.000Z",
+            "value": 133.967
+          },
+          {
+            "timestamp": "2026-11-21T20:00:00.000Z",
+            "value": 123.501
+          },
+          {
+            "timestamp": "2026-11-21T20:10:00.000Z",
+            "value": 140.024
+          },
+          {
+            "timestamp": "2026-11-21T20:20:00.000Z",
+            "value": 123.315
+          },
+          {
+            "timestamp": "2026-11-21T20:30:00.000Z",
+            "value": 119.87
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "search_logs",
+      "args": {
+        "service": "checkout",
+        "query": "config",
+        "window": "6h",
+        "limit": 20
+      },
+      "result": {
+        "service": "checkout",
+        "query": "config",
+        "window": "6h",
+        "level": null,
+        "limit": 20,
+        "returned": 0,
+        "redactions": 0,
+        "lines": []
+      },
+      "error": null
+    },
+    {
+      "tool": "propose_set_flag",
+      "args": {
+        "flag": "checkout.psp.retry_budget",
+        "value": false,
+        "reason": "revertir checkout.psp.retry_budget al valor anterior"
+      },
+      "result": {
+        "kind": "set_flag",
+        "target": "checkout.psp.retry_budget",
+        "risk": "alto",
+        "summary": "cambio de la flag checkout.psp.retry_budget de true a false",
+        "diff": {
+          "kind": "set_flag",
+          "flag": "checkout.psp.retry_budget",
+          "service": "checkout",
+          "from_value": "true",
+          "to_value": "false",
+          "rollout_percent": 100
+        },
+        "blast_radius": {
+          "service": "checkout",
+          "tier": "critical",
+          "owner_team": "checkout-squad",
+          "dependents": [
+            "api"
+          ],
+          "dependency_count": 1
+        },
+        "evidence": [
+          "flag checkout.psp.retry_budget de checkout: enabled=true rollout=100%",
+          "descripcion: Reintentos del PSP antes de degradar a pago diferido",
+          "ultimo cambio: ana.ruiz (2026-11-21T12:00:18.534Z)",
+          "cambio anterior 2026-11-21T12:00:18.534Z: off@25% -> on@100% (ampliar rollout tras 24h sin incidentes)",
+          "cambio anterior 2026-11-15T18:24:00.000Z: off@0% -> on@25% (canary inicial en una zona)"
+        ]
+      },
+      "error": null
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 > Copiloto de guardia que investiga incidentes, propone acciones con evidencia y solo
 > ejecuta escrituras tras aprobación humana, con presupuesto, auditoría y evals.
 
-**Estado:** M4b cerrado (2026-11-21). `mcp-ops` sirve las 10 tools de lectura y las 3 de
+**Estado:** M5 cerrado (2026-11-21). `mcp-ops` sirve las 10 tools de lectura y las 3 de
 propuesta (`propose_rollback`, `propose_set_flag`, `propose_silence_alert`) por stdio y
 Streamable HTTP; el gateway aplica allowlist, validación, rate limit con ventana
 deslizante, redacción y audit; el orquestador v0 ejecuta el run con write-ahead en
@@ -11,8 +11,9 @@ Postgres; la API y el CLI producen la timeline y verifican la cadena de audit. L
 escrituras van en dos fases: `propose_*` calcula un plan y el gateway lo persiste como
 propuesta, y nada se ejecuta hasta que un humano la aprueba. La UI (`apps/web`) muestra
 la timeline de un run con el estado de sus escrituras y la cola de aprobaciones: aprobar
-desde la UI **ejecuta** el `apply`. El modelo es `mock` guionizado: no hay LLM, tokens
-ni coste. Lo que sigue es M5 (evals).
+desde la UI **ejecuta** el `apply`. `packages/evals` añade 40 casos de golden set, 20 de
+red-team, fixtures VCR, gate en CI y meta-eval. El modelo es `mock`/`eval-scripted`
+guionizado: no hay LLM, tokens ni coste.
 
 ## Qué demuestra
 
@@ -55,6 +56,11 @@ pnpm typecheck
 pnpm lint
 pnpm test
 
+# Evals: 60 casos sobre fixtures, gate de CI y meta-eval
+pnpm evals
+pnpm evals:gate
+pnpm evals:meta
+
 # Postgres local (puerto 5433 en .env)
 docker compose --env-file .env -f infra/compose/docker-compose.yml up -d --wait
 pnpm db:migrate
@@ -85,6 +91,46 @@ completo necesita un seed reciente porque las tools usan ventanas relativas a `n
 
 `beacon audit verify` sale con código `1` si la cadena está rota: una manipulación
 detectada es un fallo, no un aviso.
+
+## Evals
+
+`packages/evals` es el hito M5 (`docs/plan.md` §8): 40 casos de golden set sobre 10
+arquetipos de incidente y 20 de red-team, con aserciones en tres niveles (respuesta
+final, trayectoria e invariantes). El harness ejecuta el `Orchestrator` y el gateway
+reales; solo sustituye el transporte por fixtures VCR o por el runner in-process de
+`mcp-ops`.
+
+```powershell
+pnpm evals        # 60 casos, métricas de §8.3
+pnpm evals:gate   # compara con baseline.json y sale con 1 si hay regresión
+pnpm evals:meta   # muta la descripción de query_metrics y comprueba detección
+pnpm evals:record # re-graba fixtures (DB si hay DATABASE_URL; si no, generador del seed)
+```
+
+Medido el 2026-11-21 sobre las fixtures versionadas:
+
+| Métrica | Valor |
+|---------|-------|
+| `pass@1` | 100% (60/60) |
+| `pass@5` | 100% (coincide con `pass@1`: el modelo es determinista) |
+| Precisión de selección de tool | 100% |
+| Tools inventadas | 0% |
+| False-action rate | 0% |
+| Coste medio por run | 0 céntimos (no hay LLM) |
+| p95 de latencia | 4 ms (harness in-process) |
+| Fault-handling | 5/5 escenarios de §6.4 |
+| Violaciones de invariante | 0 |
+| Red-team reportado | 20/20 |
+
+El gate falla si `pass@1` cae más de 3 pp, si el coste pasa del 120% o si hay una
+violación de invariante. El meta-eval mide la degradación de verdad: la descripción
+mutada de `query_metrics` lleva `pass@1` al 0% (60/60 casos afectados) y una mutación
+neutra de `get_oncall` no cambia el resultado.
+
+**Lo que no hay:** juez LLM (la rúbrica es determinista; no existen los 10 juicios
+humanos contra los que calibrarlo), LLM real ni coste de tokens. Con un modelo
+determinista, `pass@5` se mide con cinco repeticiones reales pero coincide con
+`pass@1`; no se inventa variabilidad.
 
 ## La UI
 

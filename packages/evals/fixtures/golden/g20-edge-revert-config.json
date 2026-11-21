@@ -1,0 +1,290 @@
+{
+  "version": 1,
+  "caseId": "g20-edge-revert-config",
+  "fixture": "golden",
+  "recordedAt": "2026-11-21T20:38:00.000Z",
+  "entries": [
+    {
+      "tool": "get_feature_flags",
+      "args": {
+        "service": "edge"
+      },
+      "result": {
+        "service": "edge",
+        "flags": [
+          {
+            "key": "edge.cache.assets_long_ttl",
+            "description": "TTL de 1h para assets con hash",
+            "enabled": true,
+            "rolloutPercent": 100,
+            "updatedAt": "2026-11-18T21:15:46.526Z",
+            "updatedBy": "priya.nair",
+            "recentChanges": [
+              {
+                "changedAt": "2026-11-18T21:15:46.526Z",
+                "changedBy": "priya.nair",
+                "fromValue": "off@25%",
+                "toValue": "on@100%",
+                "reason": "ampliar rollout tras 24h sin incidentes"
+              },
+              {
+                "changedAt": "2026-10-19T18:24:00.000Z",
+                "changedBy": "sara.okafor",
+                "fromValue": "off@0%",
+                "toValue": "on@25%",
+                "reason": "canary inicial en una zona"
+              }
+            ]
+          },
+          {
+            "key": "edge.waf.block_scrapers",
+            "description": "Bloquear scrapers por huella TLS",
+            "enabled": false,
+            "rolloutPercent": 0,
+            "updatedAt": "2026-11-18T13:43:14.589Z",
+            "updatedBy": "tomas.berg",
+            "recentChanges": [
+              {
+                "changedAt": "2026-11-18T13:43:14.589Z",
+                "changedBy": "tomas.berg",
+                "fromValue": "on@25%",
+                "toValue": "off@0%",
+                "reason": "apagar tras alerta de latencia"
+              },
+              {
+                "changedAt": "2026-10-16T18:24:00.000Z",
+                "changedBy": "ana.ruiz",
+                "fromValue": "on@100%",
+                "toValue": "off@0%",
+                "reason": "canary inicial en una zona"
+              }
+            ]
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "query_metrics",
+      "args": {
+        "service": "edge",
+        "metric": "latency_p95",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max"
+      },
+      "result": {
+        "service": "edge",
+        "metric": "latency_p95",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max",
+        "bucketCount": 36,
+        "points": [
+          {
+            "timestamp": "2026-11-21T14:40:00.000Z",
+            "value": 43.56
+          },
+          {
+            "timestamp": "2026-11-21T14:50:00.000Z",
+            "value": 38.935
+          },
+          {
+            "timestamp": "2026-11-21T15:00:00.000Z",
+            "value": 44.71
+          },
+          {
+            "timestamp": "2026-11-21T15:10:00.000Z",
+            "value": 46.909
+          },
+          {
+            "timestamp": "2026-11-21T15:20:00.000Z",
+            "value": 40.701
+          },
+          {
+            "timestamp": "2026-11-21T15:30:00.000Z",
+            "value": 44.885
+          },
+          {
+            "timestamp": "2026-11-21T15:40:00.000Z",
+            "value": 44.528
+          },
+          {
+            "timestamp": "2026-11-21T15:50:00.000Z",
+            "value": 40.435
+          },
+          {
+            "timestamp": "2026-11-21T16:00:00.000Z",
+            "value": 46.622
+          },
+          {
+            "timestamp": "2026-11-21T16:10:00.000Z",
+            "value": 47.437
+          },
+          {
+            "timestamp": "2026-11-21T16:20:00.000Z",
+            "value": 47.499
+          },
+          {
+            "timestamp": "2026-11-21T16:30:00.000Z",
+            "value": 46.758
+          },
+          {
+            "timestamp": "2026-11-21T16:40:00.000Z",
+            "value": 45.94
+          },
+          {
+            "timestamp": "2026-11-21T16:50:00.000Z",
+            "value": 43.615
+          },
+          {
+            "timestamp": "2026-11-21T17:00:00.000Z",
+            "value": 44.754
+          },
+          {
+            "timestamp": "2026-11-21T17:10:00.000Z",
+            "value": 41.435
+          },
+          {
+            "timestamp": "2026-11-21T17:20:00.000Z",
+            "value": 45.806
+          },
+          {
+            "timestamp": "2026-11-21T17:30:00.000Z",
+            "value": 46.626
+          },
+          {
+            "timestamp": "2026-11-21T17:40:00.000Z",
+            "value": 43.429
+          },
+          {
+            "timestamp": "2026-11-21T17:50:00.000Z",
+            "value": 41.41
+          },
+          {
+            "timestamp": "2026-11-21T18:00:00.000Z",
+            "value": 42.806
+          },
+          {
+            "timestamp": "2026-11-21T18:10:00.000Z",
+            "value": 41.285
+          },
+          {
+            "timestamp": "2026-11-21T18:20:00.000Z",
+            "value": 41.257
+          },
+          {
+            "timestamp": "2026-11-21T18:30:00.000Z",
+            "value": 42.962
+          },
+          {
+            "timestamp": "2026-11-21T18:40:00.000Z",
+            "value": 41.368
+          },
+          {
+            "timestamp": "2026-11-21T18:50:00.000Z",
+            "value": 40.835
+          },
+          {
+            "timestamp": "2026-11-21T19:00:00.000Z",
+            "value": 44.736
+          },
+          {
+            "timestamp": "2026-11-21T19:10:00.000Z",
+            "value": 40.153
+          },
+          {
+            "timestamp": "2026-11-21T19:20:00.000Z",
+            "value": 46.623
+          },
+          {
+            "timestamp": "2026-11-21T19:30:00.000Z",
+            "value": 46.424
+          },
+          {
+            "timestamp": "2026-11-21T19:40:00.000Z",
+            "value": 40.316
+          },
+          {
+            "timestamp": "2026-11-21T19:50:00.000Z",
+            "value": 44.782
+          },
+          {
+            "timestamp": "2026-11-21T20:00:00.000Z",
+            "value": 41.571
+          },
+          {
+            "timestamp": "2026-11-21T20:10:00.000Z",
+            "value": 46.631
+          },
+          {
+            "timestamp": "2026-11-21T20:20:00.000Z",
+            "value": 42.909
+          },
+          {
+            "timestamp": "2026-11-21T20:30:00.000Z",
+            "value": 44.169
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "search_logs",
+      "args": {
+        "service": "edge",
+        "query": "config",
+        "window": "6h",
+        "limit": 20
+      },
+      "result": {
+        "service": "edge",
+        "query": "config",
+        "window": "6h",
+        "level": null,
+        "limit": 20,
+        "returned": 0,
+        "redactions": 0,
+        "lines": []
+      },
+      "error": null
+    },
+    {
+      "tool": "propose_set_flag",
+      "args": {
+        "flag": "edge.cache.assets_long_ttl",
+        "value": false,
+        "reason": "revertir edge.cache.assets_long_ttl al valor anterior"
+      },
+      "result": {
+        "kind": "set_flag",
+        "target": "edge.cache.assets_long_ttl",
+        "risk": "alto",
+        "summary": "cambio de la flag edge.cache.assets_long_ttl de true a false",
+        "diff": {
+          "kind": "set_flag",
+          "flag": "edge.cache.assets_long_ttl",
+          "service": "edge",
+          "from_value": "true",
+          "to_value": "false",
+          "rollout_percent": 100
+        },
+        "blast_radius": {
+          "service": "edge",
+          "tier": "critical",
+          "owner_team": "edge-platform",
+          "dependents": [],
+          "dependency_count": 0
+        },
+        "evidence": [
+          "flag edge.cache.assets_long_ttl de edge: enabled=true rollout=100%",
+          "descripcion: TTL de 1h para assets con hash",
+          "ultimo cambio: priya.nair (2026-11-18T21:15:46.526Z)",
+          "cambio anterior 2026-11-18T21:15:46.526Z: off@25% -> on@100% (ampliar rollout tras 24h sin incidentes)",
+          "cambio anterior 2026-10-19T18:24:00.000Z: off@0% -> on@25% (canary inicial en una zona)"
+        ]
+      },
+      "error": null
+    }
+  ]
+}

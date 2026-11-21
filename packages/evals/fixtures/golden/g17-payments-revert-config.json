@@ -1,0 +1,293 @@
+{
+  "version": 1,
+  "caseId": "g17-payments-revert-config",
+  "fixture": "golden",
+  "recordedAt": "2026-11-21T20:38:00.000Z",
+  "entries": [
+    {
+      "tool": "get_feature_flags",
+      "args": {
+        "service": "payments"
+      },
+      "result": {
+        "service": "payments",
+        "flags": [
+          {
+            "key": "payments.psp.failover",
+            "description": "Conmutar al PSP secundario si el primario supera 2s",
+            "enabled": true,
+            "rolloutPercent": 25,
+            "updatedAt": "2026-11-20T14:49:25.493Z",
+            "updatedBy": "priya.nair",
+            "recentChanges": [
+              {
+                "changedAt": "2026-11-20T14:49:25.493Z",
+                "changedBy": "priya.nair",
+                "fromValue": "off@25%",
+                "toValue": "on@25%",
+                "reason": "ampliar rollout tras 24h sin incidentes"
+              },
+              {
+                "changedAt": "2026-11-06T18:24:00.000Z",
+                "changedBy": "sara.okafor",
+                "fromValue": "off@0%",
+                "toValue": "on@25%",
+                "reason": "canary inicial en una zona"
+              }
+            ]
+          },
+          {
+            "key": "payments.webhook.signature_v2",
+            "description": "Verificar firma v2 de los webhooks del PSP",
+            "enabled": false,
+            "rolloutPercent": 0,
+            "updatedAt": "2026-11-20T07:57:47.429Z",
+            "updatedBy": "tomas.berg",
+            "recentChanges": [
+              {
+                "changedAt": "2026-11-20T07:57:47.429Z",
+                "changedBy": "tomas.berg",
+                "fromValue": "on@25%",
+                "toValue": "off@0%",
+                "reason": "apagar tras alerta de latencia"
+              },
+              {
+                "changedAt": "2026-11-03T18:24:00.000Z",
+                "changedBy": "ana.ruiz",
+                "fromValue": "on@100%",
+                "toValue": "off@0%",
+                "reason": "canary inicial en una zona"
+              }
+            ]
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "query_metrics",
+      "args": {
+        "service": "payments",
+        "metric": "latency_p95",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max"
+      },
+      "result": {
+        "service": "payments",
+        "metric": "latency_p95",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max",
+        "bucketCount": 36,
+        "points": [
+          {
+            "timestamp": "2026-11-21T14:40:00.000Z",
+            "value": 178.891
+          },
+          {
+            "timestamp": "2026-11-21T14:50:00.000Z",
+            "value": 167.306
+          },
+          {
+            "timestamp": "2026-11-21T15:00:00.000Z",
+            "value": 155.375
+          },
+          {
+            "timestamp": "2026-11-21T15:10:00.000Z",
+            "value": 169.755
+          },
+          {
+            "timestamp": "2026-11-21T15:20:00.000Z",
+            "value": 181.713
+          },
+          {
+            "timestamp": "2026-11-21T15:30:00.000Z",
+            "value": 156.704
+          },
+          {
+            "timestamp": "2026-11-21T15:40:00.000Z",
+            "value": 152.449
+          },
+          {
+            "timestamp": "2026-11-21T15:50:00.000Z",
+            "value": 155.71
+          },
+          {
+            "timestamp": "2026-11-21T16:00:00.000Z",
+            "value": 183.207
+          },
+          {
+            "timestamp": "2026-11-21T16:10:00.000Z",
+            "value": 159.582
+          },
+          {
+            "timestamp": "2026-11-21T16:20:00.000Z",
+            "value": 154.742
+          },
+          {
+            "timestamp": "2026-11-21T16:30:00.000Z",
+            "value": 164.702
+          },
+          {
+            "timestamp": "2026-11-21T16:40:00.000Z",
+            "value": 182.883
+          },
+          {
+            "timestamp": "2026-11-21T16:50:00.000Z",
+            "value": 154.148
+          },
+          {
+            "timestamp": "2026-11-21T17:00:00.000Z",
+            "value": 180.78
+          },
+          {
+            "timestamp": "2026-11-21T17:10:00.000Z",
+            "value": 158.847
+          },
+          {
+            "timestamp": "2026-11-21T17:20:00.000Z",
+            "value": 160.829
+          },
+          {
+            "timestamp": "2026-11-21T17:30:00.000Z",
+            "value": 178.861
+          },
+          {
+            "timestamp": "2026-11-21T17:40:00.000Z",
+            "value": 165.529
+          },
+          {
+            "timestamp": "2026-11-21T17:50:00.000Z",
+            "value": 179.069
+          },
+          {
+            "timestamp": "2026-11-21T18:00:00.000Z",
+            "value": 184.772
+          },
+          {
+            "timestamp": "2026-11-21T18:10:00.000Z",
+            "value": 158.983
+          },
+          {
+            "timestamp": "2026-11-21T18:20:00.000Z",
+            "value": 182.337
+          },
+          {
+            "timestamp": "2026-11-21T18:30:00.000Z",
+            "value": 180.913
+          },
+          {
+            "timestamp": "2026-11-21T18:40:00.000Z",
+            "value": 174.135
+          },
+          {
+            "timestamp": "2026-11-21T18:50:00.000Z",
+            "value": 151.639
+          },
+          {
+            "timestamp": "2026-11-21T19:00:00.000Z",
+            "value": 161.047
+          },
+          {
+            "timestamp": "2026-11-21T19:10:00.000Z",
+            "value": 177.328
+          },
+          {
+            "timestamp": "2026-11-21T19:20:00.000Z",
+            "value": 155.548
+          },
+          {
+            "timestamp": "2026-11-21T19:30:00.000Z",
+            "value": 171.406
+          },
+          {
+            "timestamp": "2026-11-21T19:40:00.000Z",
+            "value": 184.698
+          },
+          {
+            "timestamp": "2026-11-21T19:50:00.000Z",
+            "value": 167.499
+          },
+          {
+            "timestamp": "2026-11-21T20:00:00.000Z",
+            "value": 173.426
+          },
+          {
+            "timestamp": "2026-11-21T20:10:00.000Z",
+            "value": 176.043
+          },
+          {
+            "timestamp": "2026-11-21T20:20:00.000Z",
+            "value": 181.536
+          },
+          {
+            "timestamp": "2026-11-21T20:30:00.000Z",
+            "value": 155.289
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "search_logs",
+      "args": {
+        "service": "payments",
+        "query": "config",
+        "window": "6h",
+        "limit": 20
+      },
+      "result": {
+        "service": "payments",
+        "query": "config",
+        "window": "6h",
+        "level": null,
+        "limit": 20,
+        "returned": 0,
+        "redactions": 0,
+        "lines": []
+      },
+      "error": null
+    },
+    {
+      "tool": "propose_set_flag",
+      "args": {
+        "flag": "payments.psp.failover",
+        "value": false,
+        "reason": "revertir payments.psp.failover al valor anterior"
+      },
+      "result": {
+        "kind": "set_flag",
+        "target": "payments.psp.failover",
+        "risk": "alto",
+        "summary": "cambio de la flag payments.psp.failover de true a false",
+        "diff": {
+          "kind": "set_flag",
+          "flag": "payments.psp.failover",
+          "service": "payments",
+          "from_value": "true",
+          "to_value": "false",
+          "rollout_percent": 25
+        },
+        "blast_radius": {
+          "service": "payments",
+          "tier": "critical",
+          "owner_team": "payments-squad",
+          "dependents": [
+            "checkout"
+          ],
+          "dependency_count": 1
+        },
+        "evidence": [
+          "flag payments.psp.failover de payments: enabled=true rollout=25%",
+          "descripcion: Conmutar al PSP secundario si el primario supera 2s",
+          "ultimo cambio: priya.nair (2026-11-20T14:49:25.493Z)",
+          "cambio anterior 2026-11-20T14:49:25.493Z: off@25% -> on@25% (ampliar rollout tras 24h sin incidentes)",
+          "cambio anterior 2026-11-06T18:24:00.000Z: off@0% -> on@25% (canary inicial en una zona)",
+          "el rollout esta en 25%: el cambio no afecta a todo el trafico"
+        ]
+      },
+      "error": null
+    }
+  ]
+}

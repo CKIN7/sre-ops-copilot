@@ -1,0 +1,293 @@
+{
+  "version": 1,
+  "caseId": "g19-web-revert-config",
+  "fixture": "golden",
+  "recordedAt": "2026-11-21T20:38:00.000Z",
+  "entries": [
+    {
+      "tool": "get_feature_flags",
+      "args": {
+        "service": "web"
+      },
+      "result": {
+        "service": "web",
+        "flags": [
+          {
+            "key": "web.checkout.one_page",
+            "description": "Checkout en una sola pagina",
+            "enabled": false,
+            "rolloutPercent": 0,
+            "updatedAt": "2026-11-19T03:32:34.077Z",
+            "updatedBy": "lei.zhang",
+            "recentChanges": [
+              {
+                "changedAt": "2026-11-19T03:32:34.077Z",
+                "changedBy": "lei.zhang",
+                "fromValue": "on@25%",
+                "toValue": "off@0%",
+                "reason": "apagar tras alerta de latencia"
+              },
+              {
+                "changedAt": "2026-10-22T18:24:00.000Z",
+                "changedBy": "tomas.berg",
+                "fromValue": "on@100%",
+                "toValue": "off@0%",
+                "reason": "canary inicial en una zona"
+              }
+            ]
+          },
+          {
+            "key": "web.ssr.streaming",
+            "description": "Streaming de la ficha de producto",
+            "enabled": true,
+            "rolloutPercent": 80,
+            "updatedAt": "2026-11-19T10:58:01.367Z",
+            "updatedBy": "marc.soler",
+            "recentChanges": [
+              {
+                "changedAt": "2026-11-19T10:58:01.367Z",
+                "changedBy": "marc.soler",
+                "fromValue": "off@25%",
+                "toValue": "on@80%",
+                "reason": "ampliar rollout tras 24h sin incidentes"
+              },
+              {
+                "changedAt": "2026-10-25T18:24:00.000Z",
+                "changedBy": "priya.nair",
+                "fromValue": "off@0%",
+                "toValue": "on@25%",
+                "reason": "canary inicial en una zona"
+              }
+            ]
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "query_metrics",
+      "args": {
+        "service": "web",
+        "metric": "latency_p95",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max"
+      },
+      "result": {
+        "service": "web",
+        "metric": "latency_p95",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max",
+        "bucketCount": 36,
+        "points": [
+          {
+            "timestamp": "2026-11-21T14:40:00.000Z",
+            "value": 94.888
+          },
+          {
+            "timestamp": "2026-11-21T14:50:00.000Z",
+            "value": 96.002
+          },
+          {
+            "timestamp": "2026-11-21T15:00:00.000Z",
+            "value": 101.896
+          },
+          {
+            "timestamp": "2026-11-21T15:10:00.000Z",
+            "value": 96.387
+          },
+          {
+            "timestamp": "2026-11-21T15:20:00.000Z",
+            "value": 95.367
+          },
+          {
+            "timestamp": "2026-11-21T15:30:00.000Z",
+            "value": 93.157
+          },
+          {
+            "timestamp": "2026-11-21T15:40:00.000Z",
+            "value": 94.123
+          },
+          {
+            "timestamp": "2026-11-21T15:50:00.000Z",
+            "value": 92.228
+          },
+          {
+            "timestamp": "2026-11-21T16:00:00.000Z",
+            "value": 94.442
+          },
+          {
+            "timestamp": "2026-11-21T16:10:00.000Z",
+            "value": 98.583
+          },
+          {
+            "timestamp": "2026-11-21T16:20:00.000Z",
+            "value": 98.958
+          },
+          {
+            "timestamp": "2026-11-21T16:30:00.000Z",
+            "value": 96.798
+          },
+          {
+            "timestamp": "2026-11-21T16:40:00.000Z",
+            "value": 108.752
+          },
+          {
+            "timestamp": "2026-11-21T16:50:00.000Z",
+            "value": 103.057
+          },
+          {
+            "timestamp": "2026-11-21T17:00:00.000Z",
+            "value": 106.693
+          },
+          {
+            "timestamp": "2026-11-21T17:10:00.000Z",
+            "value": 94.438
+          },
+          {
+            "timestamp": "2026-11-21T17:20:00.000Z",
+            "value": 107.663
+          },
+          {
+            "timestamp": "2026-11-21T17:30:00.000Z",
+            "value": 109.124
+          },
+          {
+            "timestamp": "2026-11-21T17:40:00.000Z",
+            "value": 98.35
+          },
+          {
+            "timestamp": "2026-11-21T17:50:00.000Z",
+            "value": 109.494
+          },
+          {
+            "timestamp": "2026-11-21T18:00:00.000Z",
+            "value": 102.594
+          },
+          {
+            "timestamp": "2026-11-21T18:10:00.000Z",
+            "value": 103.509
+          },
+          {
+            "timestamp": "2026-11-21T18:20:00.000Z",
+            "value": 102.177
+          },
+          {
+            "timestamp": "2026-11-21T18:30:00.000Z",
+            "value": 102.975
+          },
+          {
+            "timestamp": "2026-11-21T18:40:00.000Z",
+            "value": 104.483
+          },
+          {
+            "timestamp": "2026-11-21T18:50:00.000Z",
+            "value": 104.735
+          },
+          {
+            "timestamp": "2026-11-21T19:00:00.000Z",
+            "value": 107.869
+          },
+          {
+            "timestamp": "2026-11-21T19:10:00.000Z",
+            "value": 97.71
+          },
+          {
+            "timestamp": "2026-11-21T19:20:00.000Z",
+            "value": 91.725
+          },
+          {
+            "timestamp": "2026-11-21T19:30:00.000Z",
+            "value": 106.344
+          },
+          {
+            "timestamp": "2026-11-21T19:40:00.000Z",
+            "value": 95.933
+          },
+          {
+            "timestamp": "2026-11-21T19:50:00.000Z",
+            "value": 101.097
+          },
+          {
+            "timestamp": "2026-11-21T20:00:00.000Z",
+            "value": 106.787
+          },
+          {
+            "timestamp": "2026-11-21T20:10:00.000Z",
+            "value": 91.233
+          },
+          {
+            "timestamp": "2026-11-21T20:20:00.000Z",
+            "value": 90.806
+          },
+          {
+            "timestamp": "2026-11-21T20:30:00.000Z",
+            "value": 100.986
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "search_logs",
+      "args": {
+        "service": "web",
+        "query": "config",
+        "window": "6h",
+        "limit": 20
+      },
+      "result": {
+        "service": "web",
+        "query": "config",
+        "window": "6h",
+        "level": null,
+        "limit": 20,
+        "returned": 0,
+        "redactions": 0,
+        "lines": []
+      },
+      "error": null
+    },
+    {
+      "tool": "propose_set_flag",
+      "args": {
+        "flag": "web.ssr.streaming",
+        "value": false,
+        "reason": "revertir web.ssr.streaming al valor anterior"
+      },
+      "result": {
+        "kind": "set_flag",
+        "target": "web.ssr.streaming",
+        "risk": "alto",
+        "summary": "cambio de la flag web.ssr.streaming de true a false",
+        "diff": {
+          "kind": "set_flag",
+          "flag": "web.ssr.streaming",
+          "service": "web",
+          "from_value": "true",
+          "to_value": "false",
+          "rollout_percent": 80
+        },
+        "blast_radius": {
+          "service": "web",
+          "tier": "critical",
+          "owner_team": "web-experience",
+          "dependents": [
+            "edge"
+          ],
+          "dependency_count": 1
+        },
+        "evidence": [
+          "flag web.ssr.streaming de web: enabled=true rollout=80%",
+          "descripcion: Streaming de la ficha de producto",
+          "ultimo cambio: marc.soler (2026-11-19T10:58:01.367Z)",
+          "cambio anterior 2026-11-19T10:58:01.367Z: off@25% -> on@80% (ampliar rollout tras 24h sin incidentes)",
+          "cambio anterior 2026-10-25T18:24:00.000Z: off@0% -> on@25% (canary inicial en una zona)",
+          "el rollout esta en 80%: el cambio no afecta a todo el trafico"
+        ]
+      },
+      "error": null
+    }
+  ]
+}
