@@ -116,6 +116,20 @@ export class ProposalService {
   }
 
   /**
+   * Las propuestas con su decisión y su efecto.
+   *
+   * Es lo que devuelve la API: la UI necesita las tres cosas juntas para pintar la
+   * cola de decisiones (qué se propone, quién lo decidió y qué pasó al aplicarlo).
+   */
+  async listDetails(
+    tenantId: string,
+    options?: ListProposalsOptions,
+  ): Promise<ProposalDetail[]> {
+    const proposals = await this.#deps.store.listProposals(tenantId, options);
+    return Promise.all(proposals.map((proposal) => this.#detail(proposal)));
+  }
+
+  /**
    * Las propuestas de un run, cada una con su decisión y su efecto. Es lo que la
    * UI cuelga de la timeline para mostrar que un `apply` quedó `applied` o
    * `degraded` (plan §11).
