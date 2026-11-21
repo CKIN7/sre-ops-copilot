@@ -13,6 +13,7 @@ import type {
   CompleteToolCallInput,
   CreateRunRecordInput,
   FinishRunRecordInput,
+  ListRunsOptions,
   RunStore,
 } from "@beacon/core/ports/run-store";
 
@@ -136,6 +137,18 @@ export class MemoryRunStore implements RunStore {
         toolCalls: this.toolCalls.filter((call) => call.stepId === step.id),
       }));
 
-    return { run, steps };
+    return { run, steps, proposals: [] };
+  }
+
+  async getRun(runId: string, tenantId: string): Promise<Run | null> {
+    const run = this.runs.get(runId);
+    return run && run.tenantId === tenantId ? run : null;
+  }
+
+  async listRuns(tenantId: string, options: ListRunsOptions = {}): Promise<Run[]> {
+    return [...this.runs.values()]
+      .filter((run) => run.tenantId === tenantId)
+      .filter((run) => !options.status || run.status === options.status)
+      .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
   }
 }
