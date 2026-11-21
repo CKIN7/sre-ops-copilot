@@ -37,7 +37,7 @@ cada responsabilidad.
 | `gateway` | allowlist, validación, presupuesto, aprobación, redacción, audit | `core` |
 | `orchestrator` | loop plan→tool→observar, estado, reanudación, anti-bucle | `core` |
 | `executors` | implementaciones de `ActionExecutor` (simulated, sandbox) | `core` |
-| `evals` | harness, casos, fixtures, asserts, gate | `core`, `orchestrator`, `executors` |
+| `evals` | harness, casos, fixtures, asserts, gate | `core`, `gateway`, `orchestrator`, `executors`, `mcp-ops` (tools) y `seed` (solo generador de fixtures) |
 | `apps/api` | HTTP, composición del proceso | todos |
 | `apps/worker` | consumo de cola, composición del proceso | todos |
 | `apps/web` | UI | DTOs y tipos publicados |
@@ -216,10 +216,17 @@ Reglas:
 - Cada caso define estado sembrado, prompt, trayectoria esperada, invariantes y
   presupuesto.
 - Aserciones en tres niveles: respuesta final, trayectoria y invariantes.
-- Fixtures grabadas para que el gate de CI sea determinista y sin coste.
+- Fixtures grabadas para que el gate de CI sea determinista y sin coste. `pnpm
+  evals:record` graba contra Postgres; sin `DATABASE_URL` regenera con el generador
+  determinista del seed en un instante fijo, y esa diferencia se documenta.
+- El harness ejecuta el `Orchestrator` y `createToolGateway` reales. Solo se
+  sustituye el transporte (`McpTransport`): fixtures VCR o runner in-process de
+  `mcp-ops`. `evals` importa `mcp-ops` por esa frontera y `seed` solo para el
+  generador de fixtures; ninguna app importa `evals`.
 - Gate: `pass@1` contra baseline, `false-action rate` 0, coste y latencia dentro de
   presupuesto, cero violaciones de invariante.
 - Meta-eval: mutar una descripción de tool y comprobar que el harness lo detecta.
+  La mutación debe cambiar la selección de tool, no solo un hash de fixture.
 
 ## Estructura y nombres
 
