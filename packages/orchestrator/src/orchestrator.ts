@@ -202,10 +202,12 @@ export class Orchestrator {
               agentId: input.agentId,
               runId: run.id,
               stepIdx: toolStepIdx,
+              // La fila de la tool call ya existe (write-ahead): una escritura puede
+              // engancharse a ella para verse en la timeline del run.
+              toolCallId: toolCall.id,
             })
           ).result;
-        } catch (error) {
-          const code = errorCodeOf(error);
+        } catch (error) {          const code = errorCodeOf(error);
           await this.#store.completeToolCall({
             toolCallId: toolCall.id,
             status: "error",
