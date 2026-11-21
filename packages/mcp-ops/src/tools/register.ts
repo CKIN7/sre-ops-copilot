@@ -31,6 +31,7 @@ import { proposeSilenceAlert } from "./propose-silence-alert.js";
 import { queryMetrics } from "./query-metrics.js";
 import { searchLogs } from "./search-logs.js";
 import { searchRunbooks } from "./search-runbooks.js";
+import { TOOL_DESCRIPTIONS, TOOL_TITLES } from "./registry.js";
 
 function asText(payload: unknown): { content: Array<{ type: "text"; text: string }> } {
   return { content: [{ type: "text", text: JSON.stringify(payload) }] };
@@ -40,9 +41,8 @@ export function registerTools(server: McpServer, pool: Pool): void {
   server.registerTool(
     "list_services",
     {
-      title: "List services",
-      description:
-        "Lista el inventario de servicios con rol, tier, equipo y dependencias. Solo lectura.",
+      title: TOOL_TITLES.list_services,
+      description: TOOL_DESCRIPTIONS.list_services,
       inputSchema: listServicesInputSchema,
     },
     async () => asText({ services: await listServices(pool) }),
@@ -51,9 +51,8 @@ export function registerTools(server: McpServer, pool: Pool): void {
   server.registerTool(
     "get_service",
     {
-      title: "Get service",
-      description:
-        "Detalle de un servicio: owner, tier, SLO declarado y dependencias directas. Solo lectura.",
+      title: TOOL_TITLES.get_service,
+      description: TOOL_DESCRIPTIONS.get_service,
       inputSchema: getServiceInputSchema,
     },
     async (input) => asText(await getService(pool, input.name)),
@@ -62,9 +61,8 @@ export function registerTools(server: McpServer, pool: Pool): void {
   server.registerTool(
     "query_metrics",
     {
-      title: "Query metrics",
-      description:
-        "Serie temporal de una metrica de un servicio. Ventana maxima 24h, 300 puntos por respuesta, metricas del catalogo cerrado.",
+      title: TOOL_TITLES.query_metrics,
+      description: TOOL_DESCRIPTIONS.query_metrics,
       inputSchema: queryMetricsInputSchema,
     },
     async (input) => asText(await queryMetrics(pool, input)),
@@ -73,9 +71,8 @@ export function registerTools(server: McpServer, pool: Pool): void {
   server.registerTool(
     "search_logs",
     {
-      title: "Search logs",
-      description:
-        "Busca lineas de log de un servicio por texto, ventana maxima 24h y hasta 50 lineas. Devuelve el contenido ya redactado: emails, IPs y tokens sustituidos por marcas.",
+      title: TOOL_TITLES.search_logs,
+      description: TOOL_DESCRIPTIONS.search_logs,
       inputSchema: searchLogsInputSchema,
     },
     async (input) => asText(await searchLogs(pool, input)),
@@ -84,9 +81,8 @@ export function registerTools(server: McpServer, pool: Pool): void {
   server.registerTool(
     "get_deploys",
     {
-      title: "Get deploys",
-      description:
-        "Despliegues de un servicio en una ventana de hasta 30 dias, con commit, autor, diff resumido y estado del rollout. Solo lectura.",
+      title: TOOL_TITLES.get_deploys,
+      description: TOOL_DESCRIPTIONS.get_deploys,
       inputSchema: getDeploysInputSchema,
     },
     async (input) => asText(await getDeploys(pool, input)),
@@ -95,9 +91,8 @@ export function registerTools(server: McpServer, pool: Pool): void {
   server.registerTool(
     "get_trace_summary",
     {
-      title: "Get trace summary",
-      description:
-        "Latencia y errores por downstream de un servicio en una ventana de hasta 24h. Los sistemas externos sin metricas aparecen con instrumented=false.",
+      title: TOOL_TITLES.get_trace_summary,
+      description: TOOL_DESCRIPTIONS.get_trace_summary,
       inputSchema: getTraceSummaryInputSchema,
     },
     async (input) => asText(await getTraceSummary(pool, input)),
@@ -106,9 +101,8 @@ export function registerTools(server: McpServer, pool: Pool): void {
   server.registerTool(
     "list_alerts",
     {
-      title: "List alerts",
-      description:
-        "Alertas de una ventana de hasta 30 dias, filtrables por servicio y estado. Una alerta activa no prueba el sintoma: hay que contrastarla con metricas.",
+      title: TOOL_TITLES.list_alerts,
+      description: TOOL_DESCRIPTIONS.list_alerts,
       inputSchema: listAlertsInputSchema,
     },
     async (input) => asText(await listAlerts(pool, input)),
@@ -117,9 +111,8 @@ export function registerTools(server: McpServer, pool: Pool): void {
   server.registerTool(
     "get_feature_flags",
     {
-      title: "Get feature flags",
-      description:
-        "Feature flags de un servicio con porcentaje de rollout y los tres cambios mas recientes. Solo lectura.",
+      title: TOOL_TITLES.get_feature_flags,
+      description: TOOL_DESCRIPTIONS.get_feature_flags,
       inputSchema: getFeatureFlagsInputSchema,
     },
     async (input) => asText(await getFeatureFlags(pool, input.service)),
@@ -128,9 +121,8 @@ export function registerTools(server: McpServer, pool: Pool): void {
   server.registerTool(
     "get_oncall",
     {
-      title: "Get on-call",
-      description:
-        "Guardia de un servicio: primario, secundario y politica de escalado. Solo lectura.",
+      title: TOOL_TITLES.get_oncall,
+      description: TOOL_DESCRIPTIONS.get_oncall,
       inputSchema: getOncallInputSchema,
     },
     async (input) => asText(await getOncall(pool, input.service)),
@@ -139,9 +131,8 @@ export function registerTools(server: McpServer, pool: Pool): void {
   server.registerTool(
     "search_runbooks",
     {
-      title: "Search runbooks",
-      description:
-        "Busca en el texto de los runbooks operativos y devuelve hasta 5 coincidencias con su cuerpo en markdown.",
+      title: TOOL_TITLES.search_runbooks,
+      description: TOOL_DESCRIPTIONS.search_runbooks,
       inputSchema: searchRunbooksInputSchema,
     },
     async (input) => asText(await searchRunbooks(pool, input.query)),
@@ -155,9 +146,8 @@ export function registerTools(server: McpServer, pool: Pool): void {
   server.registerTool(
     "propose_rollback",
     {
-      title: "Propose rollback",
-      description:
-        "Calcula el plan de un rollback: de que version a cual, que cambio hay y a que servicios alcanza. No ejecuta nada: devuelve el plan para que un humano lo apruebe.",
+      title: TOOL_TITLES.propose_rollback,
+      description: TOOL_DESCRIPTIONS.propose_rollback,
       inputSchema: proposeRollbackInputSchema,
     },
     async (input) => asText(await proposeRollback(pool, input)),
@@ -166,9 +156,8 @@ export function registerTools(server: McpServer, pool: Pool): void {
   server.registerTool(
     "propose_set_flag",
     {
-      title: "Propose flag change",
-      description:
-        "Calcula el plan de un cambio de feature flag: valor actual, valor propuesto y rollout. No ejecuta nada: devuelve el plan para que un humano lo apruebe.",
+      title: TOOL_TITLES.propose_set_flag,
+      description: TOOL_DESCRIPTIONS.propose_set_flag,
       inputSchema: proposeSetFlagInputSchema,
     },
     async (input) => asText(await proposeSetFlag(pool, input)),
@@ -177,9 +166,8 @@ export function registerTools(server: McpServer, pool: Pool): void {
   server.registerTool(
     "propose_silence_alert",
     {
-      title: "Propose alert silence",
-      description:
-        "Calcula el plan de silenciar una alerta durante un tiempo. No ejecuta nada: devuelve el plan para que un humano lo apruebe.",
+      title: TOOL_TITLES.propose_silence_alert,
+      description: TOOL_DESCRIPTIONS.propose_silence_alert,
       inputSchema: proposeSilenceAlertInputSchema,
     },
     async (input) => asText(await proposeSilenceAlert(pool, input)),
