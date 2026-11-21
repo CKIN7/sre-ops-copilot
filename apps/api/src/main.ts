@@ -4,7 +4,20 @@ import { loadConfig } from "./config.js";
 const config = loadConfig();
 const { app, close } = createApp({
   config,
-  logger: { level: config.logLevel },
+  logger: {
+    level: config.logLevel,
+    // pino redacta antes de escribir: un token en un header no llega al log.
+    redact: {
+      paths: [
+        "req.headers.authorization",
+        "req.headers.cookie",
+        "res.headers['set-cookie']",
+        "*.token",
+        "*.authorization",
+      ],
+      censor: "[redacted]",
+    },
+  },
 });
 
 try {
