@@ -25,6 +25,9 @@
   extracción futura, con disparador medido (CPU sostenida >70% de un core con 50 runs
   concurrentes, o >200 runs/s).
 - **003** concentra allowlist, presupuesto y audit en un solo lugar auditable.
+- **004** hace que la fase de ejecución no sea alcanzable por el modelo: `apply` no es
+  una tool y la aprobación es un hecho persistido, con idempotencia por restricción
+  única en vez de por lógica condicional.
 - **005** permite demo segura y evals deterministas sin renunciar a una prueba real
   contra `kind`.
 - **006** evita abuso y caídas: la demo pública nunca ejecuta escrituras reales.
