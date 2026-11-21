@@ -190,6 +190,9 @@ importers:
       '@beacon/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@beacon/executors':
+        specifier: workspace:*
+        version: link:../../packages/executors
       '@beacon/gateway':
         specifier: workspace:*
         version: link:../../packages/gateway
