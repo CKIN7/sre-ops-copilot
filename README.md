@@ -3,15 +3,16 @@
 > Copiloto de guardia que investiga incidentes, propone acciones con evidencia y solo
 > ejecuta escrituras tras aprobación humana, con presupuesto, auditoría y evals.
 
-**Estado:** M4a cerrado (2026-11-21). `mcp-ops` sirve las 10 tools de lectura y las 3 de
+**Estado:** M4b cerrado (2026-11-21). `mcp-ops` sirve las 10 tools de lectura y las 3 de
 propuesta (`propose_rollback`, `propose_set_flag`, `propose_silence_alert`) por stdio y
 Streamable HTTP; el gateway aplica allowlist, validación, rate limit con ventana
 deslizante, redacción y audit; el orquestador v0 ejecuta el run con write-ahead en
 Postgres; la API y el CLI producen la timeline y verifican la cadena de audit. Las
 escrituras van en dos fases: `propose_*` calcula un plan y el gateway lo persiste como
-propuesta, y nada se ejecuta hasta que un humano la aprueba. El modelo es `mock`
-guionizado: no hay LLM, tokens ni coste. Lo que sigue es M4b (UI de aprobación y
-timeline) y M5 (evals).
+propuesta, y nada se ejecuta hasta que un humano la aprueba. La UI (`apps/web`) muestra
+la timeline de un run con el estado de sus escrituras y la cola de aprobaciones: aprobar
+desde la UI **ejecuta** el `apply`. El modelo es `mock` guionizado: no hay LLM, tokens
+ni coste. Lo que sigue es M5 (evals).
 
 ## Qué demuestra
 
@@ -60,7 +61,7 @@ pnpm db:migrate
 $env:SEED_SCALE="0.1"; pnpm db:seed
 ```
 
-Run completo de punta a punta (tres terminales):
+Run completo de punta a punta (cuatro terminales):
 
 ```powershell
 # 1. mcp-ops por Streamable HTTP
@@ -72,7 +73,10 @@ pnpm start:api
 # 3. CLI: lanza el run y lee su timeline de Postgres a través de la API
 pnpm cli run --goal "Investiga el pico de errores 5xx en checkout"
 
-# 4. Verifica la cadena de audit: recalcula los hashes y dice si alguien la reescribió
+# 4. UI: http://localhost:5173 (el proxy inyecta el bearer del .env)
+pnpm --filter @beacon/web dev
+
+# 5. Verifica la cadena de audit: recalcula los hashes y dice si alguien la reescribió
 pnpm cli audit verify
 ```
 
@@ -81,6 +85,23 @@ completo necesita un seed reciente porque las tools usan ventanas relativas a `n
 
 `beacon audit verify` sale con código `1` si la cadena está rota: una manipulación
 detectada es un fallo, no un aviso.
+
+## La UI
+
+`apps/web` (React + Vite + TanStack Query) tiene dos pantallas:
+
+- **Runs:** la lista de runs y, al elegir uno, su timeline: steps, tool calls con los
+  args **redactados**, latencia, coste, tokens y el estado de las escrituras del run
+  (`applied`, `degraded`, `conflict`...). Las propuestas que el modelo propuso cuelgan
+  de su tool call; las abiertas desde la API se listan aparte.
+- **Aprobaciones:** la cola de propuestas con el diff, el radio de impacto (servicio,
+  tier, equipo y dependientes), la evidencia y los botones de aprobar y rechazar. Las
+  dos decisiones exigen un motivo, que queda en la auditoría. **Aprobar ejecuta el
+  `apply`**: es la misma llamada que decide y aplica, y el efecto es idempotente.
+
+La UI habla solo con la API: nunca con Postgres ni con `mcp-ops`. En local, el proxy de
+Vite inyecta el bearer del `.env` para que el token de servicio no llegue al bundle del
+navegador; contra una API remota, la persona escribe su token y el proxy lo deja pasar.
 
 ## Escrituras en dos fases
 
