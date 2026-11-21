@@ -8,7 +8,7 @@ import type { ApprovalRecord, ProposalRecord } from "./proposal-store.js";
  * una aprobación humana, y el `apply` se apoya en el puerto `ActionExecutor` para
  * tocar el mundo.
  */
-export interface ApplyRequest {
+export interface ApprovalRequest {
   proposalId: string;
   tenantId: string;
   /** Id del usuario que aprueba, resuelto server-side. Nunca un email. */
@@ -27,6 +27,19 @@ export interface ApplyOutcome {
   replayed: boolean;
 }
 
+export interface RejectOutcome {
+  proposal: ProposalRecord;
+  approval: ApprovalRecord;
+}
+
 export interface ActionApplier {
-  applyApproved(request: ApplyRequest): Promise<ApplyOutcome>;
+  /** Registra la decisión humana y ejecuta la escritura. */
+  approve(request: ApprovalRequest): Promise<ApplyOutcome>;
+  /** Registra la decisión humana y no ejecuta nada. */
+  reject(request: ApprovalRequest): Promise<RejectOutcome>;
+  /**
+   * Ejecuta una propuesta **ya aprobada**. Es el camino que usará el worker que
+   * reanude un run: ni el modelo ni la UI llegan aquí por su cuenta.
+   */
+  applyApproved(request: ApprovalRequest): Promise<ApplyOutcome>;
 }
