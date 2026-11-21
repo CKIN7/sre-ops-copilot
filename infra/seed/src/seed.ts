@@ -97,7 +97,7 @@ async function main(): Promise<void> {
     const startedAt = performance.now();
     await client.query(`
       truncate logs, deploys, alerts, feature_flag_changes, feature_flags, runbooks, oncall,
-               metrics_series, service_deps, services
+               metrics_series, service_deps, services, simulated_state
       restart identity cascade
     `);
 
@@ -380,6 +380,67 @@ async function main(): Promise<void> {
     console.log(
       `seed: ${runbooks.length} runbooks y ${oncall.length} guardias en ` +
         `${(performance.now() - docsStartedAt).toFixed(0)} ms`,
+    );
+
+    // --- Estado simulado ------------------------------------------------------
+    // El documento de estado que muta el `SimulatedExecutor` (ADR-005). Sin esto la
+    // primera escritura crearía un documento vacío y la demo no enseñaría nada: el
+    // "efecto" de la tabla de honestidad del plan (§11.7) es estado real en Postgres.
+    const simulatedStates: Array<{ target: string; state: unknown }> = [];
+
+    const latestDeployBySlug = new Map<string, { version: string; at: number }>();
+    for (const deploy of deploys) {
+      const previous = latestDeployBySlug.get(deploy.slug);
+      if (!previous || deploy.deployedAtMs > previous.at) {
+        latestDeployBySlug.set(deploy.slug, { version: deploy.version, at: deploy.deployedAtMs });
+      }
+    }
+    for (const service of SERVICES) {
+      simulatedStates.push({
+        target: `service:${service.slug}`,
+        state: {
+          service: service.slug,
+          version: latestDeployBySlug.get(service.slug)?.version ?? "",
+          rollout_percent: 100,
+        },
+      });
+    }
+    for (const flag of flags) {
+      simulatedStates.push({
+        target: `flag:${flag.key}`,
+        state: {
+          flag: flag.key,
+          value: String(flag.enabled),
+          rollout_percent: flag.rolloutPercent,
+        },
+      });
+    }
+
+    // Los ids de las alertas los pone la base: hay que leerlos para poder sembrar
+    // su estado (el `SimulatedExecutor` los referencia por id).
+    const { rows: alertStateRows } = await client.query<{ id: string; status: string }>(
+      "select id::text as id, status from alerts",
+    );
+    for (const alert of alertStateRows) {
+      simulatedStates.push({
+        target: `alert:${alert.id}`,
+        state: { alert_id: alert.id, status: alert.status, silenced_until: null },
+      });
+    }
+
+    await client.query(
+      `insert into simulated_state (target, state, version)
+       select * from unnest($1::text[], $2::jsonb[], $3::integer[])
+       as t(target, state, version)
+       on conflict (target) do update set state = excluded.state, updated_at = now()`,
+      [
+        simulatedStates.map((entry) => entry.target),
+        simulatedStates.map((entry) => JSON.stringify(entry.state)),
+        simulatedStates.map(() => 1),
+      ],
+    );
+    console.log(
+      `seed: ${simulatedStates.length} documentos de estado simulado insertados`,
     );
 
     // --- Control plane --------------------------------------------------------

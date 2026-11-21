@@ -4,9 +4,14 @@ import type {
   StepKind,
   ToolCallStatus,
 } from "@beacon/core/domain/runs";
+import type { RiskLevel, WriteKind } from "@beacon/core/domain/write-tools";
 import type { AuditAction } from "@beacon/core/ports/audit-log";
+import type { EffectStatus } from "@beacon/core/ports/effect-ledger";
+import type { ProposalStatus } from "@beacon/core/ports/proposal-store";
+import type { WriteToolName } from "@beacon/core/schemas/writes";
 import {
   bigint,
+  boolean,
   integer,
   jsonb,
   pgTable,
@@ -141,4 +146,87 @@ export const rateLimitEvents = pgTable("rate_limit_events", {
   runId: uuid("run_id").references(() => runs.id, { onDelete: "cascade" }),
   tool: text("tool").notNull(),
   createdAt: timestamptz("created_at").notNull().defaultNow(),
+});
+
+/**
+ * Espejo Drizzle de `infra/migrations/migrations/0006_write-proposals.sql`.
+ *
+ * `id` y `approval_id` los aporta la aplicación: el audit cita la propuesta antes de
+ * que exista la fila, y la aprobación nace con ella.
+ */
+export const proposals = pgTable("proposals", {
+  id: uuid("id").primaryKey(),
+  approvalId: uuid("approval_id").notNull(),
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => tenants.id, { onDelete: "cascade" }),
+  kind: text("kind").$type<WriteKind>().notNull(),
+  tool: text("tool").$type<WriteToolName>().notNull(),
+  status: text("status").$type<ProposalStatus>().notNull(),
+  risk: text("risk").$type<RiskLevel>().notNull(),
+  target: text("target").notNull(),
+  argsRedacted: jsonb("args_redacted").$type<unknown>().notNull(),
+  diff: jsonb("diff").$type<unknown>().notNull(),
+  blastRadius: jsonb("blast_radius").$type<unknown>().notNull(),
+  evidence: jsonb("evidence").$type<string[]>().notNull(),
+  idempotencyKey: text("idempotency_key").notNull(),
+  runId: uuid("run_id").references(() => runs.id, { onDelete: "set null" }),
+  toolCallId: uuid("tool_call_id").references(() => toolCalls.id, { onDelete: "set null" }),
+  createdAt: timestamptz("created_at").notNull().defaultNow(),
+  decidedAt: timestamptz("decided_at"),
+  appliedAt: timestamptz("applied_at"),
+});
+
+export const approvals = pgTable("approvals", {
+  id: uuid("id").primaryKey(),
+  proposalId: uuid("proposal_id")
+    .notNull()
+    .references(() => proposals.id, { onDelete: "cascade" }),
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => tenants.id, { onDelete: "cascade" }),
+  approver: text("approver").notNull(),
+  decision: text("decision").$type<"approved" | "rejected">().notNull(),
+  reason: text("reason"),
+  decidedAt: timestamptz("decided_at").notNull().defaultNow(),
+});
+
+/**
+ * Espejo Drizzle de `infra/migrations/migrations/0007_action-effects.sql`.
+ *
+ * `idempotency_key` es única: es la restricción que hace que un rettento del apply
+ * no vuelva a ejecutar la escritura.
+ */
+export const actionEffects = pgTable("action_effects", {
+  id: uuid("id").primaryKey(),
+  proposalId: uuid("proposal_id")
+    .notNull()
+    .references(() => proposals.id, { onDelete: "cascade" }),
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => tenants.id, { onDelete: "cascade" }),
+  toolCallId: uuid("tool_call_id").references(() => toolCalls.id, { onDelete: "set null" }),
+  idempotencyKey: text("idempotency_key").notNull(),
+  executor: text("executor").notNull(),
+  effectId: text("effect_id").notNull(),
+  status: text("status").$type<EffectStatus>().notNull(),
+  verified: boolean("verified").notNull().default(false),
+  observedState: jsonb("observed_state").$type<unknown>(),
+  evidence: jsonb("evidence").$type<string[]>().notNull(),
+  durationMs: integer("duration_ms").notNull().default(0),
+  errorCode: text("error_code"),
+  createdAt: timestamptz("created_at").notNull().defaultNow(),
+  appliedAt: timestamptz("applied_at"),
+});
+
+/**
+ * Espejo Drizzle de la tabla `simulated_state`: el documento versionado que muta el
+ * `SimulatedExecutor`. La versión es lo que permite el compare-and-swap y, con él,
+ * el `409`.
+ */
+export const simulatedState = pgTable("simulated_state", {
+  target: text("target").primaryKey(),
+  state: jsonb("state").$type<unknown>().notNull(),
+  version: integer("version").notNull().default(1),
+  updatedAt: timestamptz("updated_at").notNull().defaultNow(),
 });

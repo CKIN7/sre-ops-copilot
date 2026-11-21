@@ -1,14 +1,21 @@
 import { AppError } from "@beacon/core/errors/app-error";
 import type { AuditEntry, AuditLog } from "@beacon/core/ports/audit-log";
+import type { ProposalStore } from "@beacon/core/ports/proposal-store";
 import type { RateLimiter } from "@beacon/core/ports/rate-limiter";
 import type { ToolCallResult, ToolGateway } from "@beacon/core/ports/tool-gateway";
 import { redactValue } from "@beacon/core/redaction/redact";
+import {
+  WRITE_TOOL_NAMES,
+  actionPlanSchema,
+  type WriteToolName,
+} from "@beacon/core/schemas/writes";
 
 import { assertToolAllowed, resolveAllowedTools } from "./allowlist.js";
 import { buildAuditEntry } from "./audit.js";
 import { HttpMcpTransport } from "./http-transport.js";
 import type { McpTransport } from "./transport.js";
 import { parseToolArgs } from "./validate.js";
+import { createProposalWriter, type ProposalWriter } from "./write-policy.js";
 
 export interface CreateToolGatewayOptions {
   transport: McpTransport;
@@ -20,8 +27,18 @@ export interface CreateToolGatewayOptions {
   rateLimiter: RateLimiter;
   /** `agent:<nombre>` de quien actúa. */
   actor: string;
+  /**
+   * Persistencia de propuestas. Obligatoria si la allowlist incluye tools de
+   * escritura: sin ella no hay dónde dejar el plan que se va a aprobar.
+   */
+  proposals?: ProposalStore;
   /** Aviso de fallos no fatales (por ejemplo, no se pudo auditar una denegación). */
   onError?: (error: unknown) => void;
+}
+
+/** ¿Es una tool de escritura (fase 1) o de lectura? */
+export function isWriteTool(tool: string): tool is WriteToolName {
+  return (WRITE_TOOL_NAMES as readonly string[]).includes(tool);
 }
 
 /**
@@ -39,10 +56,26 @@ export interface CreateToolGatewayOptions {
  *
  * El rate limit va entre la validación y la llamada: una tool denegada por límite no
  * consume presupuesto ni llega a `mcp-ops`.
+ *
+ * Las tools de escritura (`propose_*`) no mutan nada: calculan un plan. El gateway es
+ * quien lo persiste como propuesta y devuelve el `approval_id` con el que un humano
+ * puede aprobarlo (ADR-004).
  */
 export function createToolGateway(options: CreateToolGatewayOptions): ToolGateway {
   const allowed = new Set(resolveAllowedTools(options.allowedTools));
   const { audit, rateLimiter, actor, onError } = options;
+
+  const needsProposals = [...allowed].some((tool) => isWriteTool(tool));
+  if (needsProposals && !options.proposals) {
+    throw new AppError(
+      "internal",
+      "the allowlist includes write tools but no proposal store was provided",
+    );
+  }
+
+  const writer: ProposalWriter | null = options.proposals
+    ? createProposalWriter({ proposals: options.proposals, audit, actor, onError })
+    : null;
 
   const auditCall = async (
     action: "tool.call.allowed" | "tool.call.denied" | "tool.call.error" | "tool.call.result",
@@ -147,7 +180,39 @@ export function createToolGateway(options: CreateToolGatewayOptions): ToolGatewa
           result,
         });
 
-        return { result, latencyMs };
+        if (!isWriteTool(tool)) {
+          return { result, latencyMs };
+        }
+
+        // Fase 1: el plan se persiste como propuesta y queda pendiente de un humano.
+        if (!writer) {
+          throw new AppError("internal", "no proposal store configured for write tools");
+        }
+
+        const plan = actionPlanSchema.safeParse(result);
+        if (!plan.success) {
+          throw new AppError("upstream_error", `${tool} returned an invalid action plan`, {
+            statusCode: 502,
+            details: plan.error.issues,
+          });
+        }
+
+        const proposal = await writer.persist({
+          context,
+          tool,
+          args: parsed,
+          plan: plan.data,
+        });
+
+        return {
+          result: {
+            proposal_id: proposal.id,
+            approval_id: proposal.approvalId,
+            status: proposal.status,
+            plan: plan.data,
+          },
+          latencyMs,
+        };
       } catch (error) {
         await auditBestEffort("tool.call.error", tool, context, {
           args: parsed,
@@ -172,6 +237,8 @@ export interface CreateHttpToolGatewayOptions {
   rateLimiter: RateLimiter;
   /** `agent:<nombre>` de quien actúa. */
   actor: string;
+  /** Persistencia de propuestas; obligatoria si hay tools de escritura en la allowlist. */
+  proposals?: ProposalStore;
   /** Aviso de fallos no fatales. */
   onError?: (error: unknown) => void;
   timeoutMs?: number;
@@ -193,6 +260,12 @@ export function createHttpToolGateway(options: CreateHttpToolGatewayOptions): To
     audit: options.audit,
     rateLimiter: options.rateLimiter,
     actor: options.actor,
+    proposals: options.proposals,
     onError: options.onError,
   });
 }
+
+export { createActionApplier } from "./apply-policy.js";
+export type { ActionApplierOptions } from "./apply-policy.js";
+export { createProposalWriter } from "./write-policy.js";
+export type { ProposalWriter, ProposalWriterOptions } from "./write-policy.js";

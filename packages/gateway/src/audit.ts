@@ -16,7 +16,8 @@ export interface AuditEntryInput {
   actor: string;
   action: AuditAction;
   tool: string;
-  runId: string;
+  /** `null` = llamada fuera de un run (una propuesta abierta desde la API). */
+  runId: string | null;
   userId: string;
   stepIdx: number;
   /** Campos sueltos que se mezclan con `user_id` y `step_idx` en el payload. */
@@ -24,8 +25,8 @@ export interface AuditEntryInput {
 }
 
 /** Objetivo de la entrada: qué se actuó, en qué run. */
-export function auditTarget(tool: string, runId: string): string {
-  return `${tool}#${runId}`;
+export function auditTarget(tool: string, runId: string | null): string {
+  return `${tool}#${runId ?? "no-run"}`;
 }
 
 /** Entrada de audit con el payload ya redactado. */

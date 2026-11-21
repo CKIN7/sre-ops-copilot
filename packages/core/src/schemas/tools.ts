@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import {
+  DURATION_PATTERN,
   MAX_POINTS,
   MAX_STEP_SECONDS,
   MAX_WINDOW_SECONDS,
@@ -19,9 +20,8 @@ import {
   MAX_LOG_WINDOW_SECONDS,
   MAX_TRACE_WINDOW_SECONDS,
 } from "../domain/read-tools.js";
-
-const SERVICE_SLUG_PATTERN = /^[a-z][a-z0-9-]{1,31}$/;
-const DURATION_PATTERN = /^([1-9][0-9]{0,3})(s|m|h)$/;
+import { SERVICE_SLUG_PATTERN } from "../domain/tool-args.js";
+import { WRITE_TOOL_INPUT_SCHEMAS, type WriteToolName } from "./writes.js";
 
 const serviceSlugSchema = z
   .string()
@@ -208,3 +208,17 @@ export const TOOL_INPUT_SCHEMAS = {
 export type ReadToolName = keyof typeof TOOL_INPUT_SCHEMAS;
 
 export const READ_TOOL_NAMES = Object.keys(TOOL_INPUT_SCHEMAS) as ReadToolName[];
+
+/**
+ * Registro único de los argumentos de **todas** las tools, lectura y escritura.
+ *
+ * El gateway valida contra este mapa: una tool que no esté aquí no existe, y
+ * quedarse fuera de él es un error de configuración server-side, no una tool que el
+ * modelo pueda intentar (ADR-003, decisión 4).
+ */
+export const ALL_TOOL_INPUT_SCHEMAS = {
+  ...TOOL_INPUT_SCHEMAS,
+  ...WRITE_TOOL_INPUT_SCHEMAS,
+} as const;
+
+export type ToolName = ReadToolName | WriteToolName;

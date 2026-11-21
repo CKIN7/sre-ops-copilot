@@ -3,12 +3,15 @@
 > Copiloto de guardia que investiga incidentes, propone acciones con evidencia y solo
 > ejecuta escrituras tras aprobación humana, con presupuesto, auditoría y evals.
 
-**Estado:** M3 cerrado (2026-11-20). `mcp-ops` sirve las 10 tools de lectura por stdio y
+**Estado:** M4a cerrado (2026-11-21). `mcp-ops` sirve las 10 tools de lectura y las 3 de
+propuesta (`propose_rollback`, `propose_set_flag`, `propose_silence_alert`) por stdio y
 Streamable HTTP; el gateway aplica allowlist, validación, rate limit con ventana
 deslizante, redacción y audit; el orquestador v0 ejecuta el run con write-ahead en
-Postgres; la API y el CLI producen la timeline y verifican la cadena de audit. El modelo
-es `mock` guionizado: no hay LLM, tokens ni coste. Lo que sigue es M4 (dos fases,
-aprobaciones, UI) y M5 (evals).
+Postgres; la API y el CLI producen la timeline y verifican la cadena de audit. Las
+escrituras van en dos fases: `propose_*` calcula un plan y el gateway lo persiste como
+propuesta, y nada se ejecuta hasta que un humano la aprueba. El modelo es `mock`
+guionizado: no hay LLM, tokens ni coste. Lo que sigue es M4b (UI de aprobación y
+timeline) y M5 (evals).
 
 ## Qué demuestra
 
@@ -78,6 +81,38 @@ completo necesita un seed reciente porque las tools usan ventanas relativas a `n
 
 `beacon audit verify` sale con código `1` si la cadena está rota: una manipulación
 detectada es un fallo, no un aviso.
+
+## Escrituras en dos fases
+
+Ninguna escritura ocurre sin que un humano la apruebe. `propose_*` **calcula** un plan
+(diff, radio de impacto y evidencia) sin tocar nada; el gateway lo persiste como
+propuesta y le acuña un `approval_id`; el `apply` es una operación interna del gateway
+—no una tool, no está en ninguna allowlist— que solo se ejecuta con la decisión
+persistida.
+
+```powershell
+# 1. Proponer: devuelve proposal_id y approval_id
+curl.exe -X POST http://127.0.0.1:3000/proposals `
+  -H "authorization: Bearer $env:BEACON_TOKEN" `
+  -H "content-type: application/json" `
+  -d '{"tool":"propose_rollback","args":{"service":"checkout","to_version":"1.41.0","reason":"pico de 5xx"}}'
+
+# 2. Aprobar: registra la decisión y ejecuta el apply (idempotente)
+curl.exe -X POST http://127.0.0.1:3000/proposals/<proposal_id>/approve `
+  -H "authorization: Bearer $env:BEACON_TOKEN" `
+  -H "content-type: application/json" `
+  -d '{"reason":"adelante"}'
+
+# 3. Listar y rechazar también existen
+curl.exe "http://127.0.0.1:3000/proposals?status=pending_approval" -H "authorization: Bearer $env:BEACON_TOKEN"
+curl.exe -X POST http://127.0.0.1:3000/proposals/<proposal_id>/reject -H "authorization: Bearer $env:BEACON_TOKEN" -d '{"reason":"no es el momento"}'
+```
+
+Repetir la aprobación **no** vuelve a escribir: el efecto se reserva con una clave
+única antes de tocar el mundo y, si ya existe, se devuelve el guardado. Un `409` o un
+`timeout` quedan registrados con el estado observado y no se reintentan a ciegas; una
+escritura aplicada pero no verificada deja la propuesta en `degraded`, nunca en
+"aplicado".
 
 ## Límites del gateway
 

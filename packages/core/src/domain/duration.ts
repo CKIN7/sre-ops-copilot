@@ -1,4 +1,4 @@
-const DURATION_PATTERN = /^([1-9][0-9]{0,3})(s|m|h)$/;
+export const DURATION_PATTERN = /^([1-9][0-9]{0,3})(s|m|h)$/;
 
 const UNIT_SECONDS = { s: 1, m: 60, h: 3600 } as const;
 

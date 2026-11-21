@@ -50,12 +50,6 @@ export class DrizzleRateLimiter implements RateLimiter {
     return this.#db.transaction(async (tx) => {
       const scopes: ScopeWindow[] = [
         {
-          kind: "run",
-          limit: this.#policy.run,
-          lockKey: `run:${input.runId}`,
-          where: [eq(rateLimitEvents.runId, input.runId)],
-        },
-        {
           kind: "tenant",
           limit: this.#policy.tenant,
           lockKey: `tenant:${input.tenantId}`,
@@ -71,6 +65,17 @@ export class DrizzleRateLimiter implements RateLimiter {
           ],
         },
       ];
+
+      // El ámbito "run" solo aplica si la llamada viene de un run. Una propuesta
+      // abierta desde la API no tiene run: el techo de tenant y de tool la cubren.
+      if (input.runId !== null) {
+        scopes.unshift({
+          kind: "run",
+          limit: this.#policy.run,
+          lockKey: `run:${input.runId}`,
+          where: [eq(rateLimitEvents.runId, input.runId)],
+        });
+      }
 
       // Orden global de los locks: acquisition en orden lexicografico para que dos
       // llamadas que comparten ambitos no se bloqueen mutuamente.

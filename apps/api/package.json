@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@beacon/core": "workspace:*",
+    "@beacon/executors": "workspace:*",
     "@beacon/gateway": "workspace:*",
     "@beacon/orchestrator": "workspace:*",
     "drizzle-orm": "0.45.4",

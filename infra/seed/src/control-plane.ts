@@ -1,4 +1,5 @@
 import { READ_TOOL_NAMES } from "@beacon/core/schemas/tools";
+import { WRITE_TOOL_NAMES } from "@beacon/core/schemas/writes";
 import type { Client } from "pg";
 
 /**
@@ -72,7 +73,9 @@ export async function seedControlPlane(client: Client): Promise<ControlPlaneIds>
       DEMO_AGENT.name,
       DEMO_AGENT.model,
       DEMO_AGENT.promptVersion,
-      [...READ_TOOL_NAMES],
+      // Las tools de escritura (fase 1) son de solo cálculo: el agente puede
+      // proponer, no ejecutar. El `apply` no está en ninguna allowlist (ADR-004).
+      [...READ_TOOL_NAMES, ...WRITE_TOOL_NAMES],
       DEMO_AGENT.budgetCents,
     ],
   );

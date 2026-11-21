@@ -56,7 +56,7 @@ describe.skipIf(!databaseUrl)("contrato stdio de mcp-ops", () => {
     return JSON.parse(textOf(result)) as T;
   }
 
-  it("descubre las 10 tools de lectura del plan", async () => {
+  it("descubre las 10 tools de lectura y las 3 de escritura del plan", async () => {
     const { tools } = await client.listTools();
     expect(tools.map((tool) => tool.name).sort()).toEqual([
       "get_deploys",
@@ -66,6 +66,9 @@ describe.skipIf(!databaseUrl)("contrato stdio de mcp-ops", () => {
       "get_trace_summary",
       "list_alerts",
       "list_services",
+      "propose_rollback",
+      "propose_set_flag",
+      "propose_silence_alert",
       "query_metrics",
       "search_logs",
       "search_runbooks",
@@ -221,5 +224,78 @@ describe.skipIf(!databaseUrl)("contrato stdio de mcp-ops", () => {
 
     const after = await call<{ services: unknown[] }>("list_services", {});
     expect(after.services).toHaveLength(6);
+  });
+
+  // --- Escrituras en dos fases (ADR-004) ---------------------------------------
+
+  it("propose_rollback devuelve el plan sin mutar nada", async () => {
+    const payload = await call<{
+      kind: string;
+      target: string;
+      risk: string;
+      diff: { kind: string; from_version: string; to_version: string };
+      blast_radius: { service: string; dependents: string[] };
+      evidence: string[];
+    }>("propose_rollback", {
+      service: "checkout",
+      to_version: "1.41.0",
+      reason: "pico de 5xx",
+    });
+
+    expect(payload.kind).toBe("rollback");
+    expect(payload.target).toBe("checkout");
+    expect(payload.risk).toBe("alto");
+    expect(payload.diff.kind).toBe("rollback");
+    expect(payload.diff.to_version).toBe("1.41.0");
+    expect(payload.diff.from_version).not.toBe("1.41.0");
+    expect(payload.blast_radius.service).toBe("checkout");
+    expect(payload.evidence.length).toBeGreaterThan(0);
+  });
+
+  it("propose_rollback falla si la version no existe", async () => {
+    const result = await client.callTool({
+      name: "propose_rollback",
+      arguments: { service: "checkout", to_version: "9.9.9", reason: "no existe" },
+    });
+    expect(result.isError).toBe(true);
+  });
+
+  it("propose_set_flag devuelve el valor actual y el propuesto", async () => {
+    const payload = await call<{
+      kind: string;
+      diff: { kind: string; from_value: string; to_value: string; service: string };
+    }>("propose_set_flag", {
+      flag: "checkout.confirm.async",
+      value: true,
+      reason: "el rollout nuevo falla",
+    });
+
+    expect(payload.kind).toBe("set_flag");
+    expect(payload.diff.from_value).toBe("false");
+    expect(payload.diff.to_value).toBe("true");
+    expect(payload.diff.service).toBe("checkout");
+  });
+
+  it("propose_silence_alert calcula hasta cuando se silencia", async () => {
+    const alerts = await call<{ alerts: Array<{ id: string; service: string }> }>(
+      "list_alerts",
+      { service: "checkout", status: "firing", window: "24h" },
+    );
+    const alert = alerts.alerts[0];
+    expect(alert).toBeDefined();
+
+    const payload = await call<{
+      kind: string;
+      diff: { kind: string; alert_id: string; duration_seconds: number; silenced_until: string };
+    }>("propose_silence_alert", {
+      alert_id: alert?.id ?? "0",
+      duration: "30m",
+      reason: "falsa alarma",
+    });
+
+    expect(payload.kind).toBe("silence_alert");
+    expect(payload.diff.alert_id).toBe(alert?.id);
+    expect(payload.diff.duration_seconds).toBe(1800);
+    expect(payload.diff.silenced_until).toMatch(/Z$/);
   });
 });

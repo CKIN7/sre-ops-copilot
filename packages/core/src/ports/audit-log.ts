@@ -10,7 +10,13 @@ export type AuditAction =
   | "tool.call.allowed"
   | "tool.call.denied"
   | "tool.call.error"
-  | "tool.call.result";
+  | "tool.call.result"
+  | "proposal.created"
+  | "proposal.approved"
+  | "proposal.rejected"
+  | "action.applied"
+  | "action.denied"
+  | "action.replayed";
 
 export interface AuditEntry {
   tenantId: string;
