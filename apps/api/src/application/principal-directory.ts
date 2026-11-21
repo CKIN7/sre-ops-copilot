@@ -14,6 +14,8 @@ export interface AgentBinding {
   model: string;
   promptVersion: string;
   allowedTools: readonly string[];
+  /** Presupuesto de coste por run, en centimos. 0 = usar el limite por defecto. */
+  budgetCents: number;
 }
 
 export interface ResolvedPrincipal {
