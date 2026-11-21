@@ -209,9 +209,13 @@ describeIntegration("escrituras en dos fases contra Postgres real (ADR-004)", ()
 
     const listed = await app.inject({ method: "GET", url: "/proposals", headers: AUTH });
     expect(listed.statusCode).toBe(200);
-    const { proposals } = listed.json<{ proposals: Array<{ id: string; status: string }> }>();
-    expect(proposals.map((item) => item.id)).toContain(proposalId);
-    expect(proposals.every((item) => item.status === "pending_approval")).toBe(true);
+    const { proposals } = listed.json<{
+      proposals: Array<{ proposal: { id: string; status: string }; approval: unknown }>;
+    }>();
+    expect(proposals.map((item) => item.proposal.id)).toContain(proposalId);
+    expect(proposals.every((item) => item.proposal.status === "pending_approval")).toBe(true);
+    // La cola viene con su decisión y su efecto, aunque todavía no los tenga.
+    expect(proposals.every((item) => item.approval === null)).toBe(true);
 
     const detail = await app.inject({
       method: "GET",
@@ -241,15 +245,17 @@ describeIntegration("escrituras en dos fases contra Postgres real (ADR-004)", ()
 
     expect(approved.statusCode).toBe(200);
     const body = approved.json<{
-      proposal: { status: string };
-      effect: { status: string; verified: boolean; observedState: unknown };
+      proposal: {
+        proposal: { status: string };
+        effect: { status: string; verified: boolean; observedState: unknown };
+      };
       replayed: boolean;
     }>();
     expect(body.replayed).toBe(false);
-    expect(body.effect.status).toBe("applied");
-    expect(body.effect.verified).toBe(true);
-    expect(body.proposal.status).toBe("applied");
-    expect(body.effect.observedState).toMatchObject({ version: "1.0.0" });
+    expect(body.proposal.effect.status).toBe("applied");
+    expect(body.proposal.effect.verified).toBe(true);
+    expect(body.proposal.proposal.status).toBe("applied");
+    expect(body.proposal.effect.observedState).toMatchObject({ version: "1.0.0" });
 
     // El efecto se ve en Postgres: el estado simulado cambio de verdad.
     const after = await pool.query(
@@ -296,7 +302,9 @@ describeIntegration("escrituras en dos fases contra Postgres real (ADR-004)", ()
       payload: { reason: "no es el momento" },
     });
     expect(rejected.statusCode).toBe(200);
-    expect(rejected.json<{ proposal: { status: string } }>().proposal.status).toBe("rejected");
+    expect(
+      rejected.json<{ proposal: { proposal: { status: string } } }>().proposal.proposal.status,
+    ).toBe("rejected");
 
     const approved = await app.inject({
       method: "POST",
