@@ -31,6 +31,8 @@ export type ApprovalDecision = "approved" | "rejected";
 
 export interface ProposalRecord {
   id: string;
+  /** Id de la aprobación, acuñado al proponer: la referencia no cambia al decidir. */
+  approvalId: string;
   tenantId: string;
   kind: WriteKind;
   tool: WriteToolName;
@@ -64,6 +66,10 @@ export interface ApprovalRecord {
 }
 
 export interface CreateProposalInput {
+  /** Id acuñado por la aplicación: el audit lo cita antes de que la fila exista. */
+  id: string;
+  /** Id de la aprobación, acuñado junto con la propuesta. */
+  approvalId: string;
   tenantId: string;
   kind: WriteKind;
   tool: WriteToolName;
