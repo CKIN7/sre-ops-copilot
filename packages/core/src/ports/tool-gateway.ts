@@ -1,3 +1,4 @@
+import type { BudgetUsage } from "./budget.js";
 import type { ToolName } from "../schemas/tools.js";
 
 /**
@@ -24,6 +25,8 @@ export interface ToolCallContext {
 export interface ToolCallResult {
   result: unknown;
   latencyMs: number;
+  /** Uso liquidado en el presupuesto; cero cuando no hay medidor real. */
+  usage?: BudgetUsage;
 }
 
 /**
