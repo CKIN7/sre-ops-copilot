@@ -72,6 +72,8 @@ export function ApprovalsPage({ client }: { client: ApiClient }) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["proposals"] });
       await queryClient.invalidateQueries({ queryKey: ["runs"] });
+      // La timeline del run también cambia: el `apply` es parte de su historia.
+      await queryClient.invalidateQueries({ queryKey: ["run"] });
     },
   });
 
