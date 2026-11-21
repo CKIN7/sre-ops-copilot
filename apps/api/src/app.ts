@@ -4,6 +4,7 @@ import type { RunStore } from "@beacon/core/ports/run-store";
 import type { AuditLog } from "@beacon/core/ports/audit-log";
 import type { ActionApplier } from "@beacon/core/ports/action-applier";
 import type { ActionExecutor } from "@beacon/core/ports/action-executor";
+import type { BudgetPort } from "@beacon/core/ports/budget";
 import type { EffectLedger } from "@beacon/core/ports/effect-ledger";
 import type { ProposalStore } from "@beacon/core/ports/proposal-store";
 import type { RateLimiter } from "@beacon/core/ports/rate-limiter";
@@ -34,6 +35,7 @@ import {
 import { createDb, type DbHandle } from "./adapters/db.js";
 import { DrizzleActionStateStore } from "./adapters/action-state.js";
 import { DrizzleAuditLog } from "./adapters/audit-log.js";
+import { DrizzleBudget, budgetLimitsFor } from "./adapters/budget.js";
 import { DrizzleEffectLedger } from "./adapters/effect-ledger.js";
 import { DrizzlePrincipalDirectory } from "./adapters/principal-directory.js";
 import { DrizzleProposalStore } from "./adapters/proposal-store.js";
@@ -55,6 +57,8 @@ export interface CreateAppOptions {
   audit?: AuditLog;
   /** Inyectable para tests; si falta, se construye sobre Postgres. */
   rateLimiter?: RateLimiter;
+  /** Inyectable para tests; si falta, se construye sobre Postgres. */
+  budget?: BudgetPort;
   /** Inyectable para tests; si falta, se construye sobre Postgres. */
   proposalStore?: ProposalStore;
   /** Inyectable para tests; si falta, se construye sobre Postgres. */
@@ -108,6 +112,11 @@ export function createApp(options: CreateAppOptions): AppHandle {
   const directory = options.directory ?? new DrizzlePrincipalDirectory(db());
   const auditLog = options.audit ?? new DrizzleAuditLog(db());
   const limiter = options.rateLimiter ?? new DrizzleRateLimiter(db(), config.rateLimit);
+  const budget =
+    options.budget ??
+    new DrizzleBudget(db(), {
+      reservationTtlMs: config.budget.reservationTtlMs,
+    });
   const proposalStore = options.proposalStore ?? new DrizzleProposalStore(db());
   const effectLedger = options.effectLedger ?? new DrizzleEffectLedger(db());
 
@@ -120,6 +129,8 @@ export function createApp(options: CreateAppOptions): AppHandle {
         allowedTools: agent.allowedTools,
         audit: auditLog,
         rateLimiter: limiter,
+        budget,
+        budgetLimits: budgetLimitsFor(agent.budgetCents, config.budget.overrides),
         actor: `agent:${agent.name}`,
         // Sin esta pieza, una tool de escritura no tiene dónde dejar su propuesta.
         proposals: proposalStore,
