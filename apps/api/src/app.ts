@@ -2,8 +2,16 @@ import { AppError } from "@beacon/core/errors/app-error";
 import type { Model } from "@beacon/core/ports/model";
 import type { RunStore } from "@beacon/core/ports/run-store";
 import type { AuditLog } from "@beacon/core/ports/audit-log";
+import type { ActionApplier } from "@beacon/core/ports/action-applier";
+import type { ActionExecutor } from "@beacon/core/ports/action-executor";
+import type { EffectLedger } from "@beacon/core/ports/effect-ledger";
+import type { ProposalStore } from "@beacon/core/ports/proposal-store";
 import type { RateLimiter } from "@beacon/core/ports/rate-limiter";
-import { createHttpToolGateway } from "@beacon/gateway";
+import { createActionApplier, createHttpToolGateway } from "@beacon/gateway";
+import {
+  SIMULATED_EXECUTOR_NAME,
+  SimulatedExecutor,
+} from "@beacon/executors/simulated";
 import {
   MOCK_MODEL_ID,
   MOCK_PROMPT_VERSION,
@@ -18,14 +26,18 @@ import type {
   AgentBinding,
   PrincipalDirectory,
 } from "./application/principal-directory.js";
+import { ProposalService } from "./application/proposal-service.js";
 import {
   RunService,
   type GatewayFactory,
 } from "./application/run-service.js";
 import { createDb, type DbHandle } from "./adapters/db.js";
+import { DrizzleActionStateStore } from "./adapters/action-state.js";
 import { DrizzleAuditLog } from "./adapters/audit-log.js";
-import { DrizzleRateLimiter } from "./adapters/rate-limiter.js";
+import { DrizzleEffectLedger } from "./adapters/effect-ledger.js";
 import { DrizzlePrincipalDirectory } from "./adapters/principal-directory.js";
+import { DrizzleProposalStore } from "./adapters/proposal-store.js";
+import { DrizzleRateLimiter } from "./adapters/rate-limiter.js";
 import { DrizzleRunStore } from "./adapters/run-store.js";
 import type { ApiConfig } from "./config.js";
 import { createAuthenticator } from "./http/auth.js";
@@ -43,12 +55,21 @@ export interface CreateAppOptions {
   audit?: AuditLog;
   /** Inyectable para tests; si falta, se construye sobre Postgres. */
   rateLimiter?: RateLimiter;
+  /** Inyectable para tests; si falta, se construye sobre Postgres. */
+  proposalStore?: ProposalStore;
+  /** Inyectable para tests; si falta, se construye sobre Postgres. */
+  effectLedger?: EffectLedger;
+  /** Inyectable para tests; si falta, se construye el `SimulatedExecutor`. */
+  executor?: ActionExecutor;
+  /** Inyectable para tests; si falta, se construye sobre los puertos. */
+  applier?: ActionApplier;
   gatewayFactory?: GatewayFactory;
 }
 
 export interface AppHandle {
   app: FastifyInstance;
   service: RunService;
+  proposals: ProposalService;
   close: () => Promise<void>;
 }
 
@@ -75,25 +96,21 @@ export function createApp(options: CreateAppOptions): AppHandle {
   const { config } = options;
 
   let dbHandle: DbHandle | undefined;
-  let store = options.store;
-  let directory = options.directory;
-  let audit = options.audit;
-  let rateLimiter = options.rateLimiter;
 
-  if (!store || !directory || !audit || !rateLimiter) {
-    dbHandle = createDb(config.databaseUrl);
-    store ??= new DrizzleRunStore(dbHandle.db);
-    directory ??= new DrizzlePrincipalDirectory(dbHandle.db);
-    audit ??= new DrizzleAuditLog(dbHandle.db);
-    rateLimiter ??= new DrizzleRateLimiter(dbHandle.db, config.rateLimit);
-  }
+  // El pool se abre solo si hace falta: en los tests todas las dependencias vienen
+  // inyectadas y no hay ni una conexión a Postgres.
+  const db = () => {
+    dbHandle ??= createDb(config.databaseUrl);
+    return dbHandle.db;
+  };
 
-  if (!store || !directory || !audit || !rateLimiter) {
-    throw new AppError("internal", "app dependencies are incomplete");
-  }
+  const store = options.store ?? new DrizzleRunStore(db());
+  const directory = options.directory ?? new DrizzlePrincipalDirectory(db());
+  const auditLog = options.audit ?? new DrizzleAuditLog(db());
+  const limiter = options.rateLimiter ?? new DrizzleRateLimiter(db(), config.rateLimit);
+  const proposalStore = options.proposalStore ?? new DrizzleProposalStore(db());
+  const effectLedger = options.effectLedger ?? new DrizzleEffectLedger(db());
 
-  const auditLog = audit;
-  const limiter = rateLimiter;
   const gatewayFactory: GatewayFactory =
     options.gatewayFactory ??
     ((agent) =>
@@ -104,12 +121,37 @@ export function createApp(options: CreateAppOptions): AppHandle {
         audit: auditLog,
         rateLimiter: limiter,
         actor: `agent:${agent.name}`,
+        // Sin esta pieza, una tool de escritura no tiene dónde dejar su propuesta.
+        proposals: proposalStore,
       }));
+
+  const executor =
+    options.executor ??
+    new SimulatedExecutor({
+      state: new DrizzleActionStateStore(db()),
+      faults: config.faults,
+    });
+
+  const applier =
+    options.applier ??
+    createActionApplier({
+      proposals: proposalStore,
+      effects: effectLedger,
+      executor,
+      audit: auditLog,
+      executorName: SIMULATED_EXECUTOR_NAME,
+    });
 
   const service = new RunService({
     store,
     createGateway: gatewayFactory,
     createModel,
+  });
+
+  const proposals = new ProposalService({
+    store: proposalStore,
+    applier,
+    createGateway: gatewayFactory,
   });
 
   const app = Fastify({ logger: options.logger ?? false });
@@ -119,11 +161,13 @@ export function createApp(options: CreateAppOptions): AppHandle {
     directory,
     audit: auditLog,
     service,
+    proposals,
   });
 
   return {
     app,
     service,
+    proposals,
     close: async () => {
       try {
         await app.close();
