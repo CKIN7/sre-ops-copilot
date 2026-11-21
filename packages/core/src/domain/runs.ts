@@ -1,8 +1,10 @@
+import type { ProposalDetail } from "./proposals.js";
+
 /**
  * Modelo del control plane para runs y timeline (docs/plan.md §5 y §7).
  *
- * Los tipos viven en `core` porque los comparten API, orquestador, repositorios y
- * CLI. Las fechas cruzan capas como ISO 8601: el driver devuelve `Date`, pero el
+ * Los tipos viven en `core` porque los comparten API, orquestador, repositorios,
+ * CLI y UI. Las fechas cruzan capas como ISO 8601: el driver devuelve `Date`, pero el
  * dominio no se ata a `pg` ni a Drizzle.
  */
 
@@ -79,4 +81,10 @@ export interface TimelineStep extends RunStep {
 export interface RunTimeline {
   run: Run;
   steps: TimelineStep[];
+  /**
+   * Las escrituras que propuso este run, con su decisión y su efecto. Es lo que
+   * permite ver en la timeline que un `apply` quedó `applied` o `degraded`
+   * (docs/plan.md §11).
+   */
+  proposals: ProposalDetail[];
 }
