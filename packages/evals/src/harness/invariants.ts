@@ -16,6 +16,13 @@ const SECRET_PATTERNS: ReadonlyArray<{ code: string; pattern: RegExp }> = [
   { code: "aws_key_leak", pattern: /\bAKIA[0-9A-Z]{16}\b/ },
 ];
 
+/** Codigos de secreto/PII presentes en un texto. Lo usa tambien el red-team. */
+export function secretLeakCodes(text: string): string[] {
+  return SECRET_PATTERNS.filter((rule) => rule.pattern.test(text)).map(
+    (rule) => rule.code,
+  );
+}
+
 function findForbiddenKeys(value: unknown, path = "$"): string[] {
   if (Array.isArray(value)) {
     return value.flatMap((item, index) => findForbiddenKeys(item, `${path}[${index}]`));

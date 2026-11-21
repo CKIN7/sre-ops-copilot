@@ -8,13 +8,15 @@
     "typecheck": "tsc -p tsconfig.test.json",
     "test": "vitest run --maxWorkers=1",
     "start": "pnpm run build && node --env-file-if-exists=../../.env dist/main.js",
-    "cli": "pnpm run build && node --env-file-if-exists=../../.env dist/cli.js"
+    "cli": "pnpm run build && node --env-file-if-exists=../../.env dist/cli.js",
+    "budget:concurrency": "pnpm run build && node --env-file-if-exists=../../.env dist/scripts/budget-concurrency.js"
   },
   "dependencies": {
     "@beacon/core": "workspace:*",
     "@beacon/executors": "workspace:*",
     "@beacon/gateway": "workspace:*",
     "@beacon/orchestrator": "workspace:*",
+    "@opentelemetry/api": "^1.10.0",
     "drizzle-orm": "0.45.4",
     "fastify": "5.12.8",
     "pg": "8.23.1",

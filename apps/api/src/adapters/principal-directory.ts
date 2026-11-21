@@ -30,6 +30,7 @@ export class DrizzlePrincipalDirectory implements PrincipalDirectory {
         model: agents.model,
         promptVersion: agents.promptVersion,
         allowedTools: agents.allowedTools,
+        budgetCents: agents.budgetCents,
       })
       .from(tenants)
       .innerJoin(users, eq(users.tenantId, tenants.id))
@@ -58,6 +59,7 @@ export class DrizzlePrincipalDirectory implements PrincipalDirectory {
         model: row.model,
         promptVersion: row.promptVersion,
         allowedTools: row.allowedTools,
+        budgetCents: row.budgetCents,
       },
     };
   }

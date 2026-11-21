@@ -14,7 +14,13 @@ nada ni arruinarla.
 
 ## Estado
 
-**M5 cerrado (2026-11-21).** M1, M2, M3, M4a, M4b y M5 están cerrados. M3 dejó
+**M5 cerrado (2026-11-21); M6 con el DoD medido (2026-11-22).** M1, M2, M3, M4a,
+M4b y M5 están cerrados. M6 añade presupuesto con reserva atómica en Postgres,
+`usage_ledger` append-only, spans OTel `run → step → tool_call → action_apply` y la
+definición de red-team bloqueado con gate. Medido: red-team 20/20 bloqueados y
+presupuesto correcto con 20 runs paralelos (`pnpm budget:concurrency`: 10 permitidos,
+10 denegados, 0 reservas abiertas). El único entregable sin resultado real es k6: no
+está instalado y Docker rechazó la imagen; no se publica p95 inventado. M3 dejó
 `mcp-ops` con las 10 tools de lectura por stdio y Streamable HTTP con bearer de
 servicio, el gateway con allowlist, validación, rate limit con ventana deslizante,
 redacción y audit encadenado por hash verificable con `pnpm cli audit verify`, el
@@ -34,10 +40,9 @@ modelo determinista), fault-handling 5/5, false-action rate 0%, coste 0 céntimo
 `pass@1` al 0%; el control neutro sigue en 100%. No hay juez LLM: la rúbrica es
 determinista.
 
-Lo que sigue es la reanudación del run tras la aprobación (el `apply` se encadena hoy
-en la misma llamada de la API) y M6 (presupuestos, OTel, k6, modelo de coste). No
-inventar módulos, scripts ni cifras que no existan; si algo no está implementado,
-decirlo.
+Lo que sigue es ejecutar k6 (falta el binario) y la reanudación del run tras la
+aprobación (el `apply` se encadena hoy en la misma llamada de la API). No inventar módulos, scripts ni cifras que no
+existan; si algo no está implementado, decirlo.
 
 ## Stack
 
@@ -87,10 +92,16 @@ pnpm typecheck
 pnpm lint
 pnpm test
 
-# Evals (M5): 60 casos sobre fixtures, gate de CI y meta-eval
+# Evals (M5/M6): 60 casos sobre fixtures, gate de CI, meta-eval y red-team bloqueado
 pnpm evals
 pnpm evals:gate
 pnpm evals:meta
+
+# Presupuesto (M6): 20 reservas concurrentes contra Postgres; necesita migraciones
+pnpm budget:concurrency
+
+# k6 (M6): p95 de run completo contra el API; necesita k6 instalado
+k6 run -e BEACON_TOKEN=$env:BEACON_TOKEN infra/k6/run-api.js
 
 # Re-grabar fixtures; con DATABASE_URL usa las tools reales; sin el, el generador
 # determinista del seed en un instante fijo

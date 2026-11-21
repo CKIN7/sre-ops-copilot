@@ -1,12 +1,15 @@
 import { createHash } from "node:crypto";
 
+import { SpanStatusCode, trace } from "@opentelemetry/api";
 import { stableStringify } from "@beacon/core/domain/json";
 import type { RunStatus, RunTrigger } from "@beacon/core/domain/runs";
 import { AppError, type AppErrorCode } from "@beacon/core/errors/app-error";
 import type { Model, Observation } from "@beacon/core/ports/model";
+import type { BudgetUsage } from "@beacon/core/ports/budget";
 import type { RunStore } from "@beacon/core/ports/run-store";
 import type { ToolGateway } from "@beacon/core/ports/tool-gateway";
 import { redactValue } from "@beacon/core/redaction/redact";
+import { schemaHashFor } from "@beacon/core/schemas/schema-hash";
 import { finalAnswerSchema, type FinalAnswer } from "@beacon/core/schemas/runs";
 
 export interface RunLimits {
@@ -60,6 +63,20 @@ function hashResult(result: unknown): string {
   return createHash("sha256").update(stableStringify(result)).digest("hex");
 }
 
+function tracer() {
+  return trace.getTracer("beacon.orchestrator", "0.1.0");
+}
+
+function addUsage(total: BudgetUsage, usage: BudgetUsage | undefined): void {
+  if (!usage) {
+    return;
+  }
+  total.tokensIn += usage.tokensIn;
+  total.tokensOut += usage.tokensOut;
+  total.costCents += usage.costCents;
+  total.wallMs += usage.wallMs;
+}
+
 /**
  * Loop de investigación v0 (docs/plan.md §5).
  *
@@ -90,6 +107,36 @@ export class Orchestrator {
   }
 
   async run(input: StartRunInput): Promise<RunResult> {
+    return tracer().startActiveSpan(
+      "run",
+      {
+        attributes: {
+          tenant_id: input.tenantId,
+          agent_id: input.agentId,
+          trigger: input.trigger,
+          goal: input.goal.slice(0, 200),
+          model: this.#model.id,
+          prompt_version: this.#model.promptVersion,
+        },
+      },
+      async (span) => {
+        try {
+          return await this.#execute(input);
+        } catch (error) {
+          span.recordException(error as Error);
+          span.setStatus({
+            code: SpanStatusCode.ERROR,
+            message: error instanceof Error ? error.message : "run failed",
+          });
+          throw error;
+        } finally {
+          span.end();
+        }
+      },
+    );
+  }
+
+  async #execute(input: StartRunInput): Promise<RunResult> {
     const startedAtMs = this.#now();
     const run = await this.#store.createRun({
       tenantId: input.tenantId,
@@ -98,8 +145,15 @@ export class Orchestrator {
       goal: input.goal,
     });
     await this.#store.markRunRunning(run.id, new Date(startedAtMs).toISOString());
+    trace.getActiveSpan()?.setAttributes({ run_id: run.id });
 
     const observations: Observation[] = [];
+    const usageTotal: BudgetUsage = {
+      tokensIn: 0,
+      tokensOut: 0,
+      costCents: 0,
+      wallMs: 0,
+    };
     const seenCalls = new Set<string>();
     let stepIdx = 0;
     let turns = 0;
@@ -115,9 +169,9 @@ export class Orchestrator {
         status,
         endedAt: new Date(this.#now()).toISOString(),
         errorCode,
-        tokensIn: 0,
-        tokensOut: 0,
-        costCents: 0,
+        tokensIn: usageTotal.tokensIn,
+        tokensOut: usageTotal.tokensOut,
+        costCents: usageTotal.costCents,
       });
       return { runId: run.id, status, answer, errorCode, turns };
     };
@@ -138,11 +192,34 @@ export class Orchestrator {
         turns += 1;
 
         const modelStartedAt = this.#now();
-        const decision = await this.#model.decide({
-          goal: input.goal,
-          turn,
-          observations,
-        });
+        const decision = await tracer().startActiveSpan(
+          "step",
+          {
+            attributes: {
+              tenant_id: input.tenantId,
+              run_id: run.id,
+              step_idx: stepIdx,
+              step_kind: "model",
+              model: this.#model.id,
+              prompt_version: this.#model.promptVersion,
+            },
+          },
+          async (stepSpan) => {
+            try {
+              return await this.#model.decide({
+                goal: input.goal,
+                turn,
+                observations,
+              });
+            } catch (error) {
+              stepSpan.recordException(error as Error);
+              stepSpan.setStatus({ code: SpanStatusCode.ERROR });
+              throw error;
+            } finally {
+              stepSpan.end();
+            }
+          },
+        );
         const modelLatencyMs = this.#now() - modelStartedAt;
 
         await this.#store.appendStep({
@@ -195,18 +272,68 @@ export class Orchestrator {
 
         let result: unknown;
         try {
-          result = (
-            await this.#gateway.call(decision.tool, decision.args, {
-              tenantId: input.tenantId,
-              userId: input.userId,
-              agentId: input.agentId,
-              runId: run.id,
-              stepIdx: toolStepIdx,
-              // La fila de la tool call ya existe (write-ahead): una escritura puede
-              // engancharse a ella para verse en la timeline del run.
-              toolCallId: toolCall.id,
-            })
-          ).result;
+          const toolOutcome = await tracer().startActiveSpan(
+            "step",
+            {
+              attributes: {
+                tenant_id: input.tenantId,
+                run_id: run.id,
+                step_idx: toolStepIdx,
+                step_kind: "tool",
+                tool: decision.tool,
+              },
+            },
+            async (stepSpan) => {
+              try {
+                return await tracer().startActiveSpan(
+                  "tool_call",
+                  {
+                    attributes: {
+                      tenant_id: input.tenantId,
+                      user_id: input.userId,
+                      agent_id: input.agentId,
+                      run_id: run.id,
+                      tool_call_id: toolCall.id,
+                      step_idx: toolStepIdx,
+                      tool: decision.tool,
+                      schema_hash: schemaHashFor(decision.tool),
+                    },
+                  },
+                  async (callSpan) => {
+                    try {
+                      return await this.#gateway.call(decision.tool, decision.args, {
+                        tenantId: input.tenantId,
+                        userId: input.userId,
+                        agentId: input.agentId,
+                        runId: run.id,
+                        stepIdx: toolStepIdx,
+                        // La fila de la tool call ya existe (write-ahead): una
+                        // escritura puede engancharse a ella para verse en la timeline.
+                        toolCallId: toolCall.id,
+                      });
+                    } catch (error) {
+                      callSpan.recordException(error as Error);
+                      callSpan.setStatus({
+                        code: SpanStatusCode.ERROR,
+                        message: error instanceof Error ? error.message : "tool call failed",
+                      });
+                      throw error;
+                    } finally {
+                      callSpan.end();
+                    }
+                  },
+                );
+              } catch (error) {
+                stepSpan.recordException(error as Error);
+                stepSpan.setStatus({ code: SpanStatusCode.ERROR });
+                throw error;
+              } finally {
+                stepSpan.end();
+              }
+            },
+          );
+          result = toolOutcome.result;
+          addUsage(usageTotal, toolOutcome.usage);
         } catch (error) {          const code = errorCodeOf(error);
           await this.#store.completeToolCall({
             toolCallId: toolCall.id,

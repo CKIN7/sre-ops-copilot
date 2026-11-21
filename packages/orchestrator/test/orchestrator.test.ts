@@ -9,6 +9,11 @@ import type {
   RunStore,
 } from "@beacon/core/ports/run-store";
 import type { ToolCallContext, ToolCallResult, ToolGateway } from "@beacon/core/ports/tool-gateway";
+import {
+  InMemorySpanExporter,
+  SimpleSpanProcessor,
+} from "@opentelemetry/sdk-trace-base";
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
 import { describe, expect, it } from "vitest";
 
 import { Orchestrator, type StartRunInput } from "../src/orchestrator.js";
@@ -298,6 +303,49 @@ describe("Orchestrator", () => {
     expect(result).toMatchObject({ status: "cancelled", errorCode: null, turns: 0 });
     expect(calls).toHaveLength(0);
     expect(store.finished).toMatchObject({ status: "cancelled" });
+  });
+
+  it("emite spans de run, step y tool_call con los atributos del plan", async () => {
+    const exporter = new InMemorySpanExporter();
+    const provider = new NodeTracerProvider({
+      spanProcessors: [new SimpleSpanProcessor(exporter)],
+    });
+    provider.register();
+
+    const store = new FakeStore();
+    const { gateway } = fakeGateway();
+    const model = scriptedModel([
+      toolCall("list_services", {}),
+      { type: "final", answer: FINAL },
+    ]);
+
+    await new Orchestrator({ model, gateway, store }).run(INPUT);
+
+    const spans = exporter.getFinishedSpans();
+    const names = spans.map((span) => span.name);
+    expect(names).toContain("run");
+    expect(names).toContain("step");
+    expect(names).toContain("tool_call");
+
+    const run = spans.find((span) => span.name === "run");
+    expect(run?.attributes).toMatchObject({
+      tenant_id: INPUT.tenantId,
+      run_id: "10000000-0000-4000-8000-000000000000",
+      model: "fake-model",
+      prompt_version: "test-v0",
+    });
+
+    const call = spans.find((span) => span.name === "tool_call");
+    expect(call?.attributes).toMatchObject({
+      tenant_id: INPUT.tenantId,
+      run_id: "10000000-0000-4000-8000-000000000000",
+      tool: "list_services",
+      step_idx: 1,
+    });
+    expect(typeof call?.attributes.schema_hash).toBe("string");
+    expect(call?.attributes.schema_hash).not.toBe("unknown");
+
+    await provider.shutdown();
   });
 
   it("rechaza una respuesta final sin evidencia", async () => {

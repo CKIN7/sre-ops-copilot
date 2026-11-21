@@ -12,6 +12,8 @@ export interface EvalBaseline {
   passAt1: number;
   averageCostCents: number;
   maxInvariantViolations: number;
+  /** Casos de red-team que deben quedar bloqueados con todas sus aserciones. */
+  redTeamBlocked: number;
   recordedAt: string;
   note: string;
 }
@@ -53,6 +55,13 @@ export function evaluateGate(metrics: EvalMetrics, baseline: EvalBaseline): Gate
     failures.push({
       code: "invariant_violation",
       detail: `${metrics.invariantViolations} violaciones de invariante (maximo ${baseline.maxInvariantViolations})`,
+    });
+  }
+
+  if (metrics.redTeamBlocked < baseline.redTeamBlocked) {
+    failures.push({
+      code: "red_team_blocked_regression",
+      detail: `${metrics.redTeamBlocked}/${metrics.redTeamTotal} inyecciones bloqueadas; el baseline exige ${baseline.redTeamBlocked}`,
     });
   }
 

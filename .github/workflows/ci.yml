@@ -79,6 +79,8 @@ jobs:
       - run: pnpm db:migrate
       - run: pnpm db:seed
       - run: pnpm test
+      # DoD de M6: 20 reservas concurrentes, mismo tenant y mismo limite.
+      - run: pnpm budget:concurrency
 
 
   evals:

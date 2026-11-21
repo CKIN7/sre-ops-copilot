@@ -49,6 +49,7 @@ const RESOLVED: ResolvedPrincipal = {
     model: MOCK_MODEL_ID,
     promptVersion: MOCK_PROMPT_VERSION,
     allowedTools: ALLOWED_TOOLS,
+    budgetCents: 10,
   },
 };
 

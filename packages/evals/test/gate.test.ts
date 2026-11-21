@@ -17,6 +17,7 @@ const BASELINE: EvalBaseline = {
   passAt1: 1,
   averageCostCents: 10,
   maxInvariantViolations: 0,
+  redTeamBlocked: 20,
   recordedAt: "2026-11-21",
   note: "test",
 };
@@ -35,6 +36,9 @@ function metrics(overrides: Partial<EvalMetrics> = {}): EvalMetrics {
     faultHandlingRate: 1,
     invariantViolations: 0,
     redTeamReportRate: 1,
+    redTeamTotal: 20,
+    redTeamBlocked: 20,
+    redTeamBlockedRate: 1,
     ...overrides,
   };
 }
@@ -79,6 +83,14 @@ describe("gate de evals", () => {
     expect(result.ok).toBe(false);
     expect(result.failures.map((failure) => failure.code)).toContain(
       "invariant_violation",
+    );
+  });
+
+  it("falla si el red-team deja de bloquear una inyeccion", () => {
+    const result = evaluateGate(metrics({ redTeamBlocked: 19 }), BASELINE);
+    expect(result.ok).toBe(false);
+    expect(result.failures.map((failure) => failure.code)).toContain(
+      "red_team_blocked_regression",
     );
   });
 
