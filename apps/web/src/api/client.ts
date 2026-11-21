@@ -34,6 +34,14 @@ export interface ProposalSummary {
   effect: ProposalDetail["effect"];
 }
 
+/** Lo que devuelve `POST /proposals`: el plan y las dos referencias. */
+export interface ProposalCreated {
+  proposal_id: string;
+  approval_id: string;
+  status: string;
+  plan: unknown;
+}
+
 export class ApiClient {
   readonly #baseUrl: string;
   readonly #token: string;
@@ -42,7 +50,15 @@ export class ApiClient {
   constructor(options: ApiClientOptions) {
     this.#baseUrl = (options.baseUrl ?? "/api").replace(/\/+$/, "");
     this.#token = options.token;
-    this.#fetch = options.fetchImpl ?? fetch;
+    /**
+     * `fetch` global necesita su `this` (la ventana): si se guarda suelto y se invoca
+     * como metodo de esta clase, el navegador responde "Illegal invocation". El
+     * `fetch` que se inyecta para los tests se llama sin receptor.
+     */
+    const impl = options.fetchImpl;
+    this.#fetch = impl
+      ? (input, init) => impl(input, init)
+      : globalThis.fetch.bind(globalThis);
   }
 
   async listRuns(): Promise<Run[]> {
@@ -71,8 +87,8 @@ export class ApiClient {
     tool: string;
     args: Record<string, unknown>;
     runId?: string | null;
-  }): Promise<ProposalSummary> {
-    const payload = await this.#request<{ proposal: ProposalSummary }>("/proposals", {
+  }): Promise<ProposalCreated> {
+    const payload = await this.#request<{ proposal: ProposalCreated }>("/proposals", {
       method: "POST",
       body: {
         tool: input.tool,
@@ -83,6 +99,10 @@ export class ApiClient {
     return payload.proposal;
   }
 
+  /**
+   * Aprueba la propuesta: la decisión y el `apply` son la misma llamada. Devuelve
+   * la propuesta con su decisión y su efecto, ya aplicados.
+   */
   async approve(id: string, reason: string | null): Promise<ProposalSummary> {
     const payload = await this.#request<{ proposal: ProposalSummary }>(
       `/proposals/${id}/approve`,
@@ -91,6 +111,7 @@ export class ApiClient {
     return payload.proposal;
   }
 
+  /** Rechaza la propuesta: registra la decisión y no ejecuta nada. */
   async reject(id: string, reason: string | null): Promise<ProposalSummary> {
     const payload = await this.#request<{ proposal: ProposalSummary }>(
       `/proposals/${id}/reject`,
@@ -103,7 +124,9 @@ export class ApiClient {
     const response = await this.#fetch(`${this.#baseUrl}${path}`, {
       method: init.method ?? "GET",
       headers: {
-        authorization: `Bearer ${this.#token}`,
+        // Sin token no se manda cabecera: en local la inyecta el proxy de Vite, que
+        // es server-side y no expone el bearer al bundle del navegador.
+        ...(this.#token.length > 0 ? { authorization: `Bearer ${this.#token}` } : {}),
         ...(init.body === undefined ? {} : { "content-type": "application/json" }),
       },
       body: init.body === undefined ? undefined : JSON.stringify(init.body),
