@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.test.json",
-    "test": "vitest run",
+    "test": "vitest run --maxWorkers=1",
     "start": "pnpm run build && node --env-file-if-exists=../../.env dist/main.js",
     "cli": "pnpm run build && node --env-file-if-exists=../../.env dist/cli.js"
   },
