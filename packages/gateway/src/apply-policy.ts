@@ -4,6 +4,11 @@ import type {
   ApprovalRequest,
   RejectOutcome,
 } from "@beacon/core/ports/action-applier";
+import { trace, SpanStatusCode } from "@opentelemetry/api";
+
+function tracer() {
+  return trace.getTracer("beacon.gateway", "0.1.0");
+}
 import type { ActionExecutor, ActionResult } from "@beacon/core/ports/action-executor";
 import type { AuditLog } from "@beacon/core/ports/audit-log";
 import type { EffectLedger } from "@beacon/core/ports/effect-ledger";
@@ -126,6 +131,44 @@ function commandFor(proposal: ProposalRecord, idempotencyKey: string): Command {
 export function createActionApplier(options: ActionApplierOptions): ActionApplier {
   const now = options.now ?? (() => Date.now());
 
+  const runExecutor = async (
+    command: Command,
+    proposal: ProposalRecord,
+    idempotencyKey: string,
+  ): Promise<ActionResult> => {
+    return tracer().startActiveSpan(
+      "action_apply",
+      {
+        attributes: {
+          tenant_id: proposal.tenantId,
+          run_id: proposal.runId ?? "",
+          proposal_id: proposal.id,
+          tool: proposal.tool,
+          executor: options.executorName,
+          idempotency_key: idempotencyKey,
+        },
+      },
+      async (span) => {
+        try {
+          switch (command.kind) {
+            case "rollback":
+              return await options.executor.rollback(command.command);
+            case "set_flag":
+              return await options.executor.setFlag(command.command);
+            case "silence_alert":
+              return await options.executor.silenceAlert(command.command);
+          }
+        } catch (error) {
+          span.recordException(error as Error);
+          span.setStatus({ code: SpanStatusCode.ERROR });
+          throw error;
+        } finally {
+          span.end();
+        }
+      },
+    );
+  };
+
   const appendAudit = async (
     action: "proposal.approved" | "proposal.rejected" | "action.applied" | "action.denied" | "action.replayed",
     request: ApprovalRequest,
@@ -201,17 +244,7 @@ export function createActionApplier(options: ActionApplierOptions): ActionApplie
 
     try {
       const command = commandFor(proposal, key);
-      switch (command.kind) {
-        case "rollback":
-          result = await options.executor.rollback(command.command);
-          break;
-        case "set_flag":
-          result = await options.executor.setFlag(command.command);
-          break;
-        case "silence_alert":
-          result = await options.executor.silenceAlert(command.command);
-          break;
-      }
+      result = await runExecutor(command, proposal, key);
     } catch (error) {
       // El efecto queda registrado como fallido: la escritura no se reintenta a
       // ciegas y quien lo mire ve que pasó.
