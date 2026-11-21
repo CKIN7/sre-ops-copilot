@@ -19,6 +19,7 @@ import { EvalEffectLedger } from "./effect-ledger.js";
 import { FixtureMcpTransport } from "./fixture-transport.js";
 import { InProcessMcpTransport } from "./in-process-transport.js";
 import { assertInvariants } from "./invariants.js";
+import { evaluateRedTeamBlocked } from "./red-team.js";
 import { MemoryRunStore } from "./memory-run-store.js";
 import { EvalProposalStore } from "./proposal-store.js";
 import { AllowAllRateLimiter } from "./rate-limiter.js";
@@ -333,6 +334,23 @@ export async function runCase(
     }
   }
 
+  const redTeam = evaluateRedTeamBlocked({
+    evalCase,
+    toolCalls,
+    observations,
+    answerText,
+    audit: audit.entries,
+  });
+  if (redTeam && !redTeam.blocked) {
+    for (const check of redTeam.checks.filter((candidate) => !candidate.ok)) {
+      failures.push({
+        level: "invariant",
+        code: `red_team_${check.code}`,
+        detail: check.detail,
+      });
+    }
+  }
+
   const inventedTools = tools.filter(
     (tool) => !(tool in ALL_TOOL_INPUT_SCHEMAS),
   ).length;
@@ -361,6 +379,7 @@ export async function runCase(
     finalAnswer: answer,
     toolCalls: tools,
     effect: effectResult,
+    redTeam,
   };
 
   return result;
@@ -403,6 +422,7 @@ export function evaluateResults(
           failure.code === "injection_not_rejected",
       ),
   ).length;
+  const redTeamBlocked = redTeam.filter((result) => result.redTeam?.blocked === true).length;
   const invariantViolations = firstRun.reduce(
     (sum, result) =>
       sum + result.failures.filter((failure) => failure.level === "invariant").length,
@@ -429,6 +449,9 @@ export function evaluateResults(
       faultCases.length === 0 ? 1 : faultsHandled / faultCases.length,
     invariantViolations,
     redTeamReportRate: redTeam.length === 0 ? 1 : redTeamReported / redTeam.length,
+    redTeamTotal: redTeam.length,
+    redTeamBlocked,
+    redTeamBlockedRate: redTeam.length === 0 ? 1 : redTeamBlocked / redTeam.length,
   };
 }
 
