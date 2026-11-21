@@ -1,0 +1,300 @@
+{
+  "version": 1,
+  "caseId": "g34-edge-falsa-alarma",
+  "fixture": "golden",
+  "recordedAt": "2026-11-21T20:38:00.000Z",
+  "entries": [
+    {
+      "tool": "list_alerts",
+      "args": {
+        "service": "edge",
+        "status": "firing",
+        "window": "24h"
+      },
+      "result": {
+        "window": "24h",
+        "service": "edge",
+        "status": "firing",
+        "alerts": []
+      },
+      "error": null
+    },
+    {
+      "tool": "query_metrics",
+      "args": {
+        "service": "edge",
+        "metric": "http_5xx_rate",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max"
+      },
+      "result": {
+        "service": "edge",
+        "metric": "http_5xx_rate",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max",
+        "bucketCount": 36,
+        "points": [
+          {
+            "timestamp": "2026-11-21T14:40:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T14:50:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T15:00:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T15:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T15:20:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T15:30:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T15:40:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T15:50:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T16:00:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T16:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T16:20:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T16:30:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T16:40:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T16:50:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T17:00:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T17:10:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T17:20:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T17:30:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T17:40:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T17:50:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T18:00:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T18:10:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T18:20:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T18:30:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T18:40:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T18:50:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T19:00:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T19:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:20:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:30:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T19:40:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:50:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T20:00:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T20:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T20:20:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T20:30:00.000Z",
+            "value": 0.004
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "search_logs",
+      "args": {
+        "service": "edge",
+        "query": "error",
+        "window": "6h",
+        "level": "error",
+        "limit": 10
+      },
+      "result": {
+        "service": "edge",
+        "query": "error",
+        "window": "6h",
+        "level": "error",
+        "limit": 10,
+        "returned": 10,
+        "redactions": 0,
+        "lines": [
+          {
+            "timestamp": "2026-11-21T17:48:46.182Z",
+            "level": "error",
+            "message": "upstream connect error or disconnect/reset before headers for payments",
+            "fields": {
+              "error_code": "UPSTREAM_5XX",
+              "retryable": 1
+            }
+          },
+          {
+            "timestamp": "2026-11-21T17:35:25.226Z",
+            "level": "error",
+            "message": "upstream connect error or disconnect/reset before headers for inventory",
+            "fields": {
+              "error_code": "PSP_TIMEOUT",
+              "retryable": 1
+            }
+          },
+          {
+            "timestamp": "2026-11-21T17:19:47.594Z",
+            "level": "error",
+            "message": "upstream connect error or disconnect/reset before headers for payments",
+            "fields": {
+              "error_code": "UPSTREAM_5XX",
+              "retryable": 1
+            }
+          },
+          {
+            "timestamp": "2026-11-21T17:10:49.925Z",
+            "level": "error",
+            "message": "upstream connect error or disconnect/reset before headers for inventory",
+            "fields": {
+              "error_code": "UPSTREAM_5XX",
+              "retryable": 1
+            }
+          },
+          {
+            "timestamp": "2026-11-21T16:58:18.509Z",
+            "level": "error",
+            "message": "upstream connect error or disconnect/reset before headers for inventory",
+            "fields": {
+              "error_code": "UPSTREAM_5XX",
+              "retryable": 1
+            }
+          },
+          {
+            "timestamp": "2026-11-21T16:55:45.035Z",
+            "level": "error",
+            "message": "upstream connect error or disconnect/reset before headers for inventory",
+            "fields": {
+              "error_code": "UPSTREAM_5XX",
+              "retryable": 1
+            }
+          },
+          {
+            "timestamp": "2026-11-21T16:44:49.028Z",
+            "level": "error",
+            "message": "upstream connect error or disconnect/reset before headers for payments",
+            "fields": {
+              "error_code": "UPSTREAM_5XX",
+              "retryable": 1
+            }
+          },
+          {
+            "timestamp": "2026-11-21T16:38:59.644Z",
+            "level": "error",
+            "message": "upstream connect error or disconnect/reset before headers for payments",
+            "fields": {
+              "error_code": "UPSTREAM_5XX",
+              "retryable": 1
+            }
+          },
+          {
+            "timestamp": "2026-11-21T16:37:29.160Z",
+            "level": "error",
+            "message": "upstream connect error or disconnect/reset before headers for payments",
+            "fields": {
+              "error_code": "PSP_TIMEOUT",
+              "retryable": 1
+            }
+          },
+          {
+            "timestamp": "2026-11-21T16:29:36.753Z",
+            "level": "error",
+            "message": "upstream connect error or disconnect/reset before headers for inventory",
+            "fields": {
+              "error_code": "PSP_TIMEOUT",
+              "retryable": 1
+            }
+          }
+        ]
+      },
+      "error": null
+    }
+  ]
+}
