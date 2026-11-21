@@ -107,9 +107,19 @@
     "./ports/rate-limiter": {
       "types": "./dist/ports/rate-limiter.d.ts",
       "default": "./dist/ports/rate-limiter.js"
+    },
+    "./ports/budget": {
+      "types": "./dist/ports/budget.d.ts",
+      "default": "./dist/ports/budget.js"
+    },
+    "./schemas/schema-hash": {
+      "types": "./dist/schemas/schema-hash.d.ts",
+      "default": "./dist/schemas/schema-hash.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.test.json",
