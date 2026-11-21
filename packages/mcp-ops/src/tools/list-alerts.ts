@@ -3,6 +3,8 @@ import type { ListAlertsInput } from "@beacon/core/schemas/tools";
 import type { Pool } from "pg";
 
 export interface AlertSummary {
+  /** Id de la alerta: es lo que usa `propose_silence_alert` para referirse a ella. */
+  id: string;
   name: string;
   service: string;
   severity: string;
@@ -13,6 +15,7 @@ export interface AlertSummary {
 }
 
 interface AlertRow {
+  id: string;
   name: string;
   slug: string;
   severity: string;
@@ -23,7 +26,8 @@ interface AlertRow {
 }
 
 const LIST_ALERTS_SQL = `
-  select a.name,
+  select a.id::text as id,
+         a.name,
          s.slug,
          a.severity,
          a.status,
@@ -56,6 +60,7 @@ export async function listAlerts(
     service: input.service ?? null,
     status: input.status ?? null,
     alerts: rows.map((row) => ({
+      id: row.id,
       name: row.name,
       service: row.slug,
       severity: row.severity,
