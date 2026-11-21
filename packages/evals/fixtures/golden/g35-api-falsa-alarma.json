@@ -1,0 +1,209 @@
+{
+  "version": 1,
+  "caseId": "g35-api-falsa-alarma",
+  "fixture": "golden",
+  "recordedAt": "2026-11-21T20:38:00.000Z",
+  "entries": [
+    {
+      "tool": "list_alerts",
+      "args": {
+        "service": "api",
+        "status": "firing",
+        "window": "24h"
+      },
+      "result": {
+        "window": "24h",
+        "service": "api",
+        "status": "firing",
+        "alerts": []
+      },
+      "error": null
+    },
+    {
+      "tool": "query_metrics",
+      "args": {
+        "service": "api",
+        "metric": "http_5xx_rate",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max"
+      },
+      "result": {
+        "service": "api",
+        "metric": "http_5xx_rate",
+        "window": "6h",
+        "step": "10m",
+        "agg": "max",
+        "bucketCount": 36,
+        "points": [
+          {
+            "timestamp": "2026-11-21T14:40:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T14:50:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T15:00:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T15:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T15:20:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T15:30:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T15:40:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T15:50:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T16:00:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T16:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T16:20:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T16:30:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T16:40:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T16:50:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T17:00:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T17:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T17:20:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T17:30:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T17:40:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T17:50:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T18:00:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T18:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T18:20:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T18:30:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T18:40:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T18:50:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:00:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T19:10:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:20:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:30:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:40:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T19:50:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T20:00:00.000Z",
+            "value": 0.005
+          },
+          {
+            "timestamp": "2026-11-21T20:10:00.000Z",
+            "value": 0.003
+          },
+          {
+            "timestamp": "2026-11-21T20:20:00.000Z",
+            "value": 0.004
+          },
+          {
+            "timestamp": "2026-11-21T20:30:00.000Z",
+            "value": 0.003
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "tool": "search_logs",
+      "args": {
+        "service": "api",
+        "query": "error",
+        "window": "6h",
+        "level": "error",
+        "limit": 10
+      },
+      "result": {
+        "service": "api",
+        "query": "error",
+        "window": "6h",
+        "level": "error",
+        "limit": 10,
+        "returned": 0,
+        "redactions": 0,
+        "lines": []
+      },
+      "error": null
+    }
+  ]
+}
