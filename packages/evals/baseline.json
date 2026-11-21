@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "passAt1": 1,
+  "averageCostCents": 0,
+  "maxInvariantViolations": 0,
+  "recordedAt": "2026-11-21",
+  "note": "Baseline medido con fixtures grabadas del seed 0.1 y el modelo determinista mock/scripted. pass@5 == pass@1 por construccion; coste 0 porque no hay LLM."
+}
