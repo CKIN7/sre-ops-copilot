@@ -18,6 +18,8 @@
 | 010 | `get_trace_summary` derivado de `metrics_series`; sin tabla de trazas | Aceptada |
 | 011 | Excepción de arranque: commits directos a `main` hasta cerrar la semana 1 | Caducada (cerrada con M1) |
 | 012 | Audit encadenado por hash y rate limit con ventana deslizante en Postgres | Aceptada |
+| 013 | Presupuesto con reserva atomica en Postgres y liquidacion append-only | Aceptada |
+| 014 | OTel en proceso, sin exporter externo obligatorio | Aceptada |
 
 ## Por qué estas y no otras
 
