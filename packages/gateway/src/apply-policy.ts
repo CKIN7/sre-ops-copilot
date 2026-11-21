@@ -261,7 +261,12 @@ export function createActionApplier(options: ActionApplierOptions): ActionApplie
     }
 
     return {
-      proposal: { ...proposal, status, appliedAt },
+      proposal: {
+        ...proposal,
+        status,
+        decidedAt: approval.decidedAt,
+        appliedAt,
+      },
       approval,
       effect: completed,
       replayed: false,
