@@ -52,6 +52,10 @@
       "types": "./dist/domain/write-tools.d.ts",
       "default": "./dist/domain/write-tools.js"
     },
+    "./domain/proposals": {
+      "types": "./dist/domain/proposals.d.ts",
+      "default": "./dist/domain/proposals.js"
+    },
     "./schemas/runs": {
       "types": "./dist/schemas/runs.d.ts",
       "default": "./dist/schemas/runs.js"
