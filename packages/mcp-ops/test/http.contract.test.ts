@@ -135,7 +135,7 @@ describe("borde HTTP de mcp-ops", () => {
     expect(response.status).toBe(404);
   });
 
-  it("lista las 10 tools con la revisión 2026-07-28", async () => {
+  it("lista las 13 tools con la revisión 2026-07-28", async () => {
     const envelope = modernRequest(1, "tools/list");
     const response = await postMcp({ headers: headersFor(envelope), body: envelope });
     expect(response.status).toBe(200);
@@ -151,6 +151,9 @@ describe("borde HTTP de mcp-ops", () => {
       "get_trace_summary",
       "list_alerts",
       "list_services",
+      "propose_rollback",
+      "propose_set_flag",
+      "propose_silence_alert",
       "query_metrics",
       "search_logs",
       "search_runbooks",
