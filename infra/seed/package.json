@@ -18,5 +18,11 @@
     "@types/pg": "8.23.1",
     "typescript": "6.0.3",
     "vitest": "5.1.0"
+  },
+  "exports": {
+    "./generator": {
+      "types": "./dist/generator.d.ts",
+      "default": "./dist/generator.js"
+    }
   }
 }
