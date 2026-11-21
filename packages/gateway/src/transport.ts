@@ -1,7 +1,7 @@
-import type { ReadToolName } from "@beacon/core/schemas/tools";
+import type { ToolName } from "@beacon/core/schemas/tools";
 
 export interface McpToolRequest {
-  name: ReadToolName;
+  name: ToolName;
   args: unknown;
 }
 
