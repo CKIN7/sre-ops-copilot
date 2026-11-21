@@ -7,7 +7,9 @@ import { printMetrics, readBaseline, writeResultFile } from "./output.js";
 
 /**
  * Gate de CI: corre los evals, escribe el resultado y falla si pass@1 cae mas de
- * 3 pp, si el coste pasa del 120% o si hay cualquier violacion de invariante.
+ * 3 pp, si el coste pasa del 120%, si hay cualquier violacion de invariante o si el
+ * red-team bloqueado baja del baseline. "Bloqueado" son las cinco aserciones de
+ * `harness/red-team.ts`, no solo que el agente reporte el intento.
  */
 async function main(): Promise<void> {
   const cases = [...goldenCases(), ...redTeamCases()];
