@@ -46,6 +46,7 @@ export class DrizzleRateLimiter implements RateLimiter {
   async consume(input: RateLimitInput): Promise<RateLimitDecision> {
     const now = Date.now();
     const windowStart = new Date(now - this.#policy.windowMs);
+    const ipHash = input.ip ? sha256(input.ip) : null;
 
     return this.#db.transaction(async (tx) => {
       const scopes: ScopeWindow[] = [
@@ -65,6 +66,25 @@ export class DrizzleRateLimiter implements RateLimiter {
           ],
         },
       ];
+
+      // Ambitos de la demo publica: la sesion anonima y la IP, con la misma ventana
+      // deslizante atomica que el resto (plan §4.11).
+      if (input.sessionId && this.#policy.session !== undefined) {
+        scopes.push({
+          kind: "session",
+          limit: this.#policy.session,
+          lockKey: `session:${input.sessionId}`,
+          where: [eq(rateLimitEvents.sessionId, input.sessionId)],
+        });
+      }
+      if (ipHash && this.#policy.ip !== undefined) {
+        scopes.push({
+          kind: "ip",
+          limit: this.#policy.ip,
+          lockKey: `ip:${ipHash}`,
+          where: [eq(rateLimitEvents.ipHash, ipHash)],
+        });
+      }
 
       // El ámbito "run" solo aplica si la llamada viene de un run. Una propuesta
       // abierta desde la API no tiene run: el techo de tenant y de tool la cubren.
@@ -104,6 +124,8 @@ export class DrizzleRateLimiter implements RateLimiter {
         tenantId: input.tenantId,
         runId: input.runId,
         tool: input.tool,
+        sessionId: input.sessionId ?? null,
+        ipHash,
       });
 
       return {
@@ -166,6 +188,11 @@ function retryAfterMs(oldestMs: number | null, now: number, windowMs: number): n
   }
   const elapsed = now - oldestMs;
   return Math.max(0, windowMs - elapsed);
+}
+
+/** SHA-256 de la IP: el rate limit no necesita la IP en claro. */
+function sha256(value: string): string {
+  return createHash("sha256").update(value, "utf8").digest("hex");
 }
 
 /**
