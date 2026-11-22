@@ -1,7 +1,7 @@
 # Guion del video (3 minutos)
 
-> Estado: **guion listo; grabacion pendiente**. El video no se puede generar
-> desde el repositorio. No se publica como hecho hasta que exista el archivo.
+> Estado: **entregable de M8b; guion listo, grabacion pendiente**. El video no se
+> puede generar desde el repositorio y no forma parte del cierre de M8.
 
 Objetivo: que alguien que no conoce el proyecto entienda en 3 minutos que Beacon
 investiga con evidencia, no escribe sin aprobacion y no puede abusar de la demo.
@@ -74,4 +74,4 @@ investiga con evidencia, no escribe sin aprobacion y no puede abusar de la demo.
 - [ ] El estado final es `applied` + `verified` o `degraded` explicado.
 - [ ] Se muestra la tabla de honestidad.
 - [ ] Duracion <= 3:00.
-- [ ] Se publica el enlace en el README al cerrar M8.
+- [ ] Se publica el enlace en el README al cerrar M8b.
