@@ -13,7 +13,11 @@ import type {
 export class FakeRateLimiter implements RateLimiter {
   readonly calls: RateLimitInput[] = [];
   /** Si está definida, la siguiente llamada se rechaza con ese ámbito. */
-  deny: { scope: "run" | "tenant" | "tool"; limit: number; observed: number } | null = null;
+  deny: {
+    scope: "run" | "tenant" | "tool" | "session" | "ip";
+    limit: number;
+    observed: number;
+  } | null = null;
 
   async consume(input: RateLimitInput): Promise<RateLimitDecision> {
     this.calls.push(input);
