@@ -4,16 +4,17 @@ import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-quer
 import { ApiClient, ApiError } from "./api/client.js";
 import { clearToken, readToken, writeToken } from "./api/token.js";
 import { TokenGate } from "./components/TokenGate.js";
+import { AboutPage } from "./pages/AboutPage.js";
 import { ApprovalsPage } from "./pages/ApprovalsPage.js";
 import { RunsPage } from "./pages/RunsPage.js";
 
-type Tab = "runs" | "approvals";
+type Tab = "runs" | "approvals" | "about";
 
 /**
  * Shell de la UI de Beacon (plan §11).
  *
- * Dos pestañas: runs (la timeline) y aprobaciones (la cola de decisiones). La tabla
- * de honestidad del §11.7 vive hoy en el README; la vista `/about` sigue pendiente.
+ * Tres pestañas: runs (la timeline), aprobaciones (la cola de decisiones) y about
+ * (la tabla de honestidad del §11.7 y el estado de la demo).
  */
 export function App() {
   const [token, setToken] = useState(() => readToken());
@@ -54,6 +55,13 @@ function Shell({
     staleTime: 30_000,
   });
 
+  const demo = useQuery({
+    queryKey: ["demo-status"],
+    queryFn: () => client.getDemoStatus(),
+    retry: false,
+    staleTime: 15_000,
+  });
+
   const unauthorized = probe.error instanceof ApiError && probe.error.status === 401;
 
   if (token.length === 0 && unauthorized) {
@@ -80,6 +88,7 @@ function Shell({
               [
                 ["runs", "Runs"],
                 ["approvals", "Aprobaciones"],
+                ["about", "Honestidad"],
               ] as Array<[Tab, string]>
             ).map(([key, label]) => (
               <button
@@ -109,8 +118,17 @@ function Shell({
         </div>
       </header>
 
+      {demo.data?.replayOnly && (
+        <div className="border-b border-amber-900/60 bg-amber-950/40 px-4 py-2 text-center text-xs text-amber-200">
+          Modo grabado (REPLAY_ONLY): la demo sirve runs desde fixtures y no ejecuta
+          escrituras. Es el circuit breaker, no un fallo.
+        </div>
+      )}
+
       <main className="mx-auto max-w-6xl px-4 py-6">
-        {tab === "runs" ? <RunsPage client={client} /> : <ApprovalsPage client={client} />}
+        {tab === "runs" && <RunsPage client={client} demo={demo.data} />}
+        {tab === "approvals" && <ApprovalsPage client={client} />}
+        {tab === "about" && <AboutPage demo={demo.data} />}
       </main>
     </div>
   );
