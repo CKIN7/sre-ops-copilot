@@ -536,10 +536,10 @@ concurrencia (test específico con 20 runs paralelos).
   `apps/api/test/budget.integration.test.ts` pasa 2/2, incluido el append-only de
   `usage_ledger`.
 - **Carga con k6 (medida al cerrar M7):** 20 VUs durante 10 s contra API + `mcp-ops`
-  y seed reciente. Resultado: 252 intentos, 504 peticiones y **0% de errores HTTP**;
-  120 runs `succeeded` y 132 `rate_limited` por el techo de 120 llamadas/min.
-  **p95 de run completo (solo exitosos) 1.07 s** (mediana 0.56 s). El p95 de los
-  denegados (0.07 s) no se mezcla con el de runs completos. No hay p95 de encolado
+  y seed reciente. Resultado: 231 intentos, 462 peticiones y **0% de errores HTTP**;
+  120 runs `succeeded` y 111 `rate_limited` por el techo de 120 llamadas/min.
+  **p95 de run completo (solo exitosos) 1.24 s** (mediana 0.66 s). El p95 de los
+  denegados no se mezcla con el de runs completos. No hay p95 de encolado
   porque no existe cola.
 - **Coste real: 0 céntimos.** No hay LLM ni proveedor; el medidor por defecto devuelve
   cero. No se publica €/run distinto de 0 ni una tabla de precios inexistente.
@@ -803,9 +803,9 @@ presupuesto correcto con 20 runs paralelos— está medido:
 - **OTel + pino:** spans verificados en memoria (orquestador y gateway); sin collector
   externo. No hay métricas OTel de negocio todavía, solo spans.
 - **k6:** escenario en `infra/k6/run-api.js`, medido el 2026-11-22 contra API +
-  `mcp-ops` con seed reciente: 20 VUs durante 10 s, 252 intentos y 504 peticiones,
-  0% de errores HTTP. 120 runs `succeeded` y 132 `rate_limited`; **p95 de run
-  completo (solo exitosos) 1.07 s** (mediana 0.56 s). No hay p95 de encolado porque
+  `mcp-ops` con seed reciente: 20 VUs durante 10 s, 231 intentos y 462 peticiones,
+  0% de errores HTTP. 120 runs `succeeded` y 111 `rate_limited`; **p95 de run
+  completo (solo exitosos) 1.24 s** (mediana 0.66 s). No hay p95 de encolado porque
   no existe cola. Cierra el último entregable de M6.
 - **Coste:** 0 céntimos reales porque no hay LLM ni proveedor. El presupuesto se
   ejercita en tests con unidades inyectadas; no se publica una tabla de precios.
@@ -837,8 +837,8 @@ de honestidad y los workflows nocturnos.
 - **Verificado:** `pnpm typecheck`, `pnpm build`, `pnpm lint`, `pnpm evals:gate`
   (60/60, red-team 20/20), `pnpm evals:meta`, `pnpm test` completo con
   `DATABASE_URL` (62/62 en `apps/api` y 27/27 en `mcp-ops`), `pnpm budget:concurrency`
-  (10/10, `budgetRespected: true`), contrato 6/6 y k6 (p95 de runs exitosos 1.07 s;
-  132/252 rate-limited a 20 VUs).
+  (10/10, `budgetRespected: true`), contrato 6/6 y k6 (p95 de runs exitosos 1.24 s;
+  111/231 rate-limited a 20 VUs).
 - **Demo medida:** `pnpm demo:smoke` devuelve `ok: true`, `replayOnly: true`,
   `replayCalls: 1`, `writeDenied: true` y steps `1111110` (el sexto step se deniega),
   sin llamar a `mcp-ops` ni escribir ningún servicio.
@@ -857,7 +857,7 @@ de honestidad y los workflows nocturnos.
   correlación.
 - **Benchmark:** `docs/benchmark.md` reúne evals, presupuesto, contrato y carga con
   comandos reproducibles. El p95 de carga se separa de las denegaciones de rate
-  limit; a 20 VUs, 132/252 intentos fueron `rate_limited`.
+  limit; a 20 VUs, 111/231 intentos fueron `rate_limited`.
 - **ADR:** `docs/decisions/016-benchmark-reproducible-y-simulacro.md` fija la regla
   de medir solo runs `succeeded` y etiquetar el simulacro.
 - **Video:** `docs/video-script.md` tiene el guion de 3 minutos; la grabación está
@@ -923,7 +923,7 @@ fixtures, la vista de eval, los escenarios guiados de la demo pública y la vist
 | Escrituras sin aprobación | 0 | 0 |
 | Acciones `applied` sin verificar post-condición | 0 | 0 (las no verificadas quedan en `degraded`) |
 | Coste mediano por run | ≤ €0,10 | 0 céntimos (sin LLM) |
-| p95 de run | ≤ 30 s | 1.07 s (k6, solo `succeeded`, 20 VUs, 10 s) |
+| p95 de run | ≤ 30 s | 1.24 s (k6, solo `succeeded`, 20 VUs, 10 s) |
 | Cobertura de policy tests | 100% de reglas del gateway | — |
 | Fugas de presupuesto en concurrencia | 0 | 0 (20 runs: 10 permitidos, 10 denegados) |
 | Sesiones de demo por encima de presupuesto | 0 | smoke verde (techo y breaker) |
