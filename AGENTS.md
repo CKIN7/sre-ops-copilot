@@ -19,8 +19,8 @@ M4b y M5 están cerrados. M6 añade presupuesto con reserva atómica en Postgres
 `usage_ledger` append-only, spans OTel `run → step → tool_call → action_apply` y la
 definición de red-team bloqueado con gate. Medido: red-team 20/20 bloqueados y
 presupuesto correcto con 20 runs paralelos (`pnpm budget:concurrency`: 10 permitidos,
-10 denegados, 0 reservas abiertas). El único entregable sin resultado real es k6: no
-está instalado y Docker rechazó la imagen; no se publica p95 inventado. M3 dejó
+10 denegados, 0 reservas abiertas). k6 se midió al cerrar M7: p95 de run completo
+1.08 s con 20 VUs y 0% de fallos. M3 dejó
 `mcp-ops` con las 10 tools de lectura por stdio y Streamable HTTP con bearer de
 servicio, el gateway con allowlist, validación, rate limit con ventana deslizante,
 redacción y audit encadenado por hash verificable con `pnpm cli audit verify`, el
@@ -40,19 +40,22 @@ modelo determinista), fault-handling 5/5, false-action rate 0%, coste 0 céntimo
 `pass@1` al 0%; el control neutro sigue en 100%. No hay juez LLM: la rúbrica es
 determinista.
 
-M7 está implementado: `SandboxExecutor` real para rollback sobre `kind`/k3s
-(`kubectl rollout undo` + readiness con timeout), suite de contrato §8.6 en un workflow
-nocturno/manual, `DEMO_MODE`/`REPLAY_ONLY` forzados en el gateway (sesión anónima,
-techo diario, presupuesto de sesión atómico, rate limit por sesión/IP, breaker y
-fallback a replay) y la pestaña de honestidad en la UI. **No se midió 6/6**: el daemon
-de Docker no responde y `kind` no está instalado; `pnpm contract:sandbox` sale con el
-error exacto. `pnpm demo:smoke` tampoco se midió por falta de Postgres accesible. El
-caso 6 del contrato (flag) es simulado porque el sandbox solo cubre rollback.
+M7 está cerrado con el DoD medido (2026-11-22): `SandboxExecutor` real para rollback
+sobre `kind`/k3s (`kubectl rollout undo` + readiness con timeout), suite de contrato
+§8.6 en un workflow nocturno/manual, `DEMO_MODE`/`REPLAY_ONLY` forzados en el gateway
+(sesión anónima, techo diario, presupuesto de sesión atómico, rate limit por sesión/IP,
+breaker y fallback a replay) y la pestaña de honestidad en la UI. Medido: contrato
+sandbox **6/6 contra `kind` real** (caso 6 simulado y etiquetado), `pnpm demo:smoke`
+verde (`ok`, `replayOnly`, `writeDenied`, steps `1111110`), `pnpm test` completo con
+`DATABASE_URL` (62/62 en `apps/api` y 27/27 en `mcp-ops`), `budget:concurrency` con
+`budgetRespected: true` y k6 con p95 de run completo 1.08 s (20 VUs, 0% fallos).
+Para medir en Windows se corrigieron dos detalles del contrato: `os.tmpdir()` en vez de
+`/tmp` y un reset con `kubectl` directo para recuperarse de un rollout en curso.
 
-Lo que sigue es ejecutar k6 (falta el binario), la suite de contrato con Docker/kind y
-la reanudación del run tras la aprobación (el `apply` se encadena hoy en la misma
-llamada de la API). No inventar módulos, scripts ni cifras que no existan; si algo no
-está implementado, decirlo.
+Lo que sigue es la reanudación del run tras la aprobación (el `apply` se encadena hoy
+en la misma llamada de la API) y M8 (runbook, postmortem, benchmark reproducible y
+vídeo). No inventar módulos, scripts ni cifras que no existan; si algo no está
+implementado o medido, decirlo.
 
 ## Stack
 

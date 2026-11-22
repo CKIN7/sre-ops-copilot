@@ -1,0 +1,113 @@
+{
+  "startedAt": "2026-11-22T02:14:11.527Z",
+  "finishedAt": "2026-11-22T02:15:10.455Z",
+  "target": "kind",
+  "namespace": "beacon-sandbox",
+  "cases": [
+    {
+      "id": "1",
+      "name": "rollback aplicado y readiness OK",
+      "passed": true,
+      "simulated": false,
+      "details": {
+        "status": "applied",
+        "verified": true,
+        "observed": {
+          "deployment": "checkout",
+          "version": "1.25.3",
+          "desired_replicas": 1,
+          "updated_replicas": 1,
+          "ready_replicas": 1,
+          "available_replicas": 1,
+          "rollout_in_progress": false
+        },
+        "duration_ms": 2832
+      }
+    },
+    {
+      "id": "2",
+      "name": "version inexistente devuelve conflict",
+      "passed": true,
+      "simulated": false,
+      "details": {
+        "status": "conflict",
+        "observed": {
+          "deployment": "checkout",
+          "version": "1.27.1",
+          "desired_replicas": 1,
+          "updated_replicas": 1,
+          "ready_replicas": 1,
+          "available_replicas": 1,
+          "rollout_in_progress": false
+        },
+        "duration_ms": 2740
+      }
+    },
+    {
+      "id": "3",
+      "name": "misma key no reejecuta",
+      "passed": true,
+      "simulated": false,
+      "details": {
+        "first": "applied",
+        "second": "noop",
+        "effect_id": "eff_contract:case3:1795313665074",
+        "undo_commands": 1,
+        "duration_ms": 2838
+      }
+    },
+    {
+      "id": "4",
+      "name": "timeout de readiness no es exito",
+      "passed": true,
+      "simulated": false,
+      "details": {
+        "status": "applied",
+        "verified": false,
+        "proposal_status": "degraded",
+        "observed": {
+          "deployment": "checkout",
+          "version": "1.24.0-bad",
+          "desired_replicas": 1,
+          "updated_replicas": 1,
+          "ready_replicas": 1,
+          "available_replicas": 1,
+          "rollout_in_progress": true
+        },
+        "duration_ms": 12636
+      }
+    },
+    {
+      "id": "5",
+      "name": "rollout en curso devuelve conflict reconciliable",
+      "passed": true,
+      "simulated": false,
+      "details": {
+        "during": "conflict",
+        "after": "applied",
+        "verified": true,
+        "duration_ms": 30109
+      }
+    },
+    {
+      "id": "6",
+      "name": "flag aplicada y revertida deja estado coherente (simulada, fuera del sandbox)",
+      "passed": true,
+      "simulated": true,
+      "details": {
+        "status": "applied",
+        "observed": {
+          "flag": "checkout.new_flow",
+          "value": "false",
+          "rollout_percent": 0,
+          "updated_at": "2026-11-22T02:15:10.454Z"
+        },
+        "simulated": true,
+        "duration_ms": 1
+      }
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "note": "Casos 1-5 usan kubectl real. El caso 6 (flag) es simulado porque el SandboxExecutor solo cubre rollback; la evidencia lo etiqueta."
+}
