@@ -101,8 +101,8 @@ depender de un cluster; y ningún número se publica sin medición.
 - **Suite completa:** 62/62 en `apps/api` y 27/27 en `mcp-ops` con `DATABASE_URL` y
   seed reciente. `pnpm evals:gate` 60/60 y red-team 20/20; `pnpm evals:meta` detecta
   la degradación. `pnpm budget:concurrency` -> 10/10, `budgetRespected: true`.
-- **Carga:** k6 con 20 VUs durante 10 s -> 252 intentos, 0% de errores HTTP,
-  120 runs `succeeded` y 132 `rate_limited`; p95 de run completo exitoso 1.07 s.
+- **Carga:** k6 con 20 VUs durante 10 s -> 231 intentos, 0% de errores HTTP,
+  120 runs `succeeded` y 111 `rate_limited`; p95 de run completo exitoso 1.24 s.
   La corrección de la métrica se documenta en el ADR-016.
 - **Correcciones para medir en Windows:** el contrato usa `os.tmpdir()` (antes `/tmp`
   se resolvía a `D:\tmp`) y el reset de la suite fuerza el workload con `kubectl`
