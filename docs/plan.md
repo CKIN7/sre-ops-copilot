@@ -516,9 +516,11 @@ concurrencia (test específico con 20 runs paralelos).
   observaciones o audit, (4) ninguna petición de red no permitida (aserción
   estructural: hoy no existe ninguna tool con URL), y (5) el agente detecta y reporta
   el intento. El gate falla si `redTeamBlocked` baja del baseline (20).
-- k6: `infra/k6/run-api.js` con 20 VUs por defecto, umbral `p95 < 30 s` y métrica
-  `run_complete_ms`. Mide `POST /runs`, que hoy ejecuta el run completo porque **no hay
-  cola**; no se publica un p95 de encolado que no existe.
+- k6: `infra/k6/run-api.js` con 20 VUs por defecto, umbral `p95 < 30 s` y métricas
+  `run_complete_ms` (solo runs `succeeded`) y `run_succeeded`. Mide `POST /runs`, que
+  hoy ejecuta el run completo porque **no hay cola**; no se publica un p95 de encolado
+  que no existe. A 20 VUs se satura `RATE_LIMIT_TOOL=120`/min; para medir sin
+  saturación se usa `VUS=8`.
 
 **Medido en esta sesión:**
 
@@ -533,10 +535,12 @@ concurrencia (test específico con 20 runs paralelos).
   `budgetRespected: true` en 182 ms. El test
   `apps/api/test/budget.integration.test.ts` pasa 2/2, incluido el append-only de
   `usage_ledger`.
-- **Carga con k6 (medida al cerrar M7):** `infra/k6/run-api.js` con 20 VUs durante
-  10 s contra API + `mcp-ops` y seed reciente. Resultado: 252 runs, 504 peticiones,
-  0% de fallos, 1008/1008 checks y **p95 de run completo 1.08 s** (mediana 92 ms,
-  p90 760 ms). No hay p95 de encolado porque no existe cola.
+- **Carga con k6 (medida al cerrar M7):** 20 VUs durante 10 s contra API + `mcp-ops`
+  y seed reciente. Resultado: 231 intentos, 462 peticiones y **0% de errores HTTP**;
+  120 runs `succeeded` y 111 `rate_limited` por el techo de 120 llamadas/min.
+  **p95 de run completo (solo exitosos) 1.24 s** (mediana 0.66 s). El p95 de los
+  denegados no se mezcla con el de runs completos. No hay p95 de encolado
+  porque no existe cola.
 - **Coste real: 0 céntimos.** No hay LLM ni proveedor; el medidor por defecto devuelve
   cero. No se publica €/run distinto de 0 ni una tabla de precios inexistente.
 
@@ -688,7 +692,10 @@ siendo la del §22.7: no se abre el hito siguiente hasta cerrar el actual.
 | M5 | Harness de evals + 40 casos + gate en CI | `pass@1` medido y reproducible; gate bloquea una regresión inyectada |
 | M6 | Presupuestos, OTel, red-team, k6, modelo de coste | 20/20 inyecciones bloqueadas; presupuesto correcto con 20 runs paralelos |
 | M7 | `SandboxExecutor` (kind) + suite de contrato + deploy público con `DEMO_MODE` + circuit breaker | 6/6 contrato real; demo pública con techo de gasto y fallback a replay |
-| M8 | Runbook + simulacro de incidente + postmortem + README/ADRs/honestidad + benchmark + vídeo | Un desconocido entiende el proyecto en 5 min y no puede abusar de la demo |
+| M8 | Runbook + simulacro de incidente + postmortem + README/ADRs/honestidad + benchmark | Un desconocido puede seguir el runbook y reproducir el benchmark; no puede abusar de la demo |
+
+**M8b (publicación, posterior):** video de 3 minutos con el guion de §16 y enlace en el
+README. No forma parte del cierre de M8.
 
 **Estado (2026-11-20):** M1, M2 y M3 cerrados. M2 se verificó con un run real por CLI: la
 timeline (steps y tool calls) quedó en Postgres y el CLI la leyó de vuelta por la API.
@@ -799,10 +806,10 @@ presupuesto correcto con 20 runs paralelos— está medido:
 - **OTel + pino:** spans verificados en memoria (orquestador y gateway); sin collector
   externo. No hay métricas OTel de negocio todavía, solo spans.
 - **k6:** escenario en `infra/k6/run-api.js`, medido el 2026-11-22 contra API +
-  `mcp-ops` con seed reciente: 20 VUs durante 10 s, 252 runs y 504 peticiones, 0% de
-  fallos, 1008/1008 checks y **p95 de run completo 1.08 s** (mediana 92 ms, p90
-  760 ms). No hay p95 de encolado porque no existe cola. Cierra el último entregable
-  de M6.
+  `mcp-ops` con seed reciente: 20 VUs durante 10 s, 231 intentos y 462 peticiones,
+  0% de errores HTTP. 120 runs `succeeded` y 111 `rate_limited`; **p95 de run
+  completo (solo exitosos) 1.24 s** (mediana 0.66 s). No hay p95 de encolado porque
+  no existe cola. Cierra el último entregable de M6.
 - **Coste:** 0 céntimos reales porque no hay LLM ni proveedor. El presupuesto se
   ejercita en tests con unidades inyectadas; no se publica una tabla de precios.
 
@@ -833,13 +840,33 @@ de honestidad y los workflows nocturnos.
 - **Verificado:** `pnpm typecheck`, `pnpm build`, `pnpm lint`, `pnpm evals:gate`
   (60/60, red-team 20/20), `pnpm evals:meta`, `pnpm test` completo con
   `DATABASE_URL` (62/62 en `apps/api` y 27/27 en `mcp-ops`), `pnpm budget:concurrency`
-  (10/10, `budgetRespected: true`), contrato 6/6 y k6 (p95 1.08 s, 0% fallos).
+  (10/10, `budgetRespected: true`), contrato 6/6 y k6 (p95 de runs exitosos 1.24 s;
+  111/231 rate-limited a 20 VUs).
 - **Demo medida:** `pnpm demo:smoke` devuelve `ok: true`, `replayOnly: true`,
   `replayCalls: 1`, `writeDenied: true` y steps `1111110` (el sexto step se deniega),
   sin llamar a `mcp-ops` ni escribir ningún servicio.
 - **Correcciones para medir en Windows:** manifiesto temporal con `os.tmpdir()` en vez
   de `/tmp` y reset del contrato con `kubectl` directo para recuperarse de un rollout
   en curso. No cambian el contrato del executor ni relajan aserciones.
+
+**Estado (2026-11-22): M8 cerrado; el video pasa a M8b.**
+
+- **Runbook:** `docs/runbook.md` cubre arranque, flujo de incidente, dos fases,
+  modos, fallos comunes, evidencia, simulacro y limpieza.
+- **Postmortem:** `docs/postmortem-2026-11-22-checkout-5xx.md` documenta el incidente
+  sembrado (`checkout`, `http_5xx_rate` máx. 4,2%, deploy `1.42.0`), el run de
+  investigación `a54d02ef-...` y la evidencia del flujo de propuesta/aprobación.
+  Etiqueta el incidente como sintético y no afirma causalidad con una sola
+  correlación.
+- **Benchmark:** `docs/benchmark.md` reúne evals, presupuesto, contrato y carga con
+  comandos reproducibles. El p95 de carga se separa de las denegaciones de rate
+  limit; a 20 VUs, 111/231 intentos fueron `rate_limited`.
+- **ADR:** `docs/decisions/016-benchmark-reproducible-y-simulacro.md` fija la regla
+  de medir solo runs `succeeded` y etiquetar el simulacro.
+- **M8b:** `docs/video-script.md` tiene el guion de 3 minutos; la grabación queda
+  para una propuesta posterior. **No forma parte del cierre de M8.**
+- **k6 corregido:** `infra/k6/run-api.js` ya no suma al p95 los runs `failed`;
+  reporta `run_succeeded` y solo mide `run_complete_ms` para `succeeded`.
 
 **Pendiente de M5 (no cerrado):** el modo live semanal programado (existe el modo
 live y el grabador, pero no un cron) y un juez LLM calibrado (no hay juicios humanos;
@@ -868,13 +895,15 @@ fixtures, la vista de eval, los escenarios guiados de la demo pública y la vist
 4. **Threat model** de una página.
 5. **Runbook + postmortem** de un incidente provocado a propósito.
 6. **Enlace al último run de contrato contra sandbox real** (prueba de que no es teatro).
-7. **Vídeo de 3 min** con el guion de §16.
+7. **Vídeo de 3 min** con el guion de §16. Entregable de **M8b**, pendiente.
 8. **3 posts**: "por qué el gateway", "cómo evalúo un agente no determinista",
    "el día que el agente intentó obedecer a un log".
 
 ---
 
-## 16. Guion del vídeo (3 min)
+## 16. Guion del vídeo (3 min, M8b)
+
+> Entregable de M8b. No bloquea el cierre de M8.
 
 1. (0:00-0:20) "Checkout 5xx subió al 4% hace 20 minutos." → run en vivo.
 2. (0:20-1:20) Timeline: métricas → deploy correlacionado → logs → traza → hipótesis con
@@ -899,7 +928,7 @@ fixtures, la vista de eval, los escenarios guiados de la demo pública y la vist
 | Escrituras sin aprobación | 0 | 0 |
 | Acciones `applied` sin verificar post-condición | 0 | 0 (las no verificadas quedan en `degraded`) |
 | Coste mediano por run | ≤ €0,10 | 0 céntimos (sin LLM) |
-| p95 de run | ≤ 30 s | 1.08 s (k6, 20 VUs, 10 s) |
+| p95 de run | ≤ 30 s | 1.24 s (k6, solo `succeeded`, 20 VUs, 10 s) |
 | Cobertura de policy tests | 100% de reglas del gateway | — |
 | Fugas de presupuesto en concurrencia | 0 | 0 (20 runs: 10 permitidos, 10 denegados) |
 | Sesiones de demo por encima de presupuesto | 0 | smoke verde (techo y breaker) |
