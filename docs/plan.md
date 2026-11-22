@@ -402,11 +402,16 @@ permitida, y el agente reporta el intento.
 
 Se publica el enlace al último run real en el README: es la prueba de que el adaptador no es fake.
 
-**Implementación (M7):** la suite vive en `packages/executors/src/contract` y se ejecuta
-con `pnpm contract:sandbox` en un workflow nocturno/manual, no en el gate de PR. Los
-casos 1-5 usan `kubectl` real; el caso 6 (flag) es simulado y la evidencia lo etiqueta.
-Si no hay cluster, el comando sale con `1` y el error exacto. En esta sesión no se pudo
-medir 6/6 (Docker/kind no disponibles); no se publica un resultado inventado.
+**Implementación y medición (M7):** la suite vive en
+`packages/executors/src/contract` y se ejecuta con `pnpm contract:sandbox` en un
+workflow nocturno/manual, no en el gate de PR. Los casos 1-5 usan `kubectl` real; el
+caso 6 (flag) es simulado y la evidencia lo etiqueta. Si no hay cluster, el comando
+sale con `1` y el error exacto. **Medido el 2026-11-22 contra `kind` real: 6/6** en
+59 s, con evidencia por caso en `artifacts/` (copia versionada en
+`docs/evidence/sandbox-contract-2026-11-22T02-14-11.527Z.json`). Para poder medir en
+Windows hicieron falta dos correcciones: el manifiesto temporal usa `os.tmpdir()` en
+vez de `/tmp`, y el reset de la suite fuerza el workload con `kubectl` directo porque
+el executor rechaza el rollback durante un rollout en curso a proposito.
 
 ---
 
@@ -528,20 +533,17 @@ concurrencia (test específico con 20 runs paralelos).
   `budgetRespected: true` en 182 ms. El test
   `apps/api/test/budget.integration.test.ts` pasa 2/2, incluido el append-only de
   `usage_ledger`.
+- **Carga con k6 (medida al cerrar M7):** `infra/k6/run-api.js` con 20 VUs durante
+  10 s contra API + `mcp-ops` y seed reciente. Resultado: 252 runs, 504 peticiones,
+  0% de fallos, 1008/1008 checks y **p95 de run completo 1.08 s** (mediana 92 ms,
+  p90 760 ms). No hay p95 de encolado porque no existe cola.
 - **Coste real: 0 céntimos.** No hay LLM ni proveedor; el medidor por defecto devuelve
   cero. No se publica €/run distinto de 0 ni una tabla de precios inexistente.
 
-**Bloqueado por el entorno, no maquillado:**
-
-- k6 no está instalado y Docker rechazó descargar `grafana/k6` (acción externa). El
-  escenario está versionado, pero **no hay p95 de carga medido**; no se inventa.
-- El re-seed local fue rechazado por el entorno. Con el seed existente, dos tests de
-  contrato de `mcp-ops` (`query_metrics` y `get_trace_summary`) fallan por falta de
-  puntos recientes en la ventana de 2 h; no es una regresión de M6 y se corrige
-  re-sembrando.
-
-**Pendiente para cerrar el entregable de carga:** instalar k6 o autorizar su imagen y
-correr el escenario contra API + `mcp-ops` con un seed reciente.
+**Cierre del entorno (2026-11-22):** el re-seed local se ejecutó con
+`SEED_SCALE=0.1` y la suite completa contra `DATABASE_URL` quedó en verde: 62/62 en
+`apps/api` y 27/27 en `mcp-ops`. Con k6 ya instalado, el escenario de carga se midió
+contra API + `mcp-ops`; no queda ningún entregable de M6 sin resultado real.
 
 ---
 
@@ -796,21 +798,20 @@ presupuesto correcto con 20 runs paralelos— está medido:
   Medido con `pnpm evals:gate`: **20/20 bloqueados**, 60/60 casos, cero violaciones.
 - **OTel + pino:** spans verificados en memoria (orquestador y gateway); sin collector
   externo. No hay métricas OTel de negocio todavía, solo spans.
-- **k6:** escenario versionado en `infra/k6/run-api.js` (20 VUs, p95 de run completo).
-  No se ejecutó: k6 no está instalado y Docker rechazó descargar la imagen. No hay p95
-  de carga medido ni p95 de encolado (no existe cola). Es el único entregable de M6 sin
-  resultado real.
+- **k6:** escenario en `infra/k6/run-api.js`, medido el 2026-11-22 contra API +
+  `mcp-ops` con seed reciente: 20 VUs durante 10 s, 252 runs y 504 peticiones, 0% de
+  fallos, 1008/1008 checks y **p95 de run completo 1.08 s** (mediana 92 ms, p90
+  760 ms). No hay p95 de encolado porque no existe cola. Cierra el último entregable
+  de M6.
 - **Coste:** 0 céntimos reales porque no hay LLM ni proveedor. El presupuesto se
   ejercita en tests con unidades inyectadas; no se publica una tabla de precios.
 
-Para cerrar el entregable de carga falta instalar k6 o autorizar su imagen y correr el
-escenario contra API + `mcp-ops` con un seed reciente. El re-seed local también quedó
-bloqueado por el entorno; con el seed viejo fallan dos tests de contrato de `mcp-ops`
-por falta de puntos en la ventana de 2 h.
+Con el entorno desbloqueado, la suite completa contra `DATABASE_URL` quedó en verde y
+k6 se midió; no queda ningún entregable de M6 sin resultado real.
 
-**Estado (2026-11-22): M7 implementado; contrato real y smoke pendientes de entorno.**
-M7 añade el `SandboxExecutor` real, la suite de contrato §8.6, `DEMO_MODE`/`REPLAY_ONLY`
-en el gateway, la UI mínima de honestidad y los workflows nocturnos.
+**Estado (2026-11-22): M7 cerrado con el DoD medido.** M7 añade el `SandboxExecutor`
+real, la suite de contrato §8.6, `DEMO_MODE`/`REPLAY_ONLY` en el gateway, la UI mínima
+de honestidad y los workflows nocturnos.
 
 - **Sandbox:** `packages/executors/src/sandbox.ts` implementa `rollback` con
   `kubectl rollout undo` sobre `kind`/k3s, resolución de versión por historial de
@@ -820,21 +821,25 @@ en el gateway, la UI mínima de honestidad y los workflows nocturnos.
   adaptador medido.
 - **Contrato §8.6:** 6 casos en `packages/executors/src/contract`, con evidencia por
   caso en `artifacts/`, workflow nocturno/manual y comando `pnpm contract:sandbox`.
-  **No se midió 6/6 en esta sesión**: el daemon de Docker no responde
-  (`npipe:////./pipe/dockerDesktopLinuxEngine` no encontrado) y `kind` no está
-  instalado. El caso 6 (flag) es simulado y así se etiqueta.
+  **Medido 6/6 contra `kind` real** el 2026-11-22 en 59 s; el caso 6 (flag) es simulado
+  y así se etiqueta. La evidencia está en
+  `docs/evidence/sandbox-contract-2026-11-22T02-14-11.527Z.json`.
 - **Demo:** el gateway aplica sesión anónima, techo diario (200), techo de steps (6) y
   coste (5 céntimos) con reserva atómica en `demo_sessions`, rate limit por sesión/IP
   con la ventana deslizante existente, circuit breaker por fallos y fallback a
   `ReplayTransport`. `DEMO_MODE=1` exige `EXECUTOR=simulated` y fixtures de replay.
   La UI añade `/about` con la tabla de honestidad, el aviso de `REPLAY_ONLY` y tres
   escenarios guiados.
-- **Verificado:** `pnpm typecheck`, `pnpm build`, `pnpm lint`, tests unitarios de
-  sandbox/gateway/config y `pnpm evals:gate` (60/60, red-team 20/20).
-- **Pendiente de entorno:** `pnpm contract:sandbox` falla con `dial tcp [::1]:8080`
-  porque no hay cluster (Docker apagado y `kind` sin instalar); `pnpm demo:smoke`
-  falla con `ECONNREFUSED` porque no hay Postgres en 5432/5433. No se publican cifras
-  de esos dos entregables.
+- **Verificado:** `pnpm typecheck`, `pnpm build`, `pnpm lint`, `pnpm evals:gate`
+  (60/60, red-team 20/20), `pnpm evals:meta`, `pnpm test` completo con
+  `DATABASE_URL` (62/62 en `apps/api` y 27/27 en `mcp-ops`), `pnpm budget:concurrency`
+  (10/10, `budgetRespected: true`), contrato 6/6 y k6 (p95 1.08 s, 0% fallos).
+- **Demo medida:** `pnpm demo:smoke` devuelve `ok: true`, `replayOnly: true`,
+  `replayCalls: 1`, `writeDenied: true` y steps `1111110` (el sexto step se deniega),
+  sin llamar a `mcp-ops` ni escribir ningún servicio.
+- **Correcciones para medir en Windows:** manifiesto temporal con `os.tmpdir()` en vez
+  de `/tmp` y reset del contrato con `kubectl` directo para recuperarse de un rollout
+  en curso. No cambian el contrato del executor ni relajan aserciones.
 
 **Pendiente de M5 (no cerrado):** el modo live semanal programado (existe el modo
 live y el grabador, pero no un cron) y un juez LLM calibrado (no hay juicios humanos;
@@ -884,20 +889,20 @@ fixtures, la vista de eval, los escenarios guiados de la demo pública y la vist
 
 ## 17. Métricas objetivo (definition of done)
 
-| Métrica | Objetivo |
-|---|---|
-| `pass@1` golden set | ≥ 0,85 |
-| False-action rate (casos "no actuar") | 0 |
-| Inyecciones bloqueadas | 20/20 |
-| Fault-handling (5 escenarios) | 5/5 |
-| Suite de contrato sandbox | 6/6 en el último run nocturno |
-| Escrituras sin aprobación | 0 |
-| Acciones `applied` sin verificar post-condición | 0 |
-| Coste mediano por run | ≤ €0,10 |
-| p95 de run | ≤ 30 s |
-| Cobertura de policy tests | 100% de reglas del gateway |
-| Fugas de presupuesto en concurrencia | 0 |
-| Sesiones de demo por encima de presupuesto | 0 |
+| Métrica | Objetivo | Último valor medido |
+|---|---|---|
+| `pass@1` golden set | ≥ 0,85 | 100% (60/60) |
+| False-action rate (casos "no actuar") | 0 | 0% |
+| Inyecciones bloqueadas | 20/20 | 20/20 |
+| Fault-handling (5 escenarios) | 5/5 | 5/5 |
+| Suite de contrato sandbox | 6/6 en el último run nocturno | 6/6 (`kind`, 2026-11-22; caso 6 simulado) |
+| Escrituras sin aprobación | 0 | 0 |
+| Acciones `applied` sin verificar post-condición | 0 | 0 (las no verificadas quedan en `degraded`) |
+| Coste mediano por run | ≤ €0,10 | 0 céntimos (sin LLM) |
+| p95 de run | ≤ 30 s | 1.08 s (k6, 20 VUs, 10 s) |
+| Cobertura de policy tests | 100% de reglas del gateway | — |
+| Fugas de presupuesto en concurrencia | 0 | 0 (20 runs: 10 permitidos, 10 denegados) |
+| Sesiones de demo por encima de presupuesto | 0 | smoke verde (techo y breaker) |
 
 Si no se alcanza `pass@1 ≥ 0,85`, se recorta el alcance de las tools de escritura, no se
 falsean los números.
