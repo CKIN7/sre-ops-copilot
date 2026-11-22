@@ -87,22 +87,26 @@ depender de un cluster; y ningún número se publica sin medición.
   `budget_reservations` (el presupuesto de tenant sigue usándose); `compose` queda
   pendiente; el caso 6 del contrato es simulado.
 - **Seguimiento:** implementar un adaptador compose medido antes de presentarlo como
-  real; ejecutar la suite nocturna y publicar el enlace al último run; retirar
+  real; publicar el enlace al run nocturno en CI (el local ya está medido); retirar
   `REPLAY_ONLY` cuando el breaker se recupere.
 
-## Evidencia de esta sesión
+## Evidencia (2026-11-22)
 
-- `pnpm typecheck`, `pnpm build`, `pnpm lint` y `pnpm evals:gate` en verde.
-- `pnpm contract:sandbox` **no se pudo medir**: Docker no responde
-  (`npipe:////./pipe/dockerDesktopLinuxEngine` no encontrado), `kind` no está
-  instalado y `kubectl cluster-info` falla con
-  `dial tcp [::1]:8080: connectex: No se puede establecer una conexión...`. No se
-  publica 6/6.
-- `pnpm demo:smoke` **no se pudo medir**: no hay Postgres accesible en 5432 ni 5433
-  (el `.env` apunta a 5433) y la conexión falla con `ECONNREFUSED`. No se publica un
-  smoke medido.
-- `pnpm test` completo falla solo en los tests de contrato de `mcp-ops` que necesitan
-  el seed y Postgres; el resto de paquetes pasa. No es una regresión de M7.
+- `pnpm typecheck`, `pnpm build` y `pnpm lint` en verde.
+- **Contrato real:** `pnpm contract:sandbox` contra `kind` -> **6/6** en 59 s; casos
+  1-5 con `kubectl` real, caso 6 simulado. Evidencia versionada en
+  `docs/evidence/sandbox-contract-2026-11-22T02-14-11.527Z.json`.
+- **Demo:** `pnpm demo:smoke` -> `ok: true`, `replayOnly: true`, `replayCalls: 1`,
+  `writeDenied: true`, steps `1111110`; sin llamar a `mcp-ops` ni escribir servicios.
+- **Suite completa:** 62/62 en `apps/api` y 27/27 en `mcp-ops` con `DATABASE_URL` y
+  seed reciente. `pnpm evals:gate` 60/60 y red-team 20/20; `pnpm evals:meta` detecta
+  la degradación. `pnpm budget:concurrency` -> 10/10, `budgetRespected: true`.
+- **Carga:** k6 con 20 VUs durante 10 s -> 252 runs, 0% de fallos y p95 de run
+  completo 1.08 s.
+- **Correcciones para medir en Windows:** el contrato usa `os.tmpdir()` (antes `/tmp`
+  se resolvía a `D:\tmp`) y el reset de la suite fuerza el workload con `kubectl`
+  directo, porque el executor rechaza rollback durante un rollout en curso. No cambian
+  el contrato del puerto ni relajan ninguna aserción.
 
 ## Referencias
 
