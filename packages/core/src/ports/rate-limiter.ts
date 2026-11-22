@@ -5,14 +5,22 @@
  * conoce esta interfaz (ADR-003), así que la política se prueba sin Postgres.
  */
 
-/** Ámbitos del límite: por run, por tenant y por tool dentro del tenant. */
-export type RateLimitScopeKind = "run" | "tenant" | "tool";
+/**
+ * Ámbitos del límite: por run, por tenant, por tool dentro del tenant y, en la demo
+ * pública, por sesión anónima y por IP. Los dos últimos reutilizan la misma ventana
+ * deslizante atómica, no un contador en memoria (plan §4.11).
+ */
+export type RateLimitScopeKind = "run" | "tenant" | "tool" | "session" | "ip";
 
 export interface RateLimitInput {
   tenantId: string;
   /** `null` = llamada fuera de un run (una propuesta abierta desde la API). */
   runId: string | null;
   tool: string;
+  /** Sesión anónima de la demo; solo en `DEMO_MODE`. */
+  sessionId?: string | null;
+  /** IP normalizada; solo en `DEMO_MODE`. */
+  ip?: string | null;
 }
 
 export interface RateLimitDecision {
@@ -36,6 +44,10 @@ export interface RateLimitPolicy {
   tenant: number;
   /** Tool calls de una misma tool por tenant y por ventana. */
   tool: number;
+  /** Tool calls por sesión anónima y por ventana (demo). */
+  session?: number;
+  /** Tool calls por IP y por ventana (demo). */
+  ip?: number;
   /** Tamaño de la ventana deslizante, en milisegundos. */
   windowMs: number;
 }

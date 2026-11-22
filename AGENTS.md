@@ -40,9 +40,19 @@ modelo determinista), fault-handling 5/5, false-action rate 0%, coste 0 céntimo
 `pass@1` al 0%; el control neutro sigue en 100%. No hay juez LLM: la rúbrica es
 determinista.
 
-Lo que sigue es ejecutar k6 (falta el binario) y la reanudación del run tras la
-aprobación (el `apply` se encadena hoy en la misma llamada de la API). No inventar módulos, scripts ni cifras que no
-existan; si algo no está implementado, decirlo.
+M7 está implementado: `SandboxExecutor` real para rollback sobre `kind`/k3s
+(`kubectl rollout undo` + readiness con timeout), suite de contrato §8.6 en un workflow
+nocturno/manual, `DEMO_MODE`/`REPLAY_ONLY` forzados en el gateway (sesión anónima,
+techo diario, presupuesto de sesión atómico, rate limit por sesión/IP, breaker y
+fallback a replay) y la pestaña de honestidad en la UI. **No se midió 6/6**: el daemon
+de Docker no responde y `kind` no está instalado; `pnpm contract:sandbox` sale con el
+error exacto. `pnpm demo:smoke` tampoco se midió por falta de Postgres accesible. El
+caso 6 del contrato (flag) es simulado porque el sandbox solo cubre rollback.
+
+Lo que sigue es ejecutar k6 (falta el binario), la suite de contrato con Docker/kind y
+la reanudación del run tras la aprobación (el `apply` se encadena hoy en la misma
+llamada de la API). No inventar módulos, scripts ni cifras que no existan; si algo no
+está implementado, decirlo.
 
 ## Stack
 
@@ -102,6 +112,14 @@ pnpm budget:concurrency
 
 # k6 (M6): p95 de run completo contra el API; necesita k6 instalado
 k6 run -e BEACON_TOKEN=$env:BEACON_TOKEN infra/k6/run-api.js
+
+# Contrato sandbox (M7): 6 casos contra kind/k3s; necesita Docker + kind.
+# No va en el gate de PR; hay workflow nocturno/manual.
+./infra/kind/bootstrap.sh
+pnpm contract:sandbox
+
+# Smoke de la demo (M7): sesión, breaker y replay contra Postgres, sin mcp-ops.
+pnpm demo:smoke
 
 # Re-grabar fixtures; con DATABASE_URL usa las tools reales; sin el, el generador
 # determinista del seed en un instante fijo

@@ -1,0 +1,47 @@
+name: sandbox-contract
+
+# Suite de contrato del executor real (docs/plan.md §8.6, M7).
+#
+# No corre en pull_request: necesita un cluster de kind, tarda y no debe bloquear el
+# gate de PR. Se ejecuta cada noche y a mano.
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    name: contrato sandbox 6/6
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SANDBOX_TARGET: kind
+      SANDBOX_NAMESPACE: beacon-sandbox
+      READINESS_TIMEOUT: 10s
+      SANDBOX_POLL_INTERVAL: 1s
+      SANDBOX_COMMAND_TIMEOUT: 60s
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: helm/kind-action@v1
+        with:
+          cluster_name: beacon-sandbox
+          wait: 180s
+      - run: kubectl create namespace beacon-sandbox --dry-run=client -o yaml | kubectl apply -f -
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      # Si el cluster no responde, la suite sale con 1 y el error exacto.
+      - run: pnpm contract:sandbox
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sandbox-contract-evidence
+          path: artifacts/
+          if-no-files-found: warn

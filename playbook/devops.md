@@ -74,6 +74,25 @@ Reglas:
 - Los casos de inyección de prompt son obligatorios: 20/20 bloqueados.
 - La suite de contrato contra sandbox real (`kind`) es **nocturna**, no bloquea PRs.
 
+### Contrato sandbox y demo en CI
+
+| Workflow | Cuándo | Qué mide |
+|---|---|---|
+| `sandbox-contract.yml` | `schedule` 03:00 UTC y `workflow_dispatch` | 6 casos §8.6 contra un cluster `kind` real (`kubectl rollout undo` + readiness) |
+| `demo-smoke.yml` | `schedule` 03:30 UTC y `workflow_dispatch` | sesión, techo de steps, breaker y fallback a replay contra Postgres, sin `mcp-ops` |
+
+Reglas:
+
+- Ninguno de los dos va en el gate de PR: el sandbox necesita Docker/kind y el smoke
+  necesita Postgres migrado.
+- Si Docker/kind no están disponibles, `pnpm contract:sandbox` sale con `1` y el error
+  exacto. **Nunca se publica 6/6 sin un run real.**
+- La evidencia del contrato se sube como artefacto (`artifacts/`); no se guarda un
+  kubeconfig ni credenciales en el repo.
+- El caso 6 (flag) se marca como simulado: el `SandboxExecutor` solo cubre rollback.
+- `DEMO_MODE=1` exige `EXECUTOR=simulated` y `DEMO_REPLAY_FIXTURES`; el arranque falla
+  cerrado si falta cualquiera de los dos.
+
 ### Protección de `main`
 
 - PR obligatorio.

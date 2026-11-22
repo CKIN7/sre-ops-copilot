@@ -1,7 +1,24 @@
+import { NodeCommandRunner } from "@beacon/executors/command";
+import { checkSandboxAvailable } from "@beacon/executors/sandbox";
+
 import { createApp } from "./app.js";
 import { loadConfig } from "./config.js";
 
 const config = loadConfig();
+
+// Con EXECUTOR=sandbox no se arranca a ciegas: si kubectl o el cluster no estan,
+// la API falla cerrado en vez de descubrirlo en el primer rollback.
+if (config.executor === "sandbox") {
+  try {
+    await checkSandboxAvailable(config.sandbox, new NodeCommandRunner());
+  } catch (error) {
+    console.error(
+      `no se pudo arrancar con EXECUTOR=sandbox: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    process.exit(1);
+  }
+}
+
 const { app, close } = createApp({
   config,
   logger: {

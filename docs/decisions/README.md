@@ -20,6 +20,7 @@
 | 012 | Audit encadenado por hash y rate limit con ventana deslizante en Postgres | Aceptada |
 | 013 | Presupuesto con reserva atomica en Postgres y liquidacion append-only | Aceptada |
 | 014 | OTel en proceso, sin exporter externo obligatorio | Aceptada |
+| 015 | Sandbox real y `DEMO_MODE` forzado en el gateway | Aceptada |
 
 ## Por qué estas y no otras
 
@@ -47,6 +48,8 @@
 - **012** fija dónde vive el estado del rate limit (Postgres, con ventana deslizante real, no
   contadores en memoria) y cómo el audit demuestra que nadie reescribió la historia: hash chain
   con `prev_hash`, escritura serializada y verificación explícita.
+- **015** separa el sandbox real (solo rollback, suite nocturna) de la demo pública (sesión,
+  techo, breaker y replay), y deja la política de demo en el gateway, no en la UI.
 
 ## Decisiones abiertas
 

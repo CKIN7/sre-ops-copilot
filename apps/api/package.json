@@ -9,7 +9,8 @@
     "test": "vitest run --maxWorkers=1",
     "start": "pnpm run build && node --env-file-if-exists=../../.env dist/main.js",
     "cli": "pnpm run build && node --env-file-if-exists=../../.env dist/cli.js",
-    "budget:concurrency": "pnpm run build && node --env-file-if-exists=../../.env dist/scripts/budget-concurrency.js"
+    "budget:concurrency": "pnpm run build && node --env-file-if-exists=../../.env dist/scripts/budget-concurrency.js",
+    "demo:smoke": "pnpm run build && node --env-file-if-exists=../../.env dist/scripts/demo-smoke.js"
   },
   "dependencies": {
     "@beacon/core": "workspace:*",

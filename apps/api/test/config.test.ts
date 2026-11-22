@@ -90,4 +90,49 @@ describe("loadConfig", () => {
 
     expect(() => loadConfig(env)).toThrow(/MCP_AUTH_TOKEN/);
   });
+
+  it("valida la configuracion del sandbox al arrancar", () => {
+    const env = {
+      ...validEnv(),
+      EXECUTOR: "sandbox",
+      SANDBOX_TARGET: "kind",
+      READINESS_TIMEOUT: "45s",
+    };
+
+    const config = loadConfig(env);
+    expect(config.executor).toBe("sandbox");
+    expect(config.sandbox.readinessTimeoutMs).toBe(45_000);
+
+    expect(() => loadConfig({ ...env, READINESS_TIMEOUT: "45" })).toThrow(
+      /READINESS_TIMEOUT/,
+    );
+    expect(() => loadConfig({ ...env, SANDBOX_TARGET: "docker" })).toThrow(
+      /SANDBOX_TARGET/,
+    );
+  });
+
+  it("DEMO_MODE exige executor simulado y fixtures de replay", () => {
+    expect(() =>
+      loadConfig({ ...validEnv(), DEMO_MODE: "1", EXECUTOR: "sandbox" }),
+    ).toThrow(/EXECUTOR=simulated/);
+
+    expect(() => loadConfig({ ...validEnv(), DEMO_MODE: "1" })).toThrow(
+      /DEMO_REPLAY_FIXTURES/,
+    );
+
+    const config = loadConfig({
+      ...validEnv(),
+      DEMO_MODE: "1",
+      DEMO_REPLAY_FIXTURES: "packages/evals/fixtures/golden",
+    });
+    expect(config.demo.enabled).toBe(true);
+    expect(config.demo.replayOnly).toBe(false);
+    expect(config.rateLimit.session).toBe(6);
+  });
+
+  it("REPLAY_ONLY sin DEMO_MODE falla cerrado", () => {
+    expect(() => loadConfig({ ...validEnv(), REPLAY_ONLY: "1" })).toThrow(
+      /REPLAY_ONLY=1 exige DEMO_MODE=1/,
+    );
+  });
 });

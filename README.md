@@ -3,7 +3,7 @@
 > Copiloto de guardia que investiga incidentes, propone acciones con evidencia y solo
 > ejecuta escrituras tras aprobación humana, con presupuesto, auditoría y evals.
 
-**Estado:** M5 cerrado (2026-11-21); M6 con el DoD medido, k6 pendiente (2026-11-22).
+**Estado:** M6 con el DoD medido; M7 implementado, contrato sandbox y smoke pendientes de entorno (2026-11-22).
 `mcp-ops` sirve las 10 tools de lectura y las 3 de
 propuesta (`propose_rollback`, `propose_set_flag`, `propose_silence_alert`) por stdio y
 Streamable HTTP; el gateway aplica allowlist, validación, rate limit con ventana
@@ -15,7 +15,12 @@ la timeline de un run con el estado de sus escrituras y la cola de aprobaciones:
 desde la UI **ejecuta** el `apply`. `packages/evals` añade 40 casos de golden set, 20 de
 red-team, fixtures VCR, gate en CI y meta-eval. M6 añade presupuesto con reserva
 atómica en Postgres, `usage_ledger`, spans OTel y la definición de red-team bloqueado
-(20/20 medido). El modelo es `mock`/`eval-scripted` guionizado: no hay LLM, tokens ni
+(20/20 medido). M7 añade el `SandboxExecutor` real para rollback sobre `kind`/k3s (con
+suite de contrato nocturna), `DEMO_MODE`/`REPLAY_ONLY` forzados en el gateway (sesión
+anónima, techo de sesiones, presupuesto de sesión atómico, breaker y fallback a replay)
+y la pestaña de honestidad en la UI. **El 6/6 del contrato y el p95 de k6 no están
+medidos**: no hay Docker/kind ni k6 en este entorno, y no se publica una cifra
+inventada. El modelo es `mock`/`eval-scripted` guionizado: no hay LLM, tokens ni
 coste.
 
 ## Qué demuestra
@@ -27,6 +32,24 @@ coste.
 - Un **executor** por puerto/adaptador: simulado por defecto, sandbox real demostrado.
 - Un **audit encadenado por hash**: cada tool call deja una entrada y la cadena se
   verifica con una orden (`beacon audit verify`).
+
+## Tabla de honestidad
+
+| Componente | Real | Simulado |
+|---|---|---|
+| Métricas, logs y deploys | — | dataset sintético |
+| Authn, tenants, presupuesto y policies | sí | — |
+| Gateway, auditoría y aprobaciones | sí | — |
+| `propose_*` / `apply` / idempotencia | sí | — |
+| Efecto del rollback en la demo pública | — | estado en Postgres |
+| Efecto del rollback en modo `sandbox` | `kubectl` real | — |
+| `set_flag` / `silence_alert` en sandbox | — | delegado al simulado |
+| Modelo y coste de proveedor | — | mock guionizado, 0 céntimos |
+| Contrato sandbox 6/6 | pendiente de entorno | — |
+| p95 de k6 | pendiente de entorno | — |
+
+La misma tabla vive en la pestaña **Honestidad** de la UI. Si algo no se midió, se
+dice; no se publica un 6/6 ni un p95 inventado.
 
 ## Stack
 
@@ -69,6 +92,13 @@ pnpm budget:concurrency
 
 # Carga: k6 sobre POST /runs (necesita k6 instalado)
 k6 run -e BEACON_TOKEN=$env:BEACON_TOKEN infra/k6/run-api.js
+
+# Contrato sandbox M7: 6 casos contra kind/k3s (Docker + kind; nocturno/manual)
+./infra/kind/bootstrap.sh
+pnpm contract:sandbox
+
+# Smoke de la demo M7: sesión, breaker y replay contra Postgres, sin mcp-ops
+pnpm demo:smoke
 
 # Postgres local (puerto 5433 en .env)
 docker compose --env-file .env -f infra/compose/docker-compose.yml up -d --wait

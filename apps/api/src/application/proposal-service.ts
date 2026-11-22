@@ -7,6 +7,7 @@ import type {
   ApplyOutcome,
   RejectOutcome,
 } from "@beacon/core/ports/action-applier";
+import type { DemoSessionStore } from "@beacon/core/ports/demo-session";
 import type { EffectLedger } from "@beacon/core/ports/effect-ledger";
 import type {
   ListProposalsOptions,
@@ -21,7 +22,7 @@ import {
 } from "@beacon/core/schemas/writes";
 
 import type { AgentBinding } from "./principal-directory.js";
-import type { GatewayFactory } from "./run-service.js";
+import type { DemoRequest, GatewayFactory } from "./run-service.js";
 
 /** Lo que devuelve el gateway cuando la tool es de escritura. */
 export type ProposalResult = {
@@ -37,6 +38,8 @@ export interface ProposalServiceDeps {
   runs: RunStore;
   applier: ActionApplier;
   createGateway: GatewayFactory;
+  /** Presente solo en DEMO_MODE: el breaker bloquea el apply. */
+  demoSessions?: DemoSessionStore;
 }
 
 export interface ProposeCommand {
@@ -49,6 +52,8 @@ export interface ProposeCommand {
    * abre sin run). El run se valida contra el tenant: no se cuelga de otro.
    */
   runId?: string | null;
+  /** Solo en DEMO_MODE. */
+  demo?: DemoRequest;
 }
 
 /**
@@ -83,7 +88,7 @@ export class ProposalService {
       }
     }
 
-    const gateway = this.#deps.createGateway(command.agent);
+    const gateway = this.#deps.createGateway(command.agent, command.demo);
     const outcome = await gateway.call(
       command.tool as WriteToolName,
       command.args,
@@ -161,6 +166,12 @@ export class ProposalService {
     proposalId: string;
     reason: string | null;
   }): Promise<ApplyOutcome> {
+    if (this.#deps.demoSessions && (await this.#deps.demoSessions.isReplayOnly())) {
+      throw new AppError("forbidden", "REPLAY_ONLY: no se ejecutan escrituras", {
+        statusCode: 403,
+        details: { reason: "replay_only" },
+      });
+    }
     return this.#deps.applier.approve({
       proposalId: command.proposalId,
       tenantId: command.principal.tenantId,

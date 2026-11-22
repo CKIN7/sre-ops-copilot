@@ -402,6 +402,12 @@ permitida, y el agente reporta el intento.
 
 Se publica el enlace al último run real en el README: es la prueba de que el adaptador no es fake.
 
+**Implementación (M7):** la suite vive en `packages/executors/src/contract` y se ejecuta
+con `pnpm contract:sandbox` en un workflow nocturno/manual, no en el gate de PR. Los
+casos 1-5 usan `kubectl` real; el caso 6 (flag) es simulado y la evidencia lo etiqueta.
+Si no hay cluster, el comando sale con `1` y el error exacto. En esta sesión no se pudo
+medir 6/6 (Docker/kind no disponibles); no se publica un resultado inventado.
+
 ---
 
 ### 8.7 Estado de M5 (2026-11-21)
@@ -589,9 +595,13 @@ Implementado y verificado:
 - **Token:** en local el proxy de Vite inyecta el bearer del `.env` para que el token de
   servicio no llegue al bundle del navegador. Si la API responde 401, la UI pide uno.
 
-Pendiente (no existe todavía): dashboard de coste y p95, replay desde fixtures, vista
-de eval, escenarios guiados de la demo pública y la vista `/about` con la tabla de
-honestidad (§11.7), que hoy solo vive en el README.
+Implementado en M7: pestaña "Honestidad" (`/about` equivalente) con la tabla de §11.7,
+los límites conocidos y el estado de `DEMO_MODE`/`REPLAY_ONLY`; aviso global cuando el
+breaker sirve runs desde replay; y tres escenarios guiados con presupuesto precargado
+por el gateway.
+
+Pendiente (no existe todavía): dashboard de coste y p95, replay manual desde fixtures
+en la UI y vista de eval.
 
 ---
 
@@ -798,6 +808,34 @@ escenario contra API + `mcp-ops` con un seed reciente. El re-seed local también
 bloqueado por el entorno; con el seed viejo fallan dos tests de contrato de `mcp-ops`
 por falta de puntos en la ventana de 2 h.
 
+**Estado (2026-11-22): M7 implementado; contrato real y smoke pendientes de entorno.**
+M7 añade el `SandboxExecutor` real, la suite de contrato §8.6, `DEMO_MODE`/`REPLAY_ONLY`
+en el gateway, la UI mínima de honestidad y los workflows nocturnos.
+
+- **Sandbox:** `packages/executors/src/sandbox.ts` implementa `rollback` con
+  `kubectl rollout undo` sobre `kind`/k3s, resolución de versión por historial de
+  ReplicaSets, espera de readiness con `READINESS_TIMEOUT` y los estados
+  `applied`/`noop`/`conflict`/`timeout`. `set_flag` y `silence_alert` se delegan al
+  simulado y la evidencia lo dice. `SANDBOX_TARGET=compose` falla cerrado: no hay
+  adaptador medido.
+- **Contrato §8.6:** 6 casos en `packages/executors/src/contract`, con evidencia por
+  caso en `artifacts/`, workflow nocturno/manual y comando `pnpm contract:sandbox`.
+  **No se midió 6/6 en esta sesión**: el daemon de Docker no responde
+  (`npipe:////./pipe/dockerDesktopLinuxEngine` no encontrado) y `kind` no está
+  instalado. El caso 6 (flag) es simulado y así se etiqueta.
+- **Demo:** el gateway aplica sesión anónima, techo diario (200), techo de steps (6) y
+  coste (5 céntimos) con reserva atómica en `demo_sessions`, rate limit por sesión/IP
+  con la ventana deslizante existente, circuit breaker por fallos y fallback a
+  `ReplayTransport`. `DEMO_MODE=1` exige `EXECUTOR=simulated` y fixtures de replay.
+  La UI añade `/about` con la tabla de honestidad, el aviso de `REPLAY_ONLY` y tres
+  escenarios guiados.
+- **Verificado:** `pnpm typecheck`, `pnpm build`, `pnpm lint`, tests unitarios de
+  sandbox/gateway/config y `pnpm evals:gate` (60/60, red-team 20/20).
+- **Pendiente de entorno:** `pnpm contract:sandbox` falla con `dial tcp [::1]:8080`
+  porque no hay cluster (Docker apagado y `kind` sin instalar); `pnpm demo:smoke`
+  falla con `ECONNREFUSED` porque no hay Postgres en 5432/5433. No se publican cifras
+  de esos dos entregables.
+
 **Pendiente de M5 (no cerrado):** el modo live semanal programado (existe el modo
 live y el grabador, pero no un cron) y un juez LLM calibrado (no hay juicios humanos;
 no se implementa hasta que existan).
@@ -906,6 +944,7 @@ implementarla.
 | **012** | Audit encadenado por hash y rate limit en Postgres | Historia verificable y techo entre réplicas |
 | **013** | Presupuesto con reserva atómica y `usage_ledger` append-only | Gasto correcto bajo concurrencia y auditable |
 | **014** | OTel en proceso con exporter de test | Spans verificables sin collector obligatorio |
+| **015** | Sandbox real (solo rollback) y `DEMO_MODE` forzado en el gateway | Contrato nocturno y demo con techo, breaker y replay |
 
 ---
 
