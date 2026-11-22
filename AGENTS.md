@@ -54,14 +54,15 @@ rate-limited). El escenario k6 ya no suma runs `failed` al p95.
 Para medir en Windows se corrigieron dos detalles del contrato: `os.tmpdir()` en vez de
 `/tmp` y un reset con `kubectl` directo para recuperarse de un rollout en curso.
 
-M8 está implementado salvo el video: `docs/runbook.md`, postmortem del incidente
-sembrado en `docs/postmortem-2026-11-22-checkout-5xx.md`, benchmark reproducible en
-`docs/benchmark.md`, ADR-016 y guion en `docs/video-script.md`. La grabación del video
-de 3 minutos sigue pendiente; M8 no se declara cerrado hasta que exista el archivo.
+M8 está cerrado con el DoD medido (2026-11-22): `docs/runbook.md`, postmortem del
+incidente sembrado en `docs/postmortem-2026-11-22-checkout-5xx.md`, benchmark
+reproducible en `docs/benchmark.md` y ADR-016. El guion del video queda para **M8b**,
+una propuesta posterior; no forma parte del cierre de M8.
 
 Lo que sigue es la reanudación del run tras la aprobación (el `apply` se encadena hoy
-en la misma llamada de la API), grabar el video y cerrar M8. No inventar módulos,
-scripts ni cifras que no existan; si algo no está implementado o medido, decirlo.
+en la misma llamada de la API) y M8b (grabar el video y enlazarlo). No inventar
+módulos, scripts ni cifras que no existan; si algo no está implementado o medido,
+decirlo.
 
 ## Stack
 
@@ -180,7 +181,7 @@ el bearer del `.env` para que el token no llegue al bundle del navegador.
 | Runbook de operación e incidente | `docs/runbook.md` |
 | Postmortem del incidente sembrado | `docs/postmortem-2026-11-22-checkout-5xx.md` |
 | Benchmark reproducible | `docs/benchmark.md` |
-| Guion del video de 3 minutos | `docs/video-script.md` |
+| Guion del video de 3 minutos (M8b) | `docs/video-script.md` |
 | Cómo contribuir, ramas y releases | `playbook/contributing.md` |
 | CI/CD, Docker, deploy, secretos | `playbook/devops.md` |
 | Arquitectura, paquetes, capas, evals | `playbook/architecture.md` |
