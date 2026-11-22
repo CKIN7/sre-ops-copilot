@@ -99,17 +99,16 @@ Corrida: 20 VUs durante 10 s, objetivo
 
 | Metrica | Valor |
 |---|---|
-| Iteraciones | 252 |
-| Peticiones HTTP | 504 |
+| Iteraciones | 231 |
+| Peticiones HTTP | 462 |
 | Errores HTTP | 0% |
 | Runs `succeeded` | 120 |
-| Runs `rate_limited` | 132 |
-| p95 de run completo (solo `succeeded`) | **1.07 s** |
-| Mediana de run completo | 0.56 s |
-| p95 de runs fallidos (rate limit) | 0.07 s |
+| Runs `rate_limited` | 111 |
+| p95 de run completo (solo `succeeded`) | **1.24 s** |
+| Mediana de run completo | 0.66 s |
 
 **Por que se separa:** a 20 VUs se supera `RATE_LIMIT_TOOL=120` por minuto. Los
-132 runs denegados no son runs completos: su latencia no debe entrar en el p95
+111 runs denegados no son runs completos: su latencia no debe entrar en el p95
 de run completo. El escenario `infra/k6/run-api.js` solo suma a
 `run_complete_ms` los runs `succeeded` y reporta `run_succeeded` por separado.
 Para una corrida sin saturacion, usar `-e VUS=8`.
