@@ -4,18 +4,15 @@ import { trace } from "@opentelemetry/api";
 import { stableStringify } from "@beacon/core/domain/json";
 import { AppError } from "@beacon/core/errors/app-error";
 import type { AuditEntry, AuditLog } from "@beacon/core/ports/audit-log";
-import type {
-  BudgetLimits,
-  BudgetPort,
-  BudgetUsage,
-  ToolUsageMeter,
-} from "@beacon/core/ports/budget";
+import type { BudgetPort, BudgetLimits, BudgetUsage, ToolUsageMeter } from "@beacon/core/ports/budget";
 import { ZERO_USAGE_METER } from "@beacon/core/ports/budget";
+import type { DemoSessionStore } from "@beacon/core/ports/demo-session";
 import type { ProposalStore } from "@beacon/core/ports/proposal-store";
 import type { RateLimiter } from "@beacon/core/ports/rate-limiter";
 import type { ToolCallResult, ToolGateway } from "@beacon/core/ports/tool-gateway";
 import { redactValue } from "@beacon/core/redaction/redact";
 import { schemaHashFor } from "@beacon/core/schemas/schema-hash";
+import { READ_TOOL_NAMES } from "@beacon/core/schemas/tools";
 import {
   WRITE_TOOL_NAMES,
   actionPlanSchema,
@@ -56,6 +53,31 @@ export interface CreateToolGatewayOptions {
   proposals?: ProposalStore;
   /** Aviso de fallos no fatales (por ejemplo, no se pudo auditar una denegación). */
   onError?: (error: unknown) => void;
+  /** Politica de la demo publica; `undefined` = instancia privada. */
+  demo?: DemoGatewayPolicy;
+}
+
+/**
+ * Politica de la demo publica (plan §4.11). El gateway es el punto de enforcement:
+ * la UI solo muestra el estado. La sesion y la IP llegan del borde HTTP, nunca del
+ * modelo.
+ */
+export interface DemoGatewayPolicy {
+  sessions: DemoSessionStore;
+  sessionId: string;
+  ip: string;
+  /** Techo de coste acumulado por sesion, en centimos. */
+  maxCostCents: number;
+  /** Techo de steps por sesion. */
+  maxSteps: number;
+  sessionTtlMs: number;
+  dailyLimit: number;
+  /** Fallos de dependencia consecutivos que disparan REPLAY_ONLY. */
+  failureThreshold: number;
+  /** `true` si la instancia arranco en REPLAY_ONLY=1. */
+  replayOnly: boolean;
+  /** Transporte de fixtures; obligatorio para que el fallback sirva runs. */
+  replayTransport?: McpTransport;
 }
 
 /** ¿Es una tool de escritura (fase 1) o de lectura? */
@@ -163,12 +185,70 @@ export function createToolGateway(options: CreateToolGatewayOptions): ToolGatewa
         throw error;
       }
 
+      // Politica de demo (plan §4.11): sesion anonima, techo diario y breaker. Se
+      // aplica en el gateway, antes de gastar rate limit o presupuesto.
+      let replayOnly = false;
+      if (options.demo) {
+        // Allowlist de la demo: las 10 tools de lectura y las propose_*; nada mas,
+        // aunque el control plane del agente tenga una lista mas amplia.
+        const demoTool =
+          (READ_TOOL_NAMES as readonly string[]).includes(tool) || isWriteTool(tool);
+        if (!demoTool) {
+          await auditBestEffort("tool.call.denied", tool, context, {
+            reason: "demo_tool_not_allowed",
+          });
+          throw new AppError("forbidden", `DEMO_MODE: tool no permitida: ${tool}`, {
+            statusCode: 403,
+            details: { reason: "demo_tool_not_allowed" },
+          });
+        }
+
+        const touched = await options.demo.sessions.touch({
+          sessionId: options.demo.sessionId,
+          ip: options.demo.ip,
+          now: Date.now(),
+          ttlMs: options.demo.sessionTtlMs,
+          dailyLimit: options.demo.dailyLimit,
+        });
+        if (!touched.allowed) {
+          await auditBestEffort("tool.call.denied", tool, context, {
+            reason: `demo_${touched.reason ?? "denied"}`,
+            limit: touched.limit,
+            observed: touched.observed,
+          });
+          throw new AppError("rate_limited", `demo denied: ${touched.reason ?? "unknown"}`, {
+            statusCode: 429,
+            details: {
+              reason: touched.reason,
+              limit: touched.limit,
+              observed: touched.observed,
+            },
+          });
+        }
+
+        replayOnly = options.demo.replayOnly || touched.state?.replayOnly === true;
+
+        // En REPLAY_ONLY no se ejecuta ninguna escritura: ni siquiera una propuesta.
+        if (replayOnly && isWriteTool(tool)) {
+          await auditBestEffort("tool.call.denied", tool, context, {
+            reason: "replay_only_write",
+          });
+          throw new AppError("forbidden", "REPLAY_ONLY: no se ejecutan escrituras", {
+            statusCode: 403,
+            details: { reason: "replay_only" },
+          });
+        }
+      }
+
       // Rate limit antes de la auditoría y de la llamada: una llamada rechazada por
       // límite no consume presupuesto y no sale a la red.
       const decision = await rateLimiter.consume({
         tenantId: context.tenantId,
         runId: context.runId,
         tool,
+        ...(options.demo
+          ? { sessionId: options.demo.sessionId, ip: options.demo.ip }
+          : {}),
       });
 
       if (!decision.allowed) {
@@ -202,6 +282,39 @@ export function createToolGateway(options: CreateToolGatewayOptions): ToolGatewa
         }),
       );
       const budgetKey = budgetKeyFor(tool, parsed, context);
+
+      // Presupuesto de la sesion anonima: se cobra con reserva atomica en Postgres
+      // (no un contador en memoria). Es independiente del presupuesto del tenant,
+      // que sigue aplicandose mas abajo.
+      if (options.demo) {
+        const charged = await options.demo.sessions.charge({
+          sessionId: options.demo.sessionId,
+          now: Date.now(),
+          ttlMs: options.demo.sessionTtlMs,
+          costCents: estimate.costCents,
+          maxCostCents: options.demo.maxCostCents,
+          maxSteps: options.demo.maxSteps,
+        });
+        if (!charged.allowed) {
+          await auditBestEffort("tool.call.denied", tool, context, {
+            reason: `demo_${charged.reason ?? "budget_exceeded"}`,
+            limit: charged.limit,
+            observed: charged.observed,
+          });
+          throw new AppError(
+            charged.reason === "session_budget" ? "budget_exceeded" : "rate_limited",
+            `demo session limit: ${charged.reason ?? "unknown"}`,
+            {
+              statusCode: charged.reason === "session_budget" ? 402 : 429,
+              details: {
+                reason: charged.reason,
+                limit: charged.limit,
+                observed: charged.observed,
+              },
+            },
+          );
+        }
+      }
       let reservationId: string | null = null;
       let reservationSettled = false;
 
@@ -276,8 +389,20 @@ export function createToolGateway(options: CreateToolGatewayOptions): ToolGatewa
       }
 
       const startedAt = performance.now();
+      const transport = replayOnly ? options.demo?.replayTransport : options.transport;
+      if (!transport) {
+        await auditBestEffort("tool.call.error", tool, context, {
+          reason: "replay_fixtures_missing",
+        });
+        throw new AppError(
+          "upstream_error",
+          "REPLAY_ONLY sin fixtures de replay: no se llama a mcp-ops",
+          { statusCode: 503, details: { reason: "replay_only" } },
+        );
+      }
+
       try {
-        const raw = await options.transport.callTool({ name: tool, args: parsed });
+        const raw = await transport.callTool({ name: tool, args: parsed });
         const latencyMs = Math.max(0, Math.round(performance.now() - startedAt));
         const usage = { ...estimate, wallMs: latencyMs };
 
@@ -334,6 +459,15 @@ export function createToolGateway(options: CreateToolGatewayOptions): ToolGatewa
         };
       } catch (error) {
         const latencyMs = Math.max(0, Math.round(performance.now() - startedAt));
+        if (options.demo) {
+          await options.demo.sessions
+            .recordFailure({
+              sessionId: options.demo.sessionId,
+              now: Date.now(),
+              threshold: options.demo.failureThreshold,
+            })
+            .catch(onError);
+        }
         try {
           await settleReservation({ ...estimate, wallMs: latencyMs });
         } catch (settleError) {
@@ -403,6 +537,8 @@ export interface CreateHttpToolGatewayOptions {
   /** Aviso de fallos no fatales. */
   onError?: (error: unknown) => void;
   timeoutMs?: number;
+  /** Politica de la demo publica; `undefined` = instancia privada. */
+  demo?: DemoGatewayPolicy;
 }
 
 /**
@@ -426,6 +562,7 @@ export function createHttpToolGateway(options: CreateHttpToolGatewayOptions): To
     actor: options.actor,
     proposals: options.proposals,
     onError: options.onError,
+    demo: options.demo,
   });
 }
 
