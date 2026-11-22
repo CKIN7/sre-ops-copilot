@@ -145,6 +145,9 @@ export const rateLimitEvents = pgTable("rate_limit_events", {
     .references(() => tenants.id, { onDelete: "cascade" }),
   runId: uuid("run_id").references(() => runs.id, { onDelete: "cascade" }),
   tool: text("tool").notNull(),
+  /** Ambito de la demo publica: sesion anonima e IP hasheada. */
+  sessionId: text("session_id"),
+  ipHash: text("ip_hash"),
   createdAt: timestamptz("created_at").notNull().defaultNow(),
 });
 
@@ -278,4 +281,22 @@ export const usageLedger = pgTable("usage_ledger", {
   costCents: integer("cost_cents").notNull().default(0),
   wallMs: integer("wall_ms").notNull().default(0),
   createdAt: timestamptz("created_at").notNull().defaultNow(),
+});
+
+/** Espejo de `demo_sessions` (migracion 0009, plan §4.11). */
+export const demoSessions = pgTable("demo_sessions", {
+  sessionId: text("session_id").primaryKey(),
+  ipHash: text("ip_hash").notNull(),
+  createdAt: timestamptz("created_at").notNull().defaultNow(),
+  expiresAt: timestamptz("expires_at").notNull(),
+  spentCents: integer("spent_cents").notNull().default(0),
+  steps: integer("steps").notNull().default(0),
+});
+
+/** Espejo del singleton `demo_breaker`: el circuit breaker de la demo. */
+export const demoBreaker = pgTable("demo_breaker", {
+  singleton: boolean("singleton").primaryKey().default(true),
+  replayOnly: boolean("replay_only").notNull().default(false),
+  failures: integer("failures").notNull().default(0),
+  updatedAt: timestamptz("updated_at").notNull().defaultNow(),
 });
