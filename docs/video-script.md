@@ -57,7 +57,7 @@ investiga con evidencia, no escribe sin aprobacion y no puede abusar de la demo.
 
 - Plano de la tabla de honestidad de `/about`.
 - Voz: "0 escrituras sin aprobacion, 0 acciones aplicadas sin verificar, coste 0
-  porque no hay LLM, p95 de run completo 1,07 s con runs exitosos. El incidente
+  porque no hay LLM, p95 de run completo 1,24 s con runs exitosos. El incidente
   es sintetico, el sandbox cubre rollback y el caso de flag es simulado. Lo que
   no esta medido, se dice."
 
