@@ -20,7 +20,7 @@ suite de contrato nocturna), `DEMO_MODE`/`REPLAY_ONLY` forzados en el gateway (s
 anónima, techo de sesiones, presupuesto de sesión atómico, breaker y fallback a replay)
 y la pestaña de honestidad en la UI. Medido: contrato sandbox **6/6** contra `kind`
 real (caso 6 simulado), demo con `replayOnly` y `writeDenied`, y k6 con **p95 de run
-completo exitoso 1.07 s** (20 VUs; 132/252 intentos quedaron `rate_limited` por el
+completo exitoso 1.24 s** (20 VUs; 111/231 intentos quedaron `rate_limited` por el
 techo de 120 llamadas/min). El modelo es `mock`/`eval-scripted` guionizado: no hay
 LLM, tokens ni coste. M8 añade runbook, postmortem del incidente sembrado, benchmark
 reproducible y guion del video; la grabación sigue pendiente.
@@ -49,7 +49,7 @@ reproducible y guion del video; la grabación sigue pendiente.
 | Modelo y coste de proveedor | — | mock guionizado, 0 céntimos |
 | `DEMO_MODE` / `REPLAY_ONLY` | smoke verde: `replayOnly`, `writeDenied` | efecto en Postgres |
 | Contrato sandbox 6/6 | sí: 6/6 contra `kind` (2026-11-22) | caso 6 (flag) |
-| p95 de k6 | 1.07 s (solo runs `succeeded`, 20 VUs, 10 s) | 132/252 `rate_limited` |
+| p95 de k6 | 1.24 s (solo runs `succeeded`, 20 VUs, 10 s) | 111/231 `rate_limited` |
 | Incidente y postmortem | run real sobre el seed | incidente sintético |
 | Video de 3 minutos | guion versionado | grabación pendiente |
 
@@ -210,10 +210,10 @@ concurrentes, 10 permitidas, 10 denegadas, 10 céntimos liquidados, **0 reservas
 abiertas** y `budgetRespected: true` en 182 ms. El test de integración pasa 2/2 e
 incluye el append-only de `usage_ledger`.
 
-**Medido:** k6 con 20 VUs durante 10 s contra API + `mcp-ops` y seed reciente dio 252
-intentos, 504 peticiones y **0% de errores HTTP**; 120 runs terminaron en `succeeded`
-y 132 en `rate_limited` por el techo de 120 llamadas/min. El **p95 de run completo
-exitoso es 1.07 s** (mediana 0.56 s); el p95 de los denegados (0.07 s) no se mezcla.
+**Medido:** k6 con 20 VUs durante 10 s contra API + `mcp-ops` y seed reciente dio 231
+intentos, 462 peticiones y **0% de errores HTTP**; 120 runs terminaron en `succeeded`
+y 111 en `rate_limited` por el techo de 120 llamadas/min. El **p95 de run completo
+exitoso es 1.24 s** (mediana 0.66 s); el p95 de los denegados no se mezcla.
 No hay p95 de encolado porque todavía no existe cola.
 
 ## La UI
