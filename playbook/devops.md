@@ -92,6 +92,9 @@ Reglas:
 - El caso 6 (flag) se marca como simulado: el `SandboxExecutor` solo cubre rollback.
 - `DEMO_MODE=1` exige `EXECUTOR=simulated` y `DEMO_REPLAY_FIXTURES`; el arranque falla
   cerrado si falta cualquiera de los dos.
+- Medición local (2026-11-22): `pnpm contract:sandbox` dio **6/6 contra `kind`** (caso 6
+  simulado) y `pnpm demo:smoke` quedó verde (`replayOnly`, `writeDenied`, steps
+  `1111110`). k6 midió **p95 de run completo 1.08 s** con 20 VUs y 0% de fallos.
 
 ### Protección de `main`
 
