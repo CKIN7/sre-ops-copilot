@@ -11,13 +11,28 @@
     "./faults": {
       "types": "./dist/faults.d.ts",
       "default": "./dist/faults.js"
+    },
+    "./sandbox": {
+      "types": "./dist/sandbox.d.ts",
+      "default": "./dist/sandbox.js"
+    },
+    "./sandbox-config": {
+      "types": "./dist/sandbox-config.d.ts",
+      "default": "./dist/sandbox-config.js"
+    },
+    "./command": {
+      "types": "./dist/command.d.ts",
+      "default": "./dist/command.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.test.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "contract:sandbox": "node dist/contract/cli.js"
   },
   "dependencies": {
     "@beacon/core": "workspace:*"
