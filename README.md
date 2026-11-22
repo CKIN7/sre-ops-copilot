@@ -3,7 +3,7 @@
 > Copiloto de guardia que investiga incidentes, propone acciones con evidencia y solo
 > ejecuta escrituras tras aprobación humana, con presupuesto, auditoría y evals.
 
-**Estado:** M6 con el DoD medido; M7 implementado, contrato sandbox y smoke pendientes de entorno (2026-11-22).
+**Estado:** M1–M7 cerrados con el DoD medido (2026-11-22); M7 con contrato 6/6 y k6 medido.
 `mcp-ops` sirve las 10 tools de lectura y las 3 de
 propuesta (`propose_rollback`, `propose_set_flag`, `propose_silence_alert`) por stdio y
 Streamable HTTP; el gateway aplica allowlist, validación, rate limit con ventana
@@ -18,10 +18,10 @@ atómica en Postgres, `usage_ledger`, spans OTel y la definición de red-team bl
 (20/20 medido). M7 añade el `SandboxExecutor` real para rollback sobre `kind`/k3s (con
 suite de contrato nocturna), `DEMO_MODE`/`REPLAY_ONLY` forzados en el gateway (sesión
 anónima, techo de sesiones, presupuesto de sesión atómico, breaker y fallback a replay)
-y la pestaña de honestidad en la UI. **El 6/6 del contrato y el p95 de k6 no están
-medidos**: no hay Docker/kind ni k6 en este entorno, y no se publica una cifra
-inventada. El modelo es `mock`/`eval-scripted` guionizado: no hay LLM, tokens ni
-coste.
+y la pestaña de honestidad en la UI. Medido: contrato sandbox **6/6** contra `kind`
+real (caso 6 simulado), demo con `replayOnly` y `writeDenied`, y k6 con **p95 de run
+completo 1.08 s** (20 VUs, 0% fallos). El modelo es `mock`/`eval-scripted` guionizado:
+no hay LLM, tokens ni coste.
 
 ## Qué demuestra
 
@@ -45,8 +45,9 @@ coste.
 | Efecto del rollback en modo `sandbox` | `kubectl` real | — |
 | `set_flag` / `silence_alert` en sandbox | — | delegado al simulado |
 | Modelo y coste de proveedor | — | mock guionizado, 0 céntimos |
-| Contrato sandbox 6/6 | pendiente de entorno | — |
-| p95 de k6 | pendiente de entorno | — |
+| `DEMO_MODE` / `REPLAY_ONLY` | smoke verde: `replayOnly`, `writeDenied` | efecto en Postgres |
+| Contrato sandbox 6/6 | sí: 6/6 contra `kind` (2026-11-22) | caso 6 (flag) |
+| p95 de k6 | 1.08 s (20 VUs, 10 s) | — |
 
 La misma tabla vive en la pestaña **Honestidad** de la UI. Si algo no se midió, se
 dice; no se publica un 6/6 ni un p95 inventado.
@@ -200,9 +201,9 @@ concurrentes, 10 permitidas, 10 denegadas, 10 céntimos liquidados, **0 reservas
 abiertas** y `budgetRespected: true` en 182 ms. El test de integración pasa 2/2 e
 incluye el append-only de `usage_ledger`.
 
-**Pendiente de medir:** k6 no está instalado y Docker rechazó descargar la imagen. El
-escenario está versionado y el comando documentado, pero no hay p95 de carga
-publicado; no se inventa. Tampoco hay p95 de encolado porque todavía no existe cola.
+**Medido:** k6 con 20 VUs durante 10 s contra API + `mcp-ops` y seed reciente dio 252
+runs, 504 peticiones, **0% de fallos**, 1008/1008 checks y **p95 de run completo 1.08 s**
+(mediana 92 ms, p90 760 ms). No hay p95 de encolado porque todavía no existe cola.
 
 ## La UI
 
