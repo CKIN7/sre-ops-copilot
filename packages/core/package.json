@@ -115,6 +115,10 @@
     "./schemas/schema-hash": {
       "types": "./dist/schemas/schema-hash.d.ts",
       "default": "./dist/schemas/schema-hash.js"
+    },
+    "./ports/demo-session": {
+      "types": "./dist/ports/demo-session.d.ts",
+      "default": "./dist/ports/demo-session.js"
     }
   },
   "files": [
