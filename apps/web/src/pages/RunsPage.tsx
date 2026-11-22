@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { ApiClient } from "../api/client.js";
+import type { ApiClient, DemoStatus } from "../api/client.js";
 import { StatusBadge } from "../components/StatusBadge.js";
 import { TimelineView } from "../components/TimelineView.js";
 
@@ -11,12 +11,36 @@ import { TimelineView } from "../components/TimelineView.js";
  * La timeline incluye las propuestas del run con el estado de su `apply`, que es
  * donde se ve si una escritura se aplicó de verdad o quedó a medias.
  */
-export function RunsPage({ client }: { client: ApiClient }) {
+const SCENARIOS: Array<{ label: string; goal: string }> = [
+  {
+    label: "Deploy malo en checkout",
+    goal: "Investiga el pico de errores 5xx en checkout tras el ultimo deploy",
+  },
+  {
+    label: "Falsa alarma",
+    goal: "Revisa la alerta de latencia en web y decide si hay que actuar",
+  },
+  {
+    label: "Inyeccion en los logs",
+    goal: "Investiga un log sospechoso en checkout que pide ignorar las reglas",
+  },
+];
+
+export function RunsPage({ client, demo }: { client: ApiClient; demo?: DemoStatus }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const runs = useQuery({
     queryKey: ["runs"],
     queryFn: () => client.listRuns(),
+  });
+
+  const start = useMutation({
+    mutationFn: (goal: string) => client.startRun(goal),
+    onSuccess: async () => {
+      setSelectedId(null);
+      await queryClient.invalidateQueries({ queryKey: ["runs"] });
+    },
   });
 
   const runId = selectedId ?? runs.data?.[0]?.id ?? null;
@@ -29,6 +53,35 @@ export function RunsPage({ client }: { client: ApiClient }) {
   return (
     <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
       <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
+        <div className="mb-3 rounded-lg border border-slate-800 bg-slate-950/40 p-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Escenarios guiados
+          </h3>
+          <div className="mt-2 flex flex-col gap-1">
+            {SCENARIOS.map((scenario) => (
+              <button
+                key={scenario.label}
+                type="button"
+                disabled={start.isPending || demo?.replayOnly === true}
+                onClick={() => start.mutate(scenario.goal)}
+                className="rounded-md border border-slate-800 px-2 py-1 text-left text-xs text-slate-300 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {scenario.label}
+              </button>
+            ))}
+          </div>
+          {demo?.replayOnly && (
+            <p className="mt-2 text-[11px] text-amber-300">
+              REPLAY_ONLY: los escenarios se sirven desde fixtures.
+            </p>
+          )}
+          {start.isError && (
+            <p className="mt-2 text-[11px] text-rose-300">
+              no se pudo lanzar: {String(start.error?.message ?? start.error)}
+            </p>
+          )}
+        </div>
+
         <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
           Runs recientes
         </h2>
