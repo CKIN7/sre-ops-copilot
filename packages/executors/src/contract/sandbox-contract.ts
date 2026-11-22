@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { dirname } from "node:path";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 
 import type { ActionStateStore } from "@beacon/core/ports/action-state";
 
@@ -247,7 +248,7 @@ async function seedWorkload(runner: CommandRunner, config: SandboxConfig): Promi
 
   for (const [index, version] of GOOD_VERSIONS.entries()) {
     if (index === 0) {
-      const manifestFile = "/tmp/beacon-sandbox-workload.json";
+      const manifestFile = join(tmpdir(), "beacon-sandbox-workload.json");
       await writeFile(manifestFile, deploymentJson(version), "utf8");
       await kubectl(runner, config, ["apply", "-f", manifestFile]);
     } else {
@@ -351,16 +352,18 @@ export async function runSandboxContract(
   const latest = GOOD_VERSIONS[GOOD_VERSIONS.length - 1] ?? "1.27.1";
 
   const reset = async (): Promise<void> => {
-    const result = await sandbox.rollback({
-      service: SERVICE,
-      toVersion: latest,
-      reason: "reset de la suite",
-      idempotencyKey: `reset:${Date.now()}`,
-    });
-    assert(
-      result.status === "applied" || result.status === "noop",
-      `reset fallo: ${result.status}`,
-    );
+    // Setup de la suite: se fuerza el workload a un estado estable con kubectl
+    // directo. El executor rechaza el rollback durante un rollout en curso a
+    // proposito, asi que usarlo aqui impediria recuperarse de los casos 4 y 5.
+    // Esto no relaja ninguna asercion: solo prepara el escenario.
+    await kubectl(counting, config, [
+      "patch",
+      "deployment",
+      SERVICE,
+      "--type=merge",
+      "-p",
+      patchFor(latest),
+    ]);
     await waitStable(counting, config);
   };
 
