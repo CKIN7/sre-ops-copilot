@@ -94,7 +94,7 @@ Reglas:
   cerrado si falta cualquiera de los dos.
 - Medición local (2026-11-22): `pnpm contract:sandbox` dio **6/6 contra `kind`** (caso 6
   simulado) y `pnpm demo:smoke` quedó verde (`replayOnly`, `writeDenied`, steps
-  `1111110`). k6 midió **p95 de run completo exitoso 1.07 s** con 20 VUs; 132/252
+  `1111110`). k6 midió **p95 de run completo exitoso 1.24 s** con 20 VUs; 111/231
   intentos fueron `rate_limited` por el techo de 120 llamadas/min. El benchmark y el
   runbook están en `docs/benchmark.md` y `docs/runbook.md`.
 
