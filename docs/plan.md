@@ -692,7 +692,10 @@ siendo la del §22.7: no se abre el hito siguiente hasta cerrar el actual.
 | M5 | Harness de evals + 40 casos + gate en CI | `pass@1` medido y reproducible; gate bloquea una regresión inyectada |
 | M6 | Presupuestos, OTel, red-team, k6, modelo de coste | 20/20 inyecciones bloqueadas; presupuesto correcto con 20 runs paralelos |
 | M7 | `SandboxExecutor` (kind) + suite de contrato + deploy público con `DEMO_MODE` + circuit breaker | 6/6 contrato real; demo pública con techo de gasto y fallback a replay |
-| M8 | Runbook + simulacro de incidente + postmortem + README/ADRs/honestidad + benchmark + vídeo | Un desconocido entiende el proyecto en 5 min y no puede abusar de la demo |
+| M8 | Runbook + simulacro de incidente + postmortem + README/ADRs/honestidad + benchmark | Un desconocido puede seguir el runbook y reproducir el benchmark; no puede abusar de la demo |
+
+**M8b (publicación, posterior):** video de 3 minutos con el guion de §16 y enlace en el
+README. No forma parte del cierre de M8.
 
 **Estado (2026-11-20):** M1, M2 y M3 cerrados. M2 se verificó con un run real por CLI: la
 timeline (steps y tool calls) quedó en Postgres y el CLI la leyó de vuelta por la API.
@@ -846,7 +849,7 @@ de honestidad y los workflows nocturnos.
   de `/tmp` y reset del contrato con `kubectl` directo para recuperarse de un rollout
   en curso. No cambian el contrato del executor ni relajan aserciones.
 
-**Estado (2026-11-22): M8 implementado salvo el video, pendiente de grabación.**
+**Estado (2026-11-22): M8 cerrado; el video pasa a M8b.**
 
 - **Runbook:** `docs/runbook.md` cubre arranque, flujo de incidente, dos fases,
   modos, fallos comunes, evidencia, simulacro y limpieza.
@@ -860,8 +863,8 @@ de honestidad y los workflows nocturnos.
   limit; a 20 VUs, 111/231 intentos fueron `rate_limited`.
 - **ADR:** `docs/decisions/016-benchmark-reproducible-y-simulacro.md` fija la regla
   de medir solo runs `succeeded` y etiquetar el simulacro.
-- **Video:** `docs/video-script.md` tiene el guion de 3 minutos; la grabación está
-  pendiente. **M8 no se declara cerrado hasta que exista el video.**
+- **M8b:** `docs/video-script.md` tiene el guion de 3 minutos; la grabación queda
+  para una propuesta posterior. **No forma parte del cierre de M8.**
 - **k6 corregido:** `infra/k6/run-api.js` ya no suma al p95 los runs `failed`;
   reporta `run_succeeded` y solo mide `run_complete_ms` para `succeeded`.
 
@@ -892,13 +895,15 @@ fixtures, la vista de eval, los escenarios guiados de la demo pública y la vist
 4. **Threat model** de una página.
 5. **Runbook + postmortem** de un incidente provocado a propósito.
 6. **Enlace al último run de contrato contra sandbox real** (prueba de que no es teatro).
-7. **Vídeo de 3 min** con el guion de §16.
+7. **Vídeo de 3 min** con el guion de §16. Entregable de **M8b**, pendiente.
 8. **3 posts**: "por qué el gateway", "cómo evalúo un agente no determinista",
    "el día que el agente intentó obedecer a un log".
 
 ---
 
-## 16. Guion del vídeo (3 min)
+## 16. Guion del vídeo (3 min, M8b)
+
+> Entregable de M8b. No bloquea el cierre de M8.
 
 1. (0:00-0:20) "Checkout 5xx subió al 4% hace 20 minutos." → run en vivo.
 2. (0:20-1:20) Timeline: métricas → deploy correlacionado → logs → traza → hipótesis con
