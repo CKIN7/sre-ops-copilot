@@ -23,7 +23,9 @@
     "evals:meta": "pnpm --filter @beacon/evals meta",
     "evals:record": "pnpm --filter @beacon/evals record",
     "budget:concurrency": "pnpm --filter @beacon/api budget:concurrency",
-    "load:k6": "k6 run infra/k6/run-api.js"
+    "load:k6": "k6 run infra/k6/run-api.js",
+    "contract:sandbox": "pnpm --filter @beacon/executors contract:sandbox",
+    "demo:smoke": "pnpm --filter @beacon/api demo:smoke"
   },
   "devDependencies": {
     "eslint": "10.15.0",
