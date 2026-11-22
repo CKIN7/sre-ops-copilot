@@ -8,7 +8,13 @@ import { Orchestrator, type RunResult } from "@beacon/orchestrator/orchestrator"
 
 import type { AgentBinding } from "./principal-directory.js";
 
-export type GatewayFactory = (agent: AgentBinding) => ToolGateway;
+/** Contexto de demo resuelto en el borde HTTP (cookie anonima + IP). */
+export interface DemoRequest {
+  sessionId: string;
+  ip: string;
+}
+
+export type GatewayFactory = (agent: AgentBinding, demo?: DemoRequest) => ToolGateway;
 
 export type ModelFactory = (agent: AgentBinding) => Model;
 
@@ -23,6 +29,8 @@ export interface StartRunCommand {
   agent: AgentBinding;
   goal: string;
   trigger: RunTrigger;
+  /** Solo en DEMO_MODE; el gateway lo usa para sesion, techo y breaker. */
+  demo?: DemoRequest;
 }
 
 /**
@@ -39,7 +47,7 @@ export class RunService {
   async start(command: StartRunCommand): Promise<RunResult> {
     const orchestrator = new Orchestrator({
       model: this.#deps.createModel(command.agent),
-      gateway: this.#deps.createGateway(command.agent),
+      gateway: this.#deps.createGateway(command.agent, command.demo),
       store: this.#deps.store,
     });
 
