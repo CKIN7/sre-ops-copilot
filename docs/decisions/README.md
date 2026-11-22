@@ -21,6 +21,7 @@
 | 013 | Presupuesto con reserva atomica en Postgres y liquidacion append-only | Aceptada |
 | 014 | OTel en proceso, sin exporter externo obligatorio | Aceptada |
 | 015 | Sandbox real y `DEMO_MODE` forzado en el gateway | Aceptada |
+| 016 | Benchmark reproducible y simulacro de incidente honesto | Aceptada |
 
 ## Por qué estas y no otras
 
@@ -50,6 +51,9 @@
   con `prev_hash`, escritura serializada y verificación explícita.
 - **015** separa el sandbox real (solo rollback, suite nocturna) de la demo pública (sesión,
   techo, breaker y replay), y deja la política de demo en el gateway, no en la UI.
+- **016** separa el p95 de runs exitosos de las denegaciones de rate limit, etiqueta el
+  incidente del postmortem como sintético y deja el video como tarea humana pendiente en
+  vez de declararlo hecho.
 
 ## Decisiones abiertas
 
