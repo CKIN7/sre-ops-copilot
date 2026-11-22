@@ -37,3 +37,6 @@ fly.local.toml
 # Datos locales
 tmp/
 seed/output/
+
+# Evidencia local de la suite de contrato (se sube como artefacto en CI)
+artifacts/
