@@ -8,11 +8,16 @@ import type { BudgetPort } from "@beacon/core/ports/budget";
 import type { EffectLedger } from "@beacon/core/ports/effect-ledger";
 import type { ProposalStore } from "@beacon/core/ports/proposal-store";
 import type { RateLimiter } from "@beacon/core/ports/rate-limiter";
+import type { DemoSessionStore } from "@beacon/core/ports/demo-session";
 import { createActionApplier, createHttpToolGateway } from "@beacon/gateway";
 import {
   SIMULATED_EXECUTOR_NAME,
   SimulatedExecutor,
 } from "@beacon/executors/simulated";
+import {
+  SANDBOX_EXECUTOR_NAME,
+  SandboxExecutor,
+} from "@beacon/executors/sandbox";
 import {
   MOCK_MODEL_ID,
   MOCK_PROMPT_VERSION,
@@ -36,10 +41,12 @@ import { createDb, type DbHandle } from "./adapters/db.js";
 import { DrizzleActionStateStore } from "./adapters/action-state.js";
 import { DrizzleAuditLog } from "./adapters/audit-log.js";
 import { DrizzleBudget, budgetLimitsFor } from "./adapters/budget.js";
+import { DrizzleDemoSessionStore } from "./adapters/demo-session.js";
 import { DrizzleEffectLedger } from "./adapters/effect-ledger.js";
 import { DrizzlePrincipalDirectory } from "./adapters/principal-directory.js";
 import { DrizzleProposalStore } from "./adapters/proposal-store.js";
 import { DrizzleRateLimiter } from "./adapters/rate-limiter.js";
+import { loadReplayTransport, type ReplayTransport } from "./adapters/replay-transport.js";
 import { DrizzleRunStore } from "./adapters/run-store.js";
 import type { ApiConfig } from "./config.js";
 import { createAuthenticator } from "./http/auth.js";
@@ -63,6 +70,10 @@ export interface CreateAppOptions {
   proposalStore?: ProposalStore;
   /** Inyectable para tests; si falta, se construye sobre Postgres. */
   effectLedger?: EffectLedger;
+  /** Inyectable para tests; si falta, se construye sobre Postgres. */
+  demoSessions?: DemoSessionStore;
+  /** Inyectable para tests; si falta, se carga de `DEMO_REPLAY_FIXTURES`. */
+  replayTransport?: ReplayTransport;
   /** Inyectable para tests; si falta, se construye el `SimulatedExecutor`. */
   executor?: ActionExecutor;
   /** Inyectable para tests; si falta, se construye sobre los puertos. */
@@ -119,10 +130,18 @@ export function createApp(options: CreateAppOptions): AppHandle {
     });
   const proposalStore = options.proposalStore ?? new DrizzleProposalStore(db());
   const effectLedger = options.effectLedger ?? new DrizzleEffectLedger(db());
+  const demoSessions =
+    options.demoSessions ??
+    (config.demo.enabled ? new DrizzleDemoSessionStore(db()) : undefined);
+  const replayTransport =
+    options.replayTransport ??
+    (config.demo.enabled && config.demo.replayFixtures
+      ? loadReplayTransport(config.demo.replayFixtures)
+      : undefined);
 
   const gatewayFactory: GatewayFactory =
     options.gatewayFactory ??
-    ((agent) =>
+    ((agent, demo) =>
       createHttpToolGateway({
         url: config.mcpUrl,
         token: config.mcpAuthToken,
@@ -134,14 +153,34 @@ export function createApp(options: CreateAppOptions): AppHandle {
         actor: `agent:${agent.name}`,
         // Sin esta pieza, una tool de escritura no tiene dónde dejar su propuesta.
         proposals: proposalStore,
+        demo:
+          config.demo.enabled && demo && demoSessions
+            ? {
+                sessions: demoSessions,
+                sessionId: demo.sessionId,
+                ip: demo.ip,
+                maxCostCents: config.demo.sessionBudgetCents,
+                maxSteps: config.demo.sessionMaxSteps,
+                sessionTtlMs: config.demo.sessionTtlMs,
+                dailyLimit: config.demo.dailySessions,
+                failureThreshold: config.demo.failureThreshold,
+                replayOnly: config.demo.replayOnly,
+                replayTransport,
+              }
+            : undefined,
       }));
 
+  const simulated = options.executor
+    ? undefined
+    : new SimulatedExecutor({
+        state: new DrizzleActionStateStore(db()),
+        faults: config.faults,
+      });
   const executor =
     options.executor ??
-    new SimulatedExecutor({
-      state: new DrizzleActionStateStore(db()),
-      faults: config.faults,
-    });
+    (config.executor === "sandbox"
+      ? new SandboxExecutor({ config: config.sandbox, fallback: simulated! })
+      : simulated!);
 
   const applier =
     options.applier ??
@@ -150,7 +189,10 @@ export function createApp(options: CreateAppOptions): AppHandle {
       effects: effectLedger,
       executor,
       audit: auditLog,
-      executorName: SIMULATED_EXECUTOR_NAME,
+      executorName:
+        config.executor === "sandbox" && !options.executor
+          ? SANDBOX_EXECUTOR_NAME
+          : SIMULATED_EXECUTOR_NAME,
     });
 
   const service = new RunService({
@@ -165,6 +207,7 @@ export function createApp(options: CreateAppOptions): AppHandle {
     runs: store,
     applier,
     createGateway: gatewayFactory,
+    demoSessions,
   });
 
   const app = Fastify({ logger: options.logger ?? false });
@@ -175,6 +218,8 @@ export function createApp(options: CreateAppOptions): AppHandle {
     audit: auditLog,
     service,
     proposals,
+    config,
+    demoSessions,
   });
 
   return {
