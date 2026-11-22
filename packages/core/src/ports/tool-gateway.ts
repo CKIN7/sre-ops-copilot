@@ -20,6 +20,12 @@ export interface ToolCallContext {
    * engancharse a su tool call y verse en la timeline del run.
    */
   toolCallId?: string | null;
+  /**
+   * Sesion anonima de la demo publica y su IP normalizada. Los pone el borde HTTP
+   * desde la cookie; el modelo nunca los aporta. Fuera de `DEMO_MODE` van vacios.
+   */
+  demoSessionId?: string | null;
+  demoIp?: string | null;
 }
 
 export interface ToolCallResult {
