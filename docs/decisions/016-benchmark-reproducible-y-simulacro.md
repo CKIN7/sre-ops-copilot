@@ -17,7 +17,7 @@ vender humo.
    de rate limit o de presupuesto?
 2. ¿Como se demuestra el flujo de incidente si el modelo guionizado no propone
    acciones?
-3. ¿Que se publica cuando el video de 3 minutos todavia no existe?
+3. ¿Donde se ubica el video de 3 minutos si todavia no existe?
 
 ## Opciones consideradas
 
@@ -37,17 +37,17 @@ vender humo.
    investigacion es real sobre el seed; la propuesta aplicada que se cita es
    evidencia del flujo de dos fases, no una vinculacion automatica run ->
    propuesta. La reanudacion del run sigue pendiente.
-3. **El video se entrega como guion, no como archivo inventado.** El guion vive
-   en `docs/video-script.md`; M8 no se declara cerrado hasta que exista el video.
+3. **El video se difiere a M8b.** El guion vive en `docs/video-script.md`, pero no
+   forma parte del cierre de M8; se grabara y enlazara en una propuesta posterior.
 
 ## Consecuencias
 
 - **Positivas:** el benchmark no se autoengana; el rate limit aparece como una
   propiedad del sistema; el postmortem distingue dato sembrado de produccion.
 - **Negativas:** hay dos numeros que explicar (p95 de runs exitosos y proporcion
-  de rate-limited); el video queda como tarea humana.
+  de rate-limited); el video queda como tarea humana en M8b.
 - **Seguimiento:** anadir un eval que una investigacion con una propuesta; medir
-  una corrida a `VUS=8`; grabar y enlazar el video.
+  una corrida a `VUS=8`; grabar y enlazar el video en M8b.
 
 ## Evidencia
 
