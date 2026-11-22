@@ -3,7 +3,7 @@
 > Copiloto de guardia que investiga incidentes, propone acciones con evidencia y solo
 > ejecuta escrituras tras aprobación humana, con presupuesto, auditoría y evals.
 
-**Estado:** M1–M7 cerrados con el DoD medido (2026-11-22); M7 con contrato 6/6 y k6 medido.
+**Estado:** M1–M7 cerrados con el DoD medido; M8 implementado salvo el video de 3 minutos (2026-11-22).
 `mcp-ops` sirve las 10 tools de lectura y las 3 de
 propuesta (`propose_rollback`, `propose_set_flag`, `propose_silence_alert`) por stdio y
 Streamable HTTP; el gateway aplica allowlist, validación, rate limit con ventana
@@ -20,8 +20,10 @@ suite de contrato nocturna), `DEMO_MODE`/`REPLAY_ONLY` forzados en el gateway (s
 anónima, techo de sesiones, presupuesto de sesión atómico, breaker y fallback a replay)
 y la pestaña de honestidad en la UI. Medido: contrato sandbox **6/6** contra `kind`
 real (caso 6 simulado), demo con `replayOnly` y `writeDenied`, y k6 con **p95 de run
-completo 1.08 s** (20 VUs, 0% fallos). El modelo es `mock`/`eval-scripted` guionizado:
-no hay LLM, tokens ni coste.
+completo exitoso 1.07 s** (20 VUs; 132/252 intentos quedaron `rate_limited` por el
+techo de 120 llamadas/min). El modelo es `mock`/`eval-scripted` guionizado: no hay
+LLM, tokens ni coste. M8 añade runbook, postmortem del incidente sembrado, benchmark
+reproducible y guion del video; la grabación sigue pendiente.
 
 ## Qué demuestra
 
@@ -47,7 +49,9 @@ no hay LLM, tokens ni coste.
 | Modelo y coste de proveedor | — | mock guionizado, 0 céntimos |
 | `DEMO_MODE` / `REPLAY_ONLY` | smoke verde: `replayOnly`, `writeDenied` | efecto en Postgres |
 | Contrato sandbox 6/6 | sí: 6/6 contra `kind` (2026-11-22) | caso 6 (flag) |
-| p95 de k6 | 1.08 s (20 VUs, 10 s) | — |
+| p95 de k6 | 1.07 s (solo runs `succeeded`, 20 VUs, 10 s) | 132/252 `rate_limited` |
+| Incidente y postmortem | run real sobre el seed | incidente sintético |
+| Video de 3 minutos | guion versionado | grabación pendiente |
 
 La misma tabla vive en la pestaña **Honestidad** de la UI. Si algo no se midió, se
 dice; no se publica un 6/6 ni un p95 inventado.
@@ -70,6 +74,10 @@ playbook/   proceso, devops y arquitectura
 ## Documentación
 
 - [`docs/plan.md`](./docs/plan.md) — plan de ejecución, alcance y calendario.
+- [`docs/runbook.md`](./docs/runbook.md) — operación, incidente y simulacro.
+- [`docs/postmortem-2026-11-22-checkout-5xx.md`](./docs/postmortem-2026-11-22-checkout-5xx.md) — postmortem del incidente sembrado.
+- [`docs/benchmark.md`](./docs/benchmark.md) — benchmark reproducible.
+- [`docs/video-script.md`](./docs/video-script.md) — guion del video de 3 minutos.
 - [`AGENTS.md`](./AGENTS.md) — guía del repo y no negociables.
 - [`playbook/`](./playbook/README.md) — contribución, DevOps y arquitectura.
 - [`docs/decisions/`](./docs/decisions/README.md) — índice de ADRs.
@@ -92,7 +100,8 @@ pnpm evals:meta
 pnpm budget:concurrency
 
 # Carga: k6 sobre POST /runs (necesita k6 instalado)
-k6 run -e BEACON_TOKEN=$env:BEACON_TOKEN infra/k6/run-api.js
+# run_complete_ms solo cuenta runs succeeded; VUS=8 evita saturar el rate limit
+k6 run -e BEACON_TOKEN=$env:BEACON_TOKEN -e VUS=20 -e DURATION=10s infra/k6/run-api.js
 
 # Contrato sandbox M7: 6 casos contra kind/k3s (Docker + kind; nocturno/manual)
 ./infra/kind/bootstrap.sh
@@ -202,8 +211,10 @@ abiertas** y `budgetRespected: true` en 182 ms. El test de integración pasa 2/2
 incluye el append-only de `usage_ledger`.
 
 **Medido:** k6 con 20 VUs durante 10 s contra API + `mcp-ops` y seed reciente dio 252
-runs, 504 peticiones, **0% de fallos**, 1008/1008 checks y **p95 de run completo 1.08 s**
-(mediana 92 ms, p90 760 ms). No hay p95 de encolado porque todavía no existe cola.
+intentos, 504 peticiones y **0% de errores HTTP**; 120 runs terminaron en `succeeded`
+y 132 en `rate_limited` por el techo de 120 llamadas/min. El **p95 de run completo
+exitoso es 1.07 s** (mediana 0.56 s); el p95 de los denegados (0.07 s) no se mezcla.
+No hay p95 de encolado porque todavía no existe cola.
 
 ## La UI
 
