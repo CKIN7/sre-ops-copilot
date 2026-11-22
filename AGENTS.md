@@ -20,7 +20,7 @@ M4b y M5 están cerrados. M6 añade presupuesto con reserva atómica en Postgres
 definición de red-team bloqueado con gate. Medido: red-team 20/20 bloqueados y
 presupuesto correcto con 20 runs paralelos (`pnpm budget:concurrency`: 10 permitidos,
 10 denegados, 0 reservas abiertas). k6 se midió al cerrar M7: p95 de run completo
-exitoso 1.07 s con 20 VUs; 132/252 intentos quedaron `rate_limited` por el techo de
+exitoso 1.24 s con 20 VUs; 111/231 intentos quedaron `rate_limited` por el techo de
 120 llamadas/min. M3 dejó
 `mcp-ops` con las 10 tools de lectura por stdio y Streamable HTTP con bearer de
 servicio, el gateway con allowlist, validación, rate limit con ventana deslizante,
@@ -49,7 +49,7 @@ breaker y fallback a replay) y la pestaña de honestidad en la UI. Medido: contr
 sandbox **6/6 contra `kind` real** (caso 6 simulado y etiquetado), `pnpm demo:smoke`
 verde (`ok`, `replayOnly`, `writeDenied`, steps `1111110`), `pnpm test` completo con
 `DATABASE_URL` (62/62 en `apps/api` y 27/27 en `mcp-ops`), `budget:concurrency` con
-`budgetRespected: true` y k6 con p95 de run completo exitoso 1.07 s (20 VUs; 132/252
+`budgetRespected: true` y k6 con p95 de run completo exitoso 1.24 s (20 VUs; 111/231
 rate-limited). El escenario k6 ya no suma runs `failed` al p95.
 Para medir en Windows se corrigieron dos detalles del contrato: `os.tmpdir()` en vez de
 `/tmp` y un reset con `kubectl` directo para recuperarse de un rollout en curso.
