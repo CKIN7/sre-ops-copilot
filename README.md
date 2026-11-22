@@ -3,7 +3,7 @@
 > Copiloto de guardia que investiga incidentes, propone acciones con evidencia y solo
 > ejecuta escrituras tras aprobación humana, con presupuesto, auditoría y evals.
 
-**Estado:** M1–M7 cerrados con el DoD medido; M8 implementado salvo el video de 3 minutos (2026-11-22).
+**Estado:** M1–M8 cerrados con el DoD medido; el video de 3 minutos pasa a M8b (2026-11-22).
 `mcp-ops` sirve las 10 tools de lectura y las 3 de
 propuesta (`propose_rollback`, `propose_set_flag`, `propose_silence_alert`) por stdio y
 Streamable HTTP; el gateway aplica allowlist, validación, rate limit con ventana
@@ -22,8 +22,8 @@ y la pestaña de honestidad en la UI. Medido: contrato sandbox **6/6** contra `k
 real (caso 6 simulado), demo con `replayOnly` y `writeDenied`, y k6 con **p95 de run
 completo exitoso 1.24 s** (20 VUs; 111/231 intentos quedaron `rate_limited` por el
 techo de 120 llamadas/min). El modelo es `mock`/`eval-scripted` guionizado: no hay
-LLM, tokens ni coste. M8 añade runbook, postmortem del incidente sembrado, benchmark
-reproducible y guion del video; la grabación sigue pendiente.
+LLM, tokens ni coste. M8 añade runbook, postmortem del incidente sembrado y benchmark
+reproducible. El guion del video queda para **M8b**, una propuesta posterior.
 
 ## Qué demuestra
 
@@ -51,7 +51,7 @@ reproducible y guion del video; la grabación sigue pendiente.
 | Contrato sandbox 6/6 | sí: 6/6 contra `kind` (2026-11-22) | caso 6 (flag) |
 | p95 de k6 | 1.24 s (solo runs `succeeded`, 20 VUs, 10 s) | 111/231 `rate_limited` |
 | Incidente y postmortem | run real sobre el seed | incidente sintético |
-| Video de 3 minutos | guion versionado | grabación pendiente |
+| Video de 3 minutos | guion versionado | grabación pendiente (M8b) |
 
 La misma tabla vive en la pestaña **Honestidad** de la UI. Si algo no se midió, se
 dice; no se publica un 6/6 ni un p95 inventado.
@@ -77,7 +77,7 @@ playbook/   proceso, devops y arquitectura
 - [`docs/runbook.md`](./docs/runbook.md) — operación, incidente y simulacro.
 - [`docs/postmortem-2026-11-22-checkout-5xx.md`](./docs/postmortem-2026-11-22-checkout-5xx.md) — postmortem del incidente sembrado.
 - [`docs/benchmark.md`](./docs/benchmark.md) — benchmark reproducible.
-- [`docs/video-script.md`](./docs/video-script.md) — guion del video de 3 minutos.
+- [`docs/video-script.md`](./docs/video-script.md) — guion del video de 3 minutos (M8b).
 - [`AGENTS.md`](./AGENTS.md) — guía del repo y no negociables.
 - [`playbook/`](./playbook/README.md) — contribución, DevOps y arquitectura.
 - [`docs/decisions/`](./docs/decisions/README.md) — índice de ADRs.
