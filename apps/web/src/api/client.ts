@@ -34,6 +34,14 @@ export interface ProposalSummary {
   effect: ProposalDetail["effect"];
 }
 
+export interface DemoStatus {
+  enabled: boolean;
+  replayOnly: boolean;
+  sessionsToday?: number | null;
+  dailyLimit?: number;
+  failures?: number | null;
+}
+
 /** Lo que devuelve `POST /proposals`: el plan y las dos referencias. */
 export interface ProposalCreated {
   proposal_id: string;
@@ -64,6 +72,20 @@ export class ApiClient {
   async listRuns(): Promise<Run[]> {
     const payload = await this.#request<{ runs: Run[] }>("/runs");
     return payload.runs;
+  }
+
+  /** Estado de la demo; lo pinta la UI, pero la politica la aplica el gateway. */
+  async getDemoStatus(): Promise<DemoStatus> {
+    const payload = await this.#request<{ demo: DemoStatus }>("/demo/status");
+    return payload.demo;
+  }
+
+  /** Lanza un run; los escenarios guiados de la demo usan esto. */
+  async startRun(goal: string): Promise<void> {
+    await this.#request("/runs", {
+      method: "POST",
+      body: { goal, trigger: "ui" },
+    });
   }
 
   async getTimeline(runId: string): Promise<RunTimeline> {
